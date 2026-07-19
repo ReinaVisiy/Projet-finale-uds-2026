@@ -27,6 +27,7 @@ import EditProfile from './components/EditProfile';
 import FAQPage from './components/FAQPage';
 import LoginPage from './components/LoginPage';
 import MessagePage from './components/messagepage';
+import MessagesInbox from './components/MessagesInbox';
 import ModerationPanel from './components/ModerationPanel';
 import MyProducts from './components/MyProducts';
 import NotificationsCenter from './components/NotificationsCenter';
@@ -42,6 +43,7 @@ import { mapNotificationPourAffichage, construireNotificationRequest } from './s
 
 export default function App() {
   const [screen, setScreen] = useState('home');
+  const [previousScreen, setPreviousScreen] = useState('home');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedVendor, setSelectedVendor] = useState(null);
 
@@ -550,6 +552,8 @@ export default function App() {
     authApi.logout();
     setCurrentUser(null);
     setIsClientMode(false);
+    setSelectedVendor(null);
+    setSelectedProduct(null);
     setScreen('home');
   };
 
@@ -715,6 +719,7 @@ export default function App() {
   const adminOnlyScreens = ['admin-dashboard', 'order-management-admin', 'order-detail-admin', 'moderation-panel', 'vendor-verification'];
 
   const navigate = (s) => {
+    setPreviousScreen(screen);
     const publicScreens = ['home', 'login-page', 'register', 'recovery', 'product-detail', 'faq', 'producer-profile', 'catalogue'];
     if (!currentUser && !publicScreens.includes(s)) {
       requireLogin(() => setScreen(s));
@@ -860,8 +865,14 @@ export default function App() {
           orders={mesCommandes}
           onBackHome={() => navigate('home')}
         />;
+      case 'messages-inbox':
+        return <MessagesInbox
+          currentUser={currentUser}
+          onOpenConversation={(vendor) => { setSelectedVendor(vendor); setScreen('message'); }}
+          onBack={() => navigate(previousScreen)}
+        />;
       case 'message':
-        return <MessagePage vendor={selectedVendor} currentUser={currentUser} onBack={() => navigate('product-detail')} />;
+        return <MessagePage vendor={selectedVendor} currentUser={currentUser} onBack={() => navigate(previousScreen)} />;
       case 'user-profile':
         return <UserProfile
           currentUser={currentUser}

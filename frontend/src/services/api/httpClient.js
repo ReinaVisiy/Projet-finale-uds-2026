@@ -85,7 +85,7 @@ export async function request(baseUrl, path, options = {}) {
 
   if (!response.ok) {
     const message =
-      (payload && typeof payload === 'object' && (payload.message || payload.error)) ||
+      (payload && typeof payload === 'object' && (payload.erreur || payload.message || payload.error)) ||
       (typeof payload === 'string' && payload) ||
       `Request failed with status ${response.status}`;
     throw new ApiError(message, response.status, payload);

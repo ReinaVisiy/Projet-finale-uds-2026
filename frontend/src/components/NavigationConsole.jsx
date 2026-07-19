@@ -1,6 +1,6 @@
 // src/components/NavigationConsole.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingCart, User, LogOut, ChevronDown, ShieldCheck, Home, Package, LayoutGrid, Bell, Users, ShoppingBag, Menu, X } from 'lucide-react';
+import { ShoppingCart, User, LogOut, ChevronDown, ShieldCheck, Home, Package, LayoutGrid, Bell, Users, ShoppingBag, Menu, X, MessageCircle } from 'lucide-react';
 
 export default function NavigationConsole({
   currentScreen,
@@ -108,6 +108,9 @@ export default function NavigationConsole({
                     <Bell size={20} />
                     {unreadNotifications > 0 && <span style={styles.notifBadge}>{unreadNotifications > 9 ? '9+' : unreadNotifications}</span>}
                   </button>
+                  <button style={styles.notifBtn} onClick={() => { onNavigate('messages-inbox'); setMobileMenuOpen(false); }}>
+                    <MessageCircle size={20} />
+                  </button>
                 </>
               )}
             </div>
@@ -169,6 +172,9 @@ export default function NavigationConsole({
                     <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('notifications'); }}>
                       <Bell size={15} /> Notifications
                       {unreadNotifications > 0 && <span style={styles.dropdownBadge}>{unreadNotifications}</span>}
+                    </button>
+                    <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('messages-inbox'); }}>
+                      <MessageCircle size={15} /> Mes messages
                     </button>
                     {currentUser.role === 'client' && (
                       <>
