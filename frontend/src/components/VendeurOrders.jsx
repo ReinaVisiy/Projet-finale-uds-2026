@@ -1,0 +1,333 @@
+// src/components/VendeurOrders.jsx
+import React, { useState } from 'react';
+import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+
+export default function VendeurOrders({ orders, vendeurProducts, onUpdateOrderStatus }) {
+  const [expandedOrder, setExpandedOrder] = useState(null);
+
+  // Filtrer les commandes contenant au moins un produit du vendeur
+  const vendeurOrderIds = orders
+    .filter(order =>
+      order.items?.some(item =>
+        vendeurProducts.some(p => p.name === item.nomProduit || p.name === item.name)
+      )
+    )
+    .map(order => order.id);
+
+  const vendeurOrders = orders.filter(order => vendeurOrderIds.includes(order.id));
+
+  const getStatusIcon = (status) => {
+    if (status === 'Livrée') return <CheckCircle size={18} color="#2d6a4f" />;
+    if (status === 'En livraison') return <Truck size={18} color="#f5b041" />;
+    if (status === 'En préparation') return <Clock size={18} color="#0066cc" />;
+    if (status === 'Validée') return <Package size={18} color="#6f42c1" />;
+    if (status === 'Annulée') return <XCircle size={18} color="#b3261e" />;
+    return <Clock size={18} color="#adb5bd" />;
+  };
+
+  const getStatusColor = (status) => {
+    if (status === 'Livrée') return '#2d6a4f';
+    if (status === 'En livraison') return '#f5b041';
+    if (status === 'En préparation') return '#0066cc';
+    if (status === 'Validée') return '#6f42c1';
+    if (status === 'Annulée') return '#b3261e';
+    return '#adb5bd';
+  };
+
+  const getStatusBg = (status) => {
+    if (status === 'Livrée') return '#e9f5ee';
+    if (status === 'En livraison') return '#fff3e0';
+    if (status === 'En préparation') return '#e0f0ff';
+    if (status === 'Validée') return '#f1eafc';
+    if (status === 'Annulée') return '#fdecea';
+    return '#f1f3f5';
+  };
+
+  const handleStatusChange = (orderId, newStatus) => {
+    if (onUpdateOrderStatus) {
+      onUpdateOrderStatus(orderId, newStatus);
+    }
+  };
+
+  const toggleExpand = (orderId) => {
+    setExpandedOrder(expandedOrder === orderId ? null : orderId);
+  };
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h2 style={styles.title}>Mes commandes reçues</h2>
+        <p style={styles.subtitle}>Gérez les commandes des clients</p>
+      </div>
+
+      {vendeurOrders.length === 0 ? (
+        <div style={styles.emptyState}>
+          <Package size={48} color="#adb5bd" />
+          <p style={styles.emptyText}>Vous n'avez reçu aucune commande pour le moment.</p>
+        </div>
+      ) : (
+        <div style={styles.list}>
+          {vendeurOrders.map(order => {
+            // Calculer le montant total des produits du vendeur dans cette commande
+            const vendeurItems = order.items?.filter(item =>
+              vendeurProducts.some(p => p.name === item.nomProduit || p.name === item.name)
+            );
+            const totalAmount = vendeurItems?.reduce((sum, item) => sum + (item.subtotal || 0), 0) || order.amount;
+
+            return (
+              <div key={order.id} style={styles.orderCard}>
+                <div style={styles.orderHeader} onClick={() => toggleExpand(order.id)}>
+                  <div style={styles.orderLeft}>
+                    <div style={styles.orderId}>Commande #{order.id}</div>
+                    <div style={styles.orderDate}>{order.date}</div>
+                  </div>
+                  <div style={styles.orderRight}>
+                    <div style={styles.orderTotal}>{totalAmount.toLocaleString()} FCFA</div>
+                    <div style={{
+                      ...styles.statusBadge,
+                      backgroundColor: getStatusBg(order.status),
+                      color: getStatusColor(order.status),
+                    }}>
+                      {getStatusIcon(order.status)} {order.status}
+                    </div>
+                    <button style={styles.expandBtn}>
+                      {expandedOrder === order.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {expandedOrder === order.id && (
+                  <div style={styles.orderDetails}>
+                    <div style={styles.detailsGrid}>
+                      <div>
+                        <p style={styles.detailLabel}>Client</p>
+                        <p style={styles.detailValue}>{order.client}</p>
+                      </div>
+                      <div>
+                        <p style={styles.detailLabel}>Email</p>
+                        <p style={styles.detailValue}>{order.clientEmail || 'Non renseigné'}</p>
+                      </div>
+                      <div>
+                        <p style={styles.detailLabel}>Date</p>
+                        <p style={styles.detailValue}>{order.date}</p>
+                      </div>
+                      <div>
+                        <p style={styles.detailLabel}>Montant total</p>
+                        <p style={styles.detailValue}>{totalAmount.toLocaleString()} FCFA</p>
+                      </div>
+                    </div>
+
+                    <div style={styles.productsSection}>
+                      <h4 style={styles.productsTitle}>Produits commandés</h4>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr>
+                            <th style={styles.th}>Produit</th>
+                            <th style={styles.th}>Quantité</th>
+                            <th style={styles.th}>Prix unit.</th>
+                            <th style={styles.th}>Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {vendeurItems?.map((item, idx) => (
+                            <tr key={idx} style={styles.tr}>
+                              <td style={styles.td}>{item.nomProduit || item.name}</td>
+                              <td style={styles.td}>{item.quantity}</td>
+                              <td style={styles.td}>{item.prixUnitaire?.toLocaleString() || item.price?.toLocaleString()} FCFA</td>
+                              <td style={styles.td}>{item.subtotal?.toLocaleString() || (item.quantity * item.price)?.toLocaleString()} FCFA</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div style={styles.actionsSection}>
+                      <label style={styles.statusLabel}>Changer le statut :</label>
+                      <select
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                        style={styles.statusSelect}
+                      >
+                        <option value="En attente">En attente</option>
+                        <option value="En préparation">En préparation</option>
+                        <option value="En livraison">En livraison</option>
+                        <option value="Livrée">Livrée</option>
+                        <option value="Annulée">Annulée</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const styles = {
+  container: {
+    maxWidth: '1000px',
+    margin: '0 auto',
+    padding: '30px 20px',
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
+  },
+  header: {
+    marginBottom: '32px',
+  },
+  title: {
+    fontSize: '28px',
+    fontWeight: '900',
+    color: '#212529',
+    margin: '0 0 4px 0',
+  },
+  subtitle: {
+    fontSize: '14px',
+    color: '#6c757d',
+    margin: 0,
+  },
+  emptyState: {
+    textAlign: 'center',
+    padding: '60px 20px',
+    color: '#6c757d',
+  },
+  emptyText: {
+    fontSize: '16px',
+    marginTop: '12px',
+  },
+  list: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+  orderCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    border: '1px solid #e9ecef',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+    overflow: 'hidden',
+  },
+  orderHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '16px 20px',
+    cursor: 'pointer',
+    transition: 'background 0.2s',
+  },
+  orderLeft: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  orderId: {
+    fontWeight: '800',
+    color: '#212529',
+    fontSize: '15px',
+  },
+  orderDate: {
+    fontSize: '13px',
+    color: '#6c757d',
+  },
+  orderRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+  },
+  orderTotal: {
+    fontWeight: '800',
+    color: '#e07a5f',
+    fontSize: '15px',
+  },
+  statusBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '4px 12px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '700',
+  },
+  expandBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: '#6c757d',
+    padding: '4px',
+  },
+  orderDetails: {
+    padding: '0 20px 20px 20px',
+    borderTop: '1px solid #f1f3f5',
+  },
+  detailsGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px',
+    paddingTop: '16px',
+  },
+  detailLabel: {
+    fontSize: '12px',
+    color: '#adb5bd',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    margin: '0 0 4px 0',
+  },
+  detailValue: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#212529',
+    margin: 0,
+  },
+  productsSection: {
+    marginTop: '16px',
+  },
+  productsTitle: {
+    fontSize: '15px',
+    fontWeight: '700',
+    color: '#212529',
+    margin: '0 0 12px 0',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontSize: '14px',
+  },
+  th: {
+    textAlign: 'left',
+    padding: '8px 8px',
+    borderBottom: '1px solid #e9ecef',
+    fontSize: '12px',
+    fontWeight: '700',
+    color: '#6c757d',
+    textTransform: 'uppercase',
+  },
+  td: {
+    padding: '8px 8px',
+    borderBottom: '1px solid #f8f9fa',
+    color: '#495057',
+  },
+  tr: {
+    ':last-child td': { borderBottom: 'none' },
+  },
+  actionsSection: {
+    marginTop: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  statusLabel: {
+    fontSize: '14px',
+    fontWeight: '700',
+    color: '#495057',
+  },
+  statusSelect: {
+    padding: '8px 14px',
+    borderRadius: '10px',
+    border: '1.5px solid #dee2e6',
+    fontSize: '14px',
+    backgroundColor: '#f8f9fa',
+    cursor: 'pointer',
+    outline: 'none',
+  },
+};

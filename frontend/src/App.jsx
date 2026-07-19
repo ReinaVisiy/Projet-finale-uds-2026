@@ -1,0 +1,1143 @@
+// src/App.jsx
+import React, { useState, useEffect } from 'react';
+import NavigationConsole from './components/NavigationConsole';
+import AgroMarketHome from './components/AgriconnectHome';
+import AddProduct from './components/AddProduct';
+import EditProduct from './components/EditProduct';
+import VendeurOrders from './components/VendeurOrders';
+import ClientOrders from './components/ClientOrders';
+import ClientPurchases from './components/ClientPurchases';
+import OrderManagementAdmin from './components/OrderManagementAdmin';
+import PasswordRecovery from './components/PasswordRecovery';
+import ProductDetail from './components/ProductDetail';
+import RegisterPage from './components/Registerpage';
+import SalesHistory from './components/SalesHistory';
+import SellerDashboard from './components/SellerDashboard';
+import ShoppingCart from './components/ShoppingCart';
+import StockAlerts from './components/StockAlerts';
+import SubscriptionPlans from './components/SubscriptionPlans';
+import UserProfile from './components/UserProfile';
+import CertificationRequest from './components/CertificationRequest';
+import SignalementModal from './components/SignalementModal';
+import VendorVerificationAdmin from './components/VendorVerificationAdmin';
+import ProducerProfile from './components/ProducerProfile';
+import ProductCatalog from './components/ProductCatalog';
+import AdminDashboard from './components/AdminDashboard';
+import EditProfile from './components/EditProfile';
+import FAQPage from './components/FAQPage';
+import LoginPage from './components/LoginPage';
+import MessagePage from './components/messagepage';
+import ModerationPanel from './components/ModerationPanel';
+import MyProducts from './components/MyProducts';
+import NotificationsCenter from './components/NotificationsCenter';
+import OrderDetailAdmin from './components/OrderDetailAdmin';
+import ChangePassword from './components/ChangePassword';
+import { authApi, utilisateurApi, produitApi, signalementApi, commandeApi, paiementApi, certificationApi, notificationApi, getSession } from './services/api';
+import { ROLE_FRONTEND_TO_BACKEND, joinNomComplet, splitNomComplet, mapProfileToFrontendUser } from './services/userMapping';
+import { mapCertificationPourAdmin } from './services/certificationMapping';
+import { mapProduitPourVendeur, construireProduitRequest } from './services/productMapping';
+import { mapSignalementPourAffichage, construireRaison, TYPE_FRONTEND_TO_BACKEND } from './services/signalementMapping';
+import { mapCommandePourAffichage, STATUT_FRANCAIS_TO_BACKEND } from './services/commandeMapping';
+import { mapNotificationPourAffichage, construireNotificationRequest } from './services/notificationMapping';
+
+export default function App() {
+  const [screen, setScreen] = useState('home');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedVendor, setSelectedVendor] = useState(null);
+
+  // ===== LANGUE =====
+  const [lang, setLang] = useState('fr');
+  const toggleLang = () => setLang(prev => (prev === 'fr' ? 'en' : 'fr'));
+
+  // ===== UTILISATEUR CONNECTÉ =====
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // ===== COMPTES INSCRITS =====
+  const [registeredUsers, setRegisteredUsers] = useState([]);
+
+  // ===== NOTIFICATIONS =====
+  // Depuis l'ajout de notification-service côté backend, les
+  // notifications sont persistées et scopées par utilisateur (via le
+  // JWT), et ne vivent plus uniquement dans le localStorage du
+  // navigateur (qui mélangeait auparavant les notifications de tous
+  // les comptes utilisés sur le même appareil).
+  const [notifications, setNotifications] = useState([]);
+  const addNotification = (userId, type, message, lien = null) => {
+    // Mise à jour optimiste : l'utilisateur voit la notification
+    // apparaître immédiatement, sans attendre le réseau.
+    const newNotif = {
+      id: `notif-${Date.now()}`,
+      utilisateurId: userId,
+      type: type,
+      message,
+      lien,
+      lu: false,
+      dateCreation: new Date().toISOString(),
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+
+    // Envoi réel au backend, en arrière-plan. On avale volontairement
+    // l'erreur : une notification qui échoue à se créer ne doit jamais
+    // faire échouer l'action métier qui l'a déclenchée (commande,
+    // paiement, inscription, etc.).
+    //
+    // Note : on vérifie la session JWT via getSession() plutôt que la
+    // variable currentUser du closure, car addNotification est parfois
+    // appelée juste après setCurrentUser(...) (ex. handleLoginSuccess,
+    // handleRegisterSuccess) — à cet instant currentUser n'a pas encore
+    // été mis à jour (setState est asynchrone), alors que le token JWT,
+    // lui, a déjà été sauvegardé de façon synchrone par authApi.login.
+    if (!getSession()) return; // pas de JWT disponible avant connexion
+    // On transmet directement "type" (la sévérité UI choisie par
+    // l'appelant : info/success/warning/error) au backend en tant que
+    // "niveau" — plus besoin de la redeviner au chargement, puisque
+    // notification-service la stocke désormais telle quelle.
+    notificationApi
+      .creerNotification(construireNotificationRequest(userId, message, lien, type))
+      .catch((err) => console.error('Notification non persistée côté serveur :', err));
+  };
+
+  // ===== IDENTIFIANTS ADMIN RÉELS =====
+  // Remplace le précédent broadcast codé en dur vers userId=1 : on
+  // récupère les vrais comptes ADMIN auprès de utilisateur-service
+  // (GET /api/utilisateurs est public, donc accessible même avant
+  // connexion) et on notifie chacun d'eux individuellement.
+  const [adminIds, setAdminIds] = useState([]);
+  useEffect(() => {
+    utilisateurApi
+      .getAllUtilisateurs()
+      .then((tous) => {
+        const ids = (tous || [])
+          .filter((u) => u.role === 'ADMIN')
+          .map((u) => u.id);
+        setAdminIds(ids);
+      })
+      .catch((err) => console.error("Impossible de récupérer la liste des comptes admin :", err));
+  }, []);
+
+  const notifierAdmins = (type, message, lien = null) => {
+    if (adminIds.length === 0) {
+      // Repli si la liste n'a pas encore été chargée (ex. tout début du
+      // chargement de l'app) : on garde l'ancien comportement plutôt que
+      // de perdre silencieusement la notification.
+      addNotification(1, type, message, lien);
+      return;
+    }
+    adminIds.forEach((id) => addNotification(id, type, message, lien));
+  };
+
+  const chargerMesNotifications = async () => {
+    if (!currentUser?.id) return;
+    try {
+      const dtos = await notificationApi.getMesNotifications();
+      setNotifications((dtos || []).map(mapNotificationPourAffichage));
+    } catch (err) {
+      console.error('Impossible de charger vos notifications :', err);
+    }
+  };
+
+  // ===== COMPTE ADMIN =====
+  // NOTE : il n'y a plus de compte admin codé en dur ici. La connexion admin
+  // passe désormais par le vrai backend (auth-service). Un compte avec le
+  // rôle ADMIN doit exister dans la base de utilisateur-service (créé via
+  // POST /api/utilisateurs/admin/creer par un autre admin, ou directement
+  // en base pour le tout premier compte).
+
+  // ===== AUTRES ÉTATS =====
+  const [showSignalement, setShowSignalement] = useState(false);
+  const [signalementProduct, setSignalementProduct] = useState(null);
+  const [activePlan, setActivePlan] = useState('gratuit');
+  const [vendeurProducts, setVendeurProducts] = useState([]);
+  const [vendorVerifications, setVendorVerifications] = useState([]);
+  const [cartItems, setCartItems] = useState([]);
+  const [authRedirectMessage, setAuthRedirectMessage] = useState('');
+  const [signalements, setSignalements] = useState([]);
+  // Vraies commandes issues de commande-service : mesCommandes pour le
+  // client, toutesLesCommandes pour l'admin/le vendeur (AdminDashboard,
+  // OrderManagementAdmin, SellerDashboard, VendeurOrders).
+  const [mesCommandes, setMesCommandes] = useState([]);
+  const [toutesLesCommandes, setToutesLesCommandes] = useState([]);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [isClientMode, setIsClientMode] = useState(false);
+
+  // ===== CHARGEMENT DEPUIS localStorage =====
+  useEffect(() => {
+    const savedCart = localStorage.getItem('cartItems');
+    if (savedCart) { try { setCartItems(JSON.parse(savedCart)); } catch {} }
+    const savedPlan = localStorage.getItem('activePlan');
+    if (savedPlan) { setActivePlan(savedPlan); }
+    const savedClientMode = localStorage.getItem('isClientMode');
+    if (savedClientMode) { setIsClientMode(JSON.parse(savedClientMode)); }
+
+    // Restaurer la session utilisateur à partir du token JWT stocké,
+    // en revérifiant le profil auprès du backend (utilisateur-service)
+    // plutôt que de faire confiance à une copie locale potentiellement
+    // périmée.
+    const session = getSession();
+    if (session) {
+      utilisateurApi
+        .getUtilisateurById(session.uid)
+        .then((profile) => {
+          setCurrentUser(mapProfileToFrontendUser(profile, session.roles));
+        })
+        .catch(() => {
+          // Token invalide/expiré ou utilisateur supprimé : on nettoie la session.
+          authApi.logout();
+        });
+    }
+  }, []);
+
+  // ===== SAUVEGARDE =====
+  useEffect(() => { localStorage.setItem('cartItems', JSON.stringify(cartItems)); }, [cartItems]);
+  useEffect(() => { localStorage.setItem('activePlan', activePlan); }, [activePlan]);
+  useEffect(() => { localStorage.setItem('isClientMode', JSON.stringify(isClientMode)); }, [isClientMode]);
+
+  // ===== INITIALISER activePlan =====
+  useEffect(() => {
+    if (currentUser?.role === 'vendeur') {
+      setActivePlan(currentUser.plan || 'gratuit');
+    }
+  }, [currentUser]);
+
+  // ===== PRODUITS DU VENDEUR CONNECTÉ =====
+  // Remplace l'ancien stockage local : on va chercher les vrais produits
+  // du vendeur auprès de produit-service dès qu'un vendeur est connecté.
+  const refreshVendeurProducts = async () => {
+    if (!currentUser || currentUser.role !== 'vendeur') return;
+    try {
+      const data = await produitApi.getMesProduits();
+      setVendeurProducts((data || []).map(mapProduitPourVendeur));
+    } catch (err) {
+      console.error('Impossible de charger vos produits :', err);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.role === 'vendeur') {
+      refreshVendeurProducts();
+    } else {
+      setVendeurProducts([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id, currentUser?.role]);
+
+  // ===== SIGNALEMENTS (modération admin) =====
+  // Remplace l'ancien stockage local : on va chercher les vrais
+  // signalements auprès de signalement-service, puis on résout le nom
+  // affichable de la cible (produit ou utilisateur) et de l'auteur,
+  // car le backend ne stocke que des IDs.
+  const chargerSignalements = async () => {
+    try {
+      const dtos = await signalementApi.getAllSignalements();
+      const enrichis = await Promise.all(
+        (dtos || []).map(async (dto) => {
+          let cibleNom;
+          try {
+            if (dto.type === 'PRODUIT') {
+              const produit = await produitApi.getProduitById(dto.targetId);
+              cibleNom = produit?.nom;
+            } else {
+              const utilisateur = await utilisateurApi.getUtilisateurById(dto.targetId);
+              cibleNom = utilisateur?.nom;
+            }
+          } catch {
+            cibleNom = undefined; // cible supprimée entretemps : on garde l'ID en repli
+          }
+          let auteurNom;
+          try {
+            const reporter = await utilisateurApi.getUtilisateurById(dto.reporterId);
+            auteurNom = reporter?.nom;
+          } catch {
+            auteurNom = undefined;
+          }
+          return mapSignalementPourAffichage(dto, cibleNom, auteurNom);
+        })
+      );
+      setSignalements(enrichis);
+    } catch (err) {
+      console.error('Impossible de charger les signalements :', err);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.role === 'admin') {
+      chargerSignalements();
+      chargerUtilisateurs();
+      chargerCertificationsEnAttente();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id, currentUser?.role]);
+
+  // ===== UTILISATEURS (liste admin) =====
+  // Remplace l'ancien stockage local/localStorage : liste réelle depuis
+  // utilisateur-service pour le dashboard admin (comptage, blocage...).
+  const chargerUtilisateurs = async () => {
+    try {
+      const dtos = await utilisateurApi.getAllUtilisateurs();
+      setRegisteredUsers((dtos || []).map((dto) => mapProfileToFrontendUser(dto, [dto.role])));
+    } catch (err) {
+      console.error('Impossible de charger les utilisateurs :', err);
+    }
+  };
+
+  // ===== CERTIFICATIONS EN ATTENTE (vérification vendeurs, admin) =====
+  // Remplace l'ancien stockage local (vendorVerifications, jamais rempli
+  // en pratique) : vraies demandes depuis certification-service, avec
+  // le nom/email/téléphone du producteur résolus via utilisateur-service
+  // (certification-service ne connaît que producteurId).
+  const chargerCertificationsEnAttente = async () => {
+    try {
+      const dtos = await certificationApi.getCertificationsEnAttente();
+      const enrichies = await Promise.all(
+        (dtos || []).map(async (dto) => {
+          let producteurInfo = {};
+          try {
+            const producteur = await utilisateurApi.getUtilisateurById(dto.producteurId);
+            const { prenom, nom } = splitNomComplet(producteur?.nom);
+            producteurInfo = { prenom, nom, email: producteur?.email, telephone: producteur?.telephone, adresse: producteur?.adresse };
+          } catch {
+            // producteur introuvable : mapCertificationPourAdmin retombe sur des valeurs par défaut
+          }
+          return mapCertificationPourAdmin(dto, producteurInfo);
+        })
+      );
+      setVendorVerifications(enrichies);
+    } catch (err) {
+      console.error('Impossible de charger les certifications en attente :', err);
+    }
+  };
+
+  // ===== COMMANDES (commande-service) =====
+  // commande-service ne renvoie que des IDs (produitId, clientId) : on
+  // résout les noms de produits (et, pour le vendeur, les noms de clients)
+  // avant de transmettre aux écrans, qui attendent déjà ce format enrichi
+  // (voir commandeMapping.js).
+  const resoudreNomsProduits = async (commandes) => {
+    const idsUniques = [...new Set(
+      commandes.flatMap((c) => (c.lignesCommande || []).map((lc) => lc.produitId))
+    )];
+    const noms = new Map();
+    await Promise.all(idsUniques.map(async (id) => {
+      try {
+        const produit = await produitApi.getProduitById(id);
+        noms.set(id, produit?.nom);
+      } catch {
+        // produit supprimé entretemps : on gardera le repli "Produit #id"
+      }
+    }));
+    return noms;
+  };
+
+  const chargerMesCommandes = async () => {
+    if (!currentUser?.id) return;
+    try {
+      const dtos = await commandeApi.getCommandesByClientId(currentUser.id);
+      const noms = await resoudreNomsProduits(dtos || []);
+      const nomClient = joinNomComplet(currentUser.prenom, currentUser.nom);
+      setMesCommandes((dtos || []).map((dto) => mapCommandePourAffichage(dto, nomClient, currentUser.email, noms)));
+    } catch (err) {
+      console.error('Impossible de charger vos commandes :', err);
+    }
+  };
+
+  const chargerToutesLesCommandes = async () => {
+    try {
+      const dtos = await commandeApi.getAllCommandes();
+      const noms = await resoudreNomsProduits(dtos || []);
+      const idsClientsUniques = [...new Set((dtos || []).map((c) => c.clientId))];
+      const clients = new Map();
+      await Promise.all(idsClientsUniques.map(async (id) => {
+        try {
+          const utilisateur = await utilisateurApi.getUtilisateurById(id);
+          clients.set(id, utilisateur);
+        } catch {
+          // client supprimé entretemps : on gardera le repli "Client #id"
+        }
+      }));
+      setToutesLesCommandes((dtos || []).map((dto) => {
+        const client = clients.get(dto.clientId);
+        return mapCommandePourAffichage(dto, client?.nom, client?.email, noms);
+      }));
+    } catch (err) {
+      console.error('Impossible de charger les commandes :', err);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.role === 'client') {
+      chargerMesCommandes();
+    } else {
+      setMesCommandes([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id, currentUser?.role]);
+
+  useEffect(() => {
+    if (currentUser?.role === 'vendeur' || currentUser?.role === 'admin') {
+      chargerToutesLesCommandes();
+    } else {
+      setToutesLesCommandes([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id, currentUser?.role]);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      chargerMesNotifications();
+    } else {
+      setNotifications([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id]);
+
+  // ===== GARDE AUTH =====
+  const requireLogin = (action) => {
+    if (currentUser) action();
+    else {
+      setAuthRedirectMessage('Connectez-vous ou créez un compte pour continuer.');
+      setScreen('login-page');
+    }
+  };
+
+  // ===== ACTIONS =====
+  const addToCart = (product, quantity = 1) => {
+    requireLogin(() => {
+      if (currentUser.role !== 'client' && !isClientMode) {
+        alert('Seuls les clients peuvent ajouter des produits au panier.');
+        return;
+      }
+      setCartItems(prev => {
+        const existing = prev.find(i => i.id === product.id);
+        if (existing) {
+          return prev.map(i => i.id === product.id
+            ? { ...i, quantity: i.quantity + quantity, total: (i.quantity + quantity) * i.price }
+            : i
+          );
+        }
+        return [...prev, {
+          id: product.id,
+          name: product.name,
+          farm: product.farm || 'Producteur local',
+          price: product.price,
+          image: product.image,
+          quantity,
+          total: product.price * quantity,
+        }];
+      });
+      setScreen('cart');
+    });
+  };
+
+  const removeFromCart = (id) => setCartItems(prev => prev.filter(i => i.id !== id));
+
+  const updateCartItemQuantity = (id, newQuantity) => {
+    if (newQuantity < 1) {
+      removeFromCart(id);
+      return;
+    }
+    setCartItems(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, quantity: newQuantity, total: item.price * newQuantity } : item
+      )
+    );
+  };
+
+  // ===== VALIDATION DE COMMANDE (commande-service + paiement-service) =====
+  // Crée la vraie commande, puis le vrai paiement si le moyen choisi est
+  // supporté par paiement-service (ORANGE_MONEY / MOBILE_MONEY uniquement :
+  // il n'existe pas de valeur 'CARTE' côté backend, l'option carte a donc
+  // été retirée de ShoppingCart.jsx plutôt que d'envoyer un appel voué à
+  // échouer).
+  const handleCheckout = async ({ paymentMethod, paymentData } = {}) => {
+    try {
+      const lignesCommande = cartItems.map(item => ({
+        produitId: item.id,
+        quantite: item.quantity,
+        prixUnitaire: item.price,
+      }));
+      const commande = await commandeApi.createCommande({
+        clientId: currentUser.id,
+        lignesCommande,
+      });
+
+      const methode = paymentMethod === 'orange-money' ? 'ORANGE_MONEY'
+        : paymentMethod === 'mtn-money' ? 'MOBILE_MONEY'
+        : null;
+
+      if (methode) {
+        await paiementApi.creerPaiement({
+          commandeId: commande.id,
+          consommateurId: currentUser.id,
+          montant: commande.montantTotal,
+          methode,
+          numeroPaiement: paymentData,
+        });
+      }
+
+      notifierAdmins('info', `Nouvelle commande #${commande.id} de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client'}`, '/admin/order-management-admin');
+      addNotification(currentUser.id, 'success', `Commande #${commande.id} confirmée !`, '/orders');
+      setCartItems([]);
+      await chargerMesCommandes();
+      navigate('orders');
+    } catch (err) {
+      alert(err?.message || "La création de la commande a échoué.");
+    }
+  };
+
+  const openSignalement = (product) => {
+    requireLogin(() => {
+      setSignalementProduct(product);
+      setShowSignalement(true);
+    });
+  };
+
+  // ===== GESTION DES ABONNEMENTS =====
+  const handleSelectPlan = (plan) => {
+    if (!currentUser || currentUser.role !== 'vendeur') {
+      alert('Seuls les vendeurs peuvent souscrire à un abonnement.');
+      return;
+    }
+    if (plan.price > 0) {
+      if (!window.confirm(`Passer à l'abonnement ${plan.name} (${plan.price.toLocaleString()} FCFA/mois) ?`)) {
+        return;
+      }
+    }
+    const updatedUser = { ...currentUser, plan: plan.id };
+    setCurrentUser(updatedUser);
+    setRegisteredUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
+    setActivePlan(plan.id);
+    notifierAdmins('info', `${currentUser.prenom} ${currentUser.nom} a changé pour le plan ${plan.name}`, '/admin/dashboard');
+    addNotification(currentUser.id, 'success', `Votre abonnement ${plan.name} est désormais actif !`, '/seller-dashboard');
+    alert(`✅ Abonnement ${plan.name} activé avec succès !`);
+    navigate('seller-dashboard');
+  };
+
+  // ===== CONNEXION =====
+  // Appelle le vrai backend (auth-service + utilisateur-service).
+  // Retourne l'utilisateur (au format frontend) en cas de succès,
+  // ou lève une erreur avec un message lisible en cas d'échec.
+  const validateLogin = async (email, password, uiRole) => {
+    const authResponse = await authApi.login(email, password);
+    const expectedBackendRole = ROLE_FRONTEND_TO_BACKEND[uiRole];
+
+    if (!authResponse.roles?.includes(expectedBackendRole)) {
+      authApi.logout();
+      throw new Error(`Aucun compte ${uiRole} trouvé avec ces identifiants.`);
+    }
+
+    const profile = await utilisateurApi.getUtilisateurById(authResponse.uid);
+    return mapProfileToFrontendUser(profile, authResponse.roles);
+  };
+
+  const handleLoginSuccess = (userData) => {
+    setCurrentUser(userData);
+    setAuthRedirectMessage('');
+    if (userData.role === 'vendeur') {
+      setActivePlan(userData.plan || 'gratuit');
+    }
+    notifierAdmins('info', `${userData.prenom} ${userData.nom} (${userData.role}) s'est connecté`, null);
+    addNotification(userData.id, 'success', `Bienvenue ${userData.prenom} ! Vous êtes connecté.`, '/profil');
+
+    setIsClientMode(false);
+
+    if (userData.role === 'admin') setScreen('admin-dashboard');
+    else if (userData.role === 'vendeur') {
+      setScreen('seller-dashboard');
+    } else setScreen('home');
+  };
+
+  const handleLogout = () => {
+    authApi.logout();
+    setCurrentUser(null);
+    setIsClientMode(false);
+    setScreen('home');
+  };
+
+  // ===== MODE CLIENT =====
+  const toggleClientMode = () => {
+    setIsClientMode(prev => {
+      const newMode = !prev;
+      if (newMode) {
+        setScreen('home');
+      } else {
+        setScreen('seller-dashboard');
+      }
+      return newMode;
+    });
+  };
+
+  // ===== INSCRIPTION =====
+  // Crée le compte auprès de utilisateur-service, puis connecte
+  // automatiquement l'utilisateur (auth-service) pour récupérer un token.
+  const handleRegisterSuccess = async ({ role, prenom, nom, email, telephone, password, photo }) => {
+    await utilisateurApi.createUtilisateur({
+      nom: joinNomComplet(prenom, nom),
+      email,
+      motDePasse: password,
+      telephone,
+      photo: photo || null,
+      role: ROLE_FRONTEND_TO_BACKEND[role],
+    });
+
+    const newUser = await validateLogin(email, password, role);
+
+    notifierAdmins('info', `Nouvel utilisateur inscrit : ${prenom} ${nom} (${role})`, '/admin/dashboard');
+    addNotification(newUser.id, 'success', `Bienvenue ${prenom} ! Votre compte a été créé.`, '/profil');
+
+    setActivePlan(newUser.plan);
+    setCurrentUser(newUser);
+    if (role === 'vendeur') {
+      setScreen('seller-dashboard');
+    } else {
+      setScreen('home');
+    }
+  };
+
+  // ===== GESTION DES PRODUITS =====
+  // AddProduct.jsx et EditProduct.jsx appellent désormais produitApi
+  // eux-mêmes ; ici on se contente de répercuter le résultat dans l'état
+  // local pour un retour visuel immédiat sur les autres écrans (StockAlerts,
+  // SellerDashboard...) qui partagent tous vendeurProducts.
+  const handleAddProduct = (newProduct) => {
+    setVendeurProducts(prev => [...prev, newProduct]);
+    navigate('my-products');
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    navigate('edit-product');
+  };
+
+  const handleUpdateProduct = (updatedProduct) => {
+    setVendeurProducts(prev =>
+      prev.map(p => p.id === updatedProduct.id ? updatedProduct : p)
+    );
+    setEditingProduct(null);
+    navigate('my-products');
+  };
+
+  const handleDeleteProduct = async (id) => {
+    const previous = vendeurProducts;
+    setVendeurProducts(prev => prev.filter(p => p.id !== id));
+    try {
+      await produitApi.supprimerProduit(id);
+    } catch (err) {
+      alert(err?.message || 'La suppression du produit a échoué.');
+      setVendeurProducts(previous); // on annule le changement optimiste si l'appel échoue
+    }
+  };
+
+  const handleDuplicateProduct = async (product) => {
+    try {
+      const request = construireProduitRequest({
+        nom: `${product.name} (Copie)`,
+        description: product.description,
+        prix: product.price,
+        stock: product.stock,
+        imageUrl: product.imageUrl,
+        categorieId: product.categoryId,
+        localisation: product.localisation,
+      });
+      const produitCree = await produitApi.publierProduit(request);
+      setVendeurProducts(prev => [...prev, mapProduitPourVendeur(produitCree)]);
+    } catch (err) {
+      alert(err?.message || 'La duplication du produit a échoué.');
+    }
+  };
+
+  // ===== APPROBATION / REJET =====
+  const handleConfirmerPaiementVerification = async (id) => {
+    try {
+      await certificationApi.confirmerPaiementCertification(id, { paye: true });
+      await chargerCertificationsEnAttente();
+    } catch (err) {
+      alert(err?.message || "La confirmation du paiement a échoué.");
+    }
+  };
+
+  const handleApproveVerification = async (id) => {
+    try {
+      await certificationApi.reviserCertification(id, { approuve: true });
+      await chargerCertificationsEnAttente();
+    } catch (err) {
+      alert(err?.message || "L'approbation a échoué.");
+    }
+  };
+
+  const handleRejectVerification = async (id, motifRejet) => {
+    try {
+      await certificationApi.reviserCertification(id, { approuve: false, motifRejet });
+      await chargerCertificationsEnAttente();
+    } catch (err) {
+      alert(err?.message || "Le rejet a échoué.");
+    }
+  };
+  const handleToggleUserBlocked = async (userId) => {
+    const user = registeredUsers.find(u => u.id === userId);
+    if (!user) return;
+    let jours = 0;
+    if (!user.suspendu) {
+      const saisie = window.prompt('Suspendre ce compte pendant combien de jours ?', '7');
+      if (saisie === null) return; // annulé
+      jours = parseInt(saisie, 10);
+      if (!jours || jours <= 0) { alert('Veuillez saisir un nombre de jours valide.'); return; }
+    }
+    try {
+      await utilisateurApi.suspendreUtilisateur(userId, jours);
+      await chargerUtilisateurs();
+    } catch (err) {
+      alert(err?.message || "Le changement de statut a échoué.");
+    }
+  };
+
+  const handleSignalerProducteur = async (producteur, motif) => {
+    try {
+      await signalementApi.createSignalement({
+        type: TYPE_FRONTEND_TO_BACKEND.utilisateur,
+        targetId: producteur.id,
+        reporterId: currentUser.id,
+        raison: motif,
+      });
+      notifierAdmins('error', `Signalement de ${producteur.nom} par ${currentUser?.prenom || 'un client'}`, '/admin/moderation-panel');
+      if (currentUser?.role === 'admin') await chargerSignalements();
+    } catch (err) {
+      alert(err?.message || "L'envoi du signalement a échoué.");
+    }
+  };
+
+  // ===== NAVIGATION =====
+  const goToProduct = (product) => { setSelectedProduct(product); setScreen('product-detail'); };
+  const goToMessage = (vendor) => requireLogin(() => { setSelectedVendor(vendor); setScreen('message'); });
+  const goToProducerProfile = (vendor) => { setSelectedVendor(vendor); setScreen('producer-profile'); };
+
+  const clientOnlyScreens = ['cart', 'checkout-wizard', 'orders', 'purchases'];
+  const vendeurOnlyScreens = ['add-product', 'edit-product', 'my-products', 'seller-dashboard', 'sales-history', 'stock-alerts', 'plans', 'certification', 'vendeur-orders'];
+  const adminOnlyScreens = ['admin-dashboard', 'order-management-admin', 'order-detail-admin', 'moderation-panel', 'vendor-verification'];
+
+  const navigate = (s) => {
+    const publicScreens = ['home', 'login-page', 'register', 'recovery', 'product-detail', 'faq', 'producer-profile', 'catalogue'];
+    if (!currentUser && !publicScreens.includes(s)) {
+      requireLogin(() => setScreen(s));
+      return;
+    }
+    if (currentUser) {
+      if (isClientMode) {
+        if (vendeurOnlyScreens.includes(s) || adminOnlyScreens.includes(s)) {
+          alert('Vous êtes en mode client, cette section est réservée aux vendeurs.');
+          return;
+        }
+      } else {
+        if (clientOnlyScreens.includes(s) && currentUser.role !== 'client') {
+          alert("Cette section est réservée aux clients.");
+          setScreen(currentUser.role === 'admin' ? 'admin-dashboard' : 'my-products');
+          return;
+        }
+        if (vendeurOnlyScreens.includes(s) && currentUser.role !== 'vendeur') {
+          alert('Cette section est réservée aux vendeurs.');
+          setScreen(currentUser.role === 'admin' ? 'admin-dashboard' : 'home');
+          return;
+        }
+        if (adminOnlyScreens.includes(s) && currentUser.role !== 'admin') {
+          alert("Cette section est réservée à l'administrateur.");
+          setScreen(currentUser.role === 'vendeur' ? 'my-products' : 'home');
+          return;
+        }
+      }
+    }
+    setScreen(s);
+  };
+
+  // ===== RENDU =====
+  const renderScreen = () => {
+    switch (screen) {
+      case 'home':
+        return <AgroMarketHome
+          onNavigateToProduct={goToProduct}
+          onNavigateToLogin={() => navigate('login-page')}
+          onNavigateToCatalogue={() => navigate('catalogue')}
+          onAddToCart={addToCart}
+          currentUser={currentUser}
+          lang={lang}
+        />;
+      case 'catalogue':
+        return <ProductCatalog
+          onBack={() => navigate('home')}
+          onNavigateToProduct={goToProduct}
+          onAddToCart={addToCart}
+        />;
+      case 'login-page':
+        return <LoginPage
+          onLoginSuccess={handleLoginSuccess}
+          onValidateLogin={validateLogin}
+          infoMessage={authRedirectMessage}
+          onNavigateToRecovery={() => navigate('recovery')}
+          onNavigateToRegister={() => navigate('register')}
+        />;
+      case 'register':
+        return <RegisterPage
+          onRegisterSuccess={handleRegisterSuccess}
+          onNavigateToLogin={() => navigate('login-page')}
+        />;
+      case 'recovery':
+        return <PasswordRecovery
+          onBack={() => navigate('login-page')}
+          onSuccess={() => navigate('login-page')}
+          registeredUsers={registeredUsers}
+          updateUserPassword={(email, newPassword) => {
+            const userIndex = registeredUsers.findIndex(
+              u => u.email.toLowerCase() === email.toLowerCase()
+            );
+            if (userIndex !== -1) {
+              const updatedUsers = [...registeredUsers];
+              updatedUsers[userIndex] = {
+                ...updatedUsers[userIndex],
+                password: newPassword,
+              };
+              setRegisteredUsers(updatedUsers);
+              if (currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
+                setCurrentUser({ ...currentUser, password: newPassword });
+              }
+              return true;
+            }
+            return false;
+          }}
+        />;
+      case 'product-detail':
+        return <ProductDetail
+          product={selectedProduct}
+          onBack={() => navigate('home')}
+          onAddToCart={(qty) => addToCart(selectedProduct, qty)}
+          onContactVendor={goToMessage}
+          onSignaler={() => openSignalement(selectedProduct)}
+          onNavigateToProducerProfile={goToProducerProfile}
+        />;
+      case 'add-product':
+        return <AddProduct
+          onProductAdded={handleAddProduct}
+          onCancel={() => navigate('my-products')}
+        />;
+      case 'edit-product':
+        return <EditProduct
+          product={editingProduct}
+          onSave={handleUpdateProduct}
+          onCancel={() => {
+            setEditingProduct(null);
+            navigate('my-products');
+          }}
+        />;
+      case 'my-products':
+        return <MyProducts
+          products={vendeurProducts}
+          onNavigateToAddProduct={() => navigate('add-product')}
+          onEditProduct={handleEditProduct}
+          onDeleteProduct={handleDeleteProduct}
+          onDuplicateProduct={handleDuplicateProduct}
+          onBack={() => navigate('seller-dashboard')}
+        />;
+      case 'cart':
+        return <ShoppingCart
+          cartItems={cartItems}
+          onRemoveItem={removeFromCart}
+          onUpdateQuantity={updateCartItemQuantity}
+          onCheckout={handleCheckout}
+          onContinueShopping={() => navigate('home')}
+        />;
+      case 'checkout-wizard':
+        return <ShoppingCart
+          cartItems={cartItems}
+          onRemoveItem={removeFromCart}
+          onUpdateQuantity={updateCartItemQuantity}
+          onCheckout={handleCheckout}
+          onContinueShopping={() => navigate('home')}
+        />;
+      case 'orders':
+        return <ClientOrders
+          orders={mesCommandes}
+          onBackHome={() => navigate('home')}
+        />;
+      case 'purchases':
+        return <ClientPurchases
+          orders={mesCommandes}
+          onBackHome={() => navigate('home')}
+        />;
+      case 'message':
+        return <MessagePage vendor={selectedVendor} currentUser={currentUser} onBack={() => navigate('product-detail')} />;
+      case 'user-profile':
+        return <UserProfile
+          currentUser={currentUser}
+          onEditProfile={() => navigate('edit-profile')}
+          onChangePassword={() => navigate('change-password')}
+          onBack={() => navigate('home')}
+        />;
+      case 'edit-profile':
+        return <EditProfile
+          currentUser={currentUser}
+          onBack={() => navigate('user-profile')}
+          onSave={async (updatedData) => {
+            // Appelle utilisateur-service (PUT /api/utilisateurs/{id}) au lieu
+            // de ne mettre à jour que l'état local. Le backend n'a qu'un seul
+            // champ "nom" : on recombine prenom + nom avec joinNomComplet.
+            try {
+              const profileDto = await utilisateurApi.updateProfil(currentUser.id, {
+                nom: joinNomComplet(updatedData.prenom, updatedData.nom),
+                email: updatedData.email,
+                telephone: updatedData.telephone,
+                photo: updatedData.photo,
+                adresse: currentUser.adresse || '',
+              });
+              const updatedUser = mapProfileToFrontendUser(
+                profileDto,
+                [ROLE_FRONTEND_TO_BACKEND[currentUser.role]]
+              );
+              setCurrentUser(updatedUser);
+              setRegisteredUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
+              navigate('user-profile');
+            } catch (err) {
+              alert(err?.message || 'La mise à jour du profil a échoué.');
+            }
+          }}
+        />;
+      case 'change-password':
+        return <ChangePassword
+          currentUser={currentUser}
+          onBack={() => navigate('user-profile')}
+          onSave={async (currentPassword, newPassword) => {
+            // Appelle utilisateur-service (PUT /api/utilisateurs/{id}/mot-de-passe).
+            // Le backend vérifie lui-même l'ancien mot de passe ; en cas
+            // d'erreur, on laisse l'exception remonter jusqu'à ChangePassword
+            // pour qu'elle affiche le message sur le champ concerné.
+            await utilisateurApi.changerMotDePasse(currentUser.id, currentPassword, newPassword);
+            addNotification(currentUser.id, 'info', 'Votre mot de passe a été modifié avec succès.', null);
+          }}
+        />;
+      case 'notifications':
+        return <NotificationsCenter
+          onBack={() => navigate('home')}
+          currentUser={currentUser}
+          notifications={notifications}
+          onMarkAsRead={(id) => {
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, lu: true } : n));
+            notificationApi.marquerCommeLu(id).catch((err) => console.error('Échec marquage lu :', err));
+          }}
+          onMarkAllAsRead={() => {
+            setNotifications(prev => prev.map(n => (n.utilisateurId === currentUser.id || n.utilisateurId === 1) ? { ...n, lu: true } : n));
+            notificationApi.marquerToutesLues().catch((err) => console.error('Échec « tout marquer lu » :', err));
+          }}
+          onDelete={(id) => {
+            setNotifications(prev => prev.filter(n => n.id !== id));
+            notificationApi.supprimerNotification(id).catch((err) => console.error('Échec suppression notification :', err));
+          }}
+          onNavigateToLink={(lien) => {
+            if (lien) {
+              if (lien.startsWith('/')) {
+                const target = lien.replace('/', '');
+                if (target === 'profil') navigate('user-profile');
+                else if (target === 'orders') navigate('orders');
+                else if (target === 'purchases') navigate('purchases');
+                else if (target === 'seller-dashboard') navigate('seller-dashboard');
+                else if (target === 'admin/dashboard') navigate('admin-dashboard');
+                else if (target === 'admin/order-management-admin') navigate('order-management-admin');
+                else if (target === 'admin/moderation-panel') navigate('moderation-panel');
+                else if (target === 'admin/vendor-verification') navigate('vendor-verification');
+                else navigate('home');
+              } else {
+                alert(`Redirection vers : ${lien}`);
+              }
+            }
+          }}
+        />;
+      case 'faq':
+        return <FAQPage onBack={() => navigate('home')} />;
+      case 'seller-dashboard':
+        return <SellerDashboard
+          onNavigate={navigate}
+          onLogout={handleLogout}
+          currentUser={currentUser}
+          vendeurProducts={vendeurProducts}
+          adminOrders={toutesLesCommandes}
+          activePlan={activePlan}
+          onSelectPlan={(plan) => {
+            const updatedUser = { ...currentUser, plan: plan.id };
+            setCurrentUser(updatedUser);
+            setRegisteredUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
+            setActivePlan(plan.id);
+            notifierAdmins('info', `${currentUser.prenom} ${currentUser.nom} a changé pour le plan ${plan.name}`, '/admin/dashboard');
+            addNotification(currentUser.id, 'success', `Votre abonnement ${plan.name} est désormais actif !`, '/seller-dashboard');
+            alert(`✅ Abonnement ${plan.name} activé avec succès !`);
+          }}
+          onUpdateOrderStatus={async (orderId, newStatus) => {
+            try {
+              const statutBackend = STATUT_FRANCAIS_TO_BACKEND[newStatus] || newStatus;
+              await commandeApi.updateStatutCommande(orderId, statutBackend);
+              notifierAdmins('info', `Statut de la commande #${orderId} mis à jour : ${newStatus}`, '/admin/order-management-admin');
+              await chargerToutesLesCommandes();
+            } catch (err) {
+              alert(err?.message || "La mise à jour du statut de la commande a échoué.");
+            }
+          }}
+        />;
+      case 'sales-history':
+        return <SalesHistory onBack={() => navigate('seller-dashboard')} />;
+      case 'stock-alerts':
+        return <StockAlerts onBack={() => navigate('seller-dashboard')} />;
+      case 'plans':
+        return <SubscriptionPlans
+          onBack={() => navigate('seller-dashboard')}
+          currentPlan={activePlan}
+          onSelectPlan={handleSelectPlan}
+        />;
+      case 'certification':
+        return <CertificationRequest
+          onBack={() => navigate('seller-dashboard')}
+        />;
+      case 'admin-dashboard':
+        return <AdminDashboard
+          registeredUsers={registeredUsers}
+          adminOrders={toutesLesCommandes}
+          vendorVerifications={vendorVerifications}
+          signalements={signalements}
+          vendeurProducts={vendeurProducts}
+          currentUser={currentUser}
+          notifications={notifications}
+          onNavigate={navigate}
+          onLogout={handleLogout}
+          onApproveCertification={handleApproveVerification}
+          onRejectCertification={handleRejectVerification}
+        />;
+      case 'order-management-admin':
+        return <OrderManagementAdmin
+          ordersData={toutesLesCommandes}
+          onViewOrder={() => navigate('order-detail-admin')}
+          onBack={() => navigate('admin-dashboard')}
+        />;
+      case 'order-detail-admin':
+        return <OrderDetailAdmin
+          onBack={() => navigate('order-management-admin')}
+          onMarkAsDeliveredState={(id, newStatus) => {
+            setAdminOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+          }}
+        />;
+      case 'moderation-panel':
+        return <ModerationPanel
+          signalements={signalements}
+          onResolve={async (id) => {
+            try {
+              await signalementApi.updateStatutSignalement(id, 'RESOLU');
+              notifierAdmins('info', `Signalement résolu`, '/admin/moderation-panel');
+              await chargerSignalements();
+            } catch (err) {
+              alert(err?.message || "La mise à jour du signalement a échoué.");
+            }
+          }}
+          onReject={async (id) => {
+            try {
+              await signalementApi.updateStatutSignalement(id, 'REJETE');
+              notifierAdmins('info', `Signalement rejeté`, '/admin/moderation-panel');
+              await chargerSignalements();
+            } catch (err) {
+              alert(err?.message || "La mise à jour du signalement a échoué.");
+            }
+          }}
+          onBack={() => navigate('admin-dashboard')}
+        />;
+      case 'vendor-verification':
+        return <VendorVerificationAdmin
+          pendingVerifications={vendorVerifications}
+          onApprove={handleApproveVerification}
+          onReject={handleRejectVerification}
+          onConfirmerPaiement={handleConfirmerPaiementVerification}
+          onBack={() => navigate('admin-dashboard')}
+        />;
+      case 'producer-profile':
+        return <ProducerProfile
+          producteur={selectedVendor}
+          currentUser={currentUser}
+          onBack={() => navigate('product-detail')}
+          onContactVendor={goToMessage}
+          onNavigateToLogin={() => navigate('login-page')}
+          onSignalerProducteur={(motif) => requireLogin(() => handleSignalerProducteur(selectedVendor, motif))}
+        />;
+      case 'vendeur-orders':
+        return <VendeurOrders
+          orders={toutesLesCommandes}
+          vendeurProducts={vendeurProducts}
+          onUpdateOrderStatus={async (orderId, newStatus) => {
+            try {
+              const statutBackend = STATUT_FRANCAIS_TO_BACKEND[newStatus] || newStatus;
+              await commandeApi.updateStatutCommande(orderId, statutBackend);
+              notifierAdmins('info', `Statut de la commande #${orderId} mis à jour : ${newStatus}`, '/admin/order-management-admin');
+              await chargerToutesLesCommandes();
+            } catch (err) {
+              alert(err?.message || "La mise à jour du statut de la commande a échoué.");
+            }
+          }}
+        />;
+      default:
+        return <AgroMarketHome
+          onNavigateToProduct={goToProduct}
+          onNavigateToLogin={() => navigate('login-page')}
+          onNavigateToCart={() => navigate('cart')}
+          onAddToCart={addToCart}
+          cartCount={cartItems.length}
+          activePlan={activePlan}
+          onSignaler={openSignalement}
+          currentUser={currentUser}
+          onNavigateToProfile={() => navigate('user-profile')}
+        />;
+    }
+  };
+
+  return (
+    <div style={styles.appWrapper}>
+      <NavigationConsole
+        currentScreen={screen}
+        onNavigate={navigate}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        cartCount={cartItems.length}
+        lang={lang}
+        onToggleLang={toggleLang}
+        notifications={notifications}
+        isClientMode={isClientMode}
+        onToggleClientMode={toggleClientMode}
+      />
+      <div style={styles.screenContainer}>{renderScreen()}</div>
+      {showSignalement && (
+        <SignalementModal
+          product={signalementProduct}
+          onClose={() => { setShowSignalement(false); setSignalementProduct(null); }}
+          onSubmit={async (data) => {
+            try {
+              await signalementApi.createSignalement({
+                type: TYPE_FRONTEND_TO_BACKEND.produit,
+                targetId: signalementProduct.id,
+                reporterId: currentUser.id,
+                raison: construireRaison(data.motif, data.commentaire),
+              });
+              notifierAdmins('error', `Nouveau signalement de ${data.cible} par ${currentUser?.prenom || 'Client'}`, '/admin/moderation-panel');
+              if (currentUser?.role === 'admin') await chargerSignalements();
+            } catch (err) {
+              alert(err?.message || "L'envoi du signalement a échoué.");
+            }
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+const styles = {
+  appWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: '100vh',
+    width: '100%',
+    backgroundColor: '#f8f9fa',
+  },
+  screenContainer: {
+    flexGrow: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+  },
+};

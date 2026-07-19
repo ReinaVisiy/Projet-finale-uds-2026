@@ -1,0 +1,2834 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Démo AgroMarket - Validation Jury</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>" />
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- React & Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* Global Styles and Design System Variables */
+    :root {
+      --primary-color: #1b4d3e;
+      --primary-light: #2d6a4f;
+      --primary-dark: #133c30;
+      --primary-glow: rgba(27, 77, 62, 0.15);
+      
+      --accent-color: #e07a5f;
+      --accent-light: #f4f1de;
+      --accent-hover: #d0664b;
+      
+      --bg-main: #f8f9fa;
+      --bg-card: #ffffff;
+      --bg-neutral-light: #f1f3f5;
+      
+      --text-main: #212529;
+      --text-muted: #6c757d;
+      --text-light: #adb5bd;
+      --text-white: #ffffff;
+      
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.12);
+      
+      --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+
+    .fade-in {
+      animation: fadeIn var(--transition-normal) forwards;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justifyContent: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    /* Input Focus Styles */
+    .custom-input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1.5px solid #dee2e6;
+      font-size: 14px;
+      font-weight: 500;
+      color: #212529;
+      background-color: #f8f9fa;
+      outline: none;
+      transition: all 0.2s ease-in-out;
+    }
+    .custom-input:focus {
+      border: 1.5px solid var(--primary-color) !important;
+      background-color: #ffffff !important;
+      box-shadow: 0 0 0 4px var(--primary-glow) !important;
+    }
+
+    .custom-input-with-icon {
+      padding-left: 48px;
+    }
+
+    /* Table responsivity */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    /* Zoom utilities */
+    .product-image-zoom {
+      transition: transform 0.5s ease;
+    }
+    .product-image-zoom:hover {
+      transform: scale(1.08);
+    }
+
+    /* Spinner */
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React Logic (JSX) via Babel -->
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    // --- 1. JURY NAVIGATION CONSOLE ---
+    function NavigationConsole({ currentScreen, setScreen }) {
+      const [isOpen, setIsOpen] = useState(true);
+
+      const clientScreens = [
+        { id: 'recovery', name: '1. Récupération Mot de passe', desc: 'Split-screen épuré, validation d\'email et écran de succès' },
+        { id: 'home', name: '2. Page d’accueil AgroMarket', desc: 'Catalogue produit, recherche dynamique, filtres et panier réactif' },
+        { id: 'orders', name: '3. Commandes (Client)', desc: 'Historique des commandes client, badges d’état, suivi timeline et export CSV' },
+        { id: 'checkout-wizard', name: '9. Tunnel de Paiement Wizard', desc: 'Étape par étape : adresse, livraison, paiement interactif, validation et résumé dynamique' },
+        { id: 'login-page', name: '13. Page de Connexion', desc: 'Split-screen premium, validation, affichage mot de passe, se souvenir de moi et réseaux sociaux' },
+        { id: 'cart', name: '18. Mon Panier', desc: 'Gestion des articles du panier, résumé, code promo et checkout (Design ultra-moderne)' },
+        { id: 'faq', name: '19. FAQ & Support', desc: 'Foire aux questions avec accordéon, filtrage par catégories et barre de recherche' },
+        { id: 'product-detail', name: '20. Détail Produit (Banane)', desc: 'Page produit premium avec galerie, ferme, actions d\'achat et logistique' },
+        { id: 'edit-profile', name: '21. Éditer Profil', desc: 'Formulaire moderne avec upload de photo et informations personnelles' }
+      ];
+
+      const sellerScreens = [
+        { id: 'my-products', name: '4. Mes Produits (Vendeur)', desc: 'Dashboard vendeur avec filtres d\'état, duplication et suppression' },
+        { id: 'plans', name: '5. Plans d’abonnement', desc: 'Tarification à 3 plans avec sélection interactive (Basic / Pro / Premium)' },
+        { id: 'add-product', name: '6. Ajouter un produit', desc: 'Formulaire multi-onglets avec prévisualisation en direct (Live Preview)' },
+        { id: 'order-detail-admin', name: '7. Détail Commande (Admin)', desc: 'Supervision de commande, suivi logistique 4 étapes, validation interactive' },
+        { id: 'order-management-admin', name: '8. Gestion Commandes (Admin)', desc: 'Tableau de bord logistique, filtrage par onglet d\'état, recherche et actions de suivi' },
+        { id: 'seller-dashboard', name: '10. Tableau de bord Vendeur', desc: 'KPIs, graphique de revenus interactif, top produits, commandes récentes et actions rapides' },
+        { id: 'user-profile', name: '11. Profil & Paramètres', desc: 'Edition profil, sécurité (2FA), préférences de notification, boutique et coordonnées bancaires' },
+        { id: 'notifications', name: '12. Centre de Notifications', desc: 'Alertes temps réel, filtres par catégorie, marquage lu/non-lu, badges urgents et actions' },
+        { id: 'admin-dashboard', name: '14. Tableau de bord Admin', desc: 'Sidebar repliable, KPIs avec barres de progression, graphe interactif et listes récentes' },
+        { id: 'sales-history', name: '15. Historique des Ventes', desc: 'Graphe double barres (ventes/commandes), donut SVG par catégorie et tableau filtrable avec totaux' },
+        { id: 'stock-alerts', name: '16. Alertes de Stocks', desc: 'Bannière d\'alerte rouge, barres de progression de remplissage, priorités et commandes d\'urgence' },
+        { id: 'moderation-panel', name: '17. Modération & Signalements', desc: 'Stats bar, onglets de filtrage par état, cartes de signalement extensibles et actions de modération' }
+      ];
+
+      return (
+        <div style={consoleStyles.container}>
+          {/* Toggle Button */}
+          <button 
+            onClick={() => setIsOpen(!isOpen)} 
+            style={consoleStyles.toggleBtn}
+            title={isOpen ? "Masquer la console" : "Afficher la console de navigation"}
+          >
+            {isOpen ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+            ) : (
+              <div style={consoleStyles.pulseContainer}>
+                <span style={consoleStyles.pulseDot}></span>
+                <span style={consoleStyles.toggleText}>Console Jury : Cliquer pour basculer d'écran (21 interfaces disponibles)</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+            )}
+          </button>
+
+          {/* Expanded Console */}
+          {isOpen && (
+            <div style={consoleStyles.consoleBody} className="fade-in">
+              <div style={consoleStyles.header}>
+                <div style={consoleStyles.headerTitle}>
+                  <span style={consoleStyles.badge}>CONCEPTION PROFESSIONNELLE</span>
+                  <h4 style={consoleStyles.title}>Visualisation Interactive des 21 Interfaces</h4>
+                </div>
+                <p style={consoleStyles.subtitle}>
+                  Développé en React et CSS natif moderne. Basculez instantanément entre les 17 écrans du prototype.
+                </p>
+              </div>
+
+              <div style={consoleStyles.sectionsContainer}>
+                {/* Client Section */}
+                <div style={consoleStyles.sectionCol}>
+                  <h5 style={consoleStyles.sectionTitle}>🛒 Espace Client</h5>
+                  <div style={consoleStyles.btnGrid}>
+                    {clientScreens.map((screen) => {
+                      const isActive = currentScreen === screen.id;
+                      return (
+                        <button
+                          key={screen.id}
+                          onClick={() => setScreen(screen.id)}
+                          style={{
+                            ...consoleStyles.screenBtn,
+                            ...(isActive ? consoleStyles.activeScreenBtn : {})
+                          }}
+                        >
+                          <span style={{
+                            ...consoleStyles.btnText,
+                            ...(isActive ? consoleStyles.activeBtnText : {})
+                          }}>
+                            {screen.name}
+                          </span>
+                          <span style={{
+                            ...consoleStyles.btnDesc,
+                            ...(isActive ? consoleStyles.activeBtnDesc : {})
+                          }}>
+                            {screen.desc}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Seller Section */}
+                <div style={consoleStyles.sectionCol}>
+                  <h5 style={consoleStyles.sectionTitle}>👨‍🌾 Espace Vendeur / Admin</h5>
+                  <div style={consoleStyles.btnGrid}>
+                    {sellerScreens.map((screen) => {
+                      const isActive = currentScreen === screen.id;
+                      return (
+                        <button
+                          key={screen.id}
+                          onClick={() => setScreen(screen.id)}
+                          style={{
+                            ...consoleStyles.screenBtn,
+                            ...(isActive ? consoleStyles.activeScreenBtn : {})
+                          }}
+                        >
+                          <span style={{
+                            ...consoleStyles.btnText,
+                            ...(isActive ? consoleStyles.activeBtnText : {})
+                          }}>
+                            {screen.name}
+                          </span>
+                          <span style={{
+                            ...consoleStyles.btnDesc,
+                            ...(isActive ? consoleStyles.activeBtnDesc : {})
+                          }}>
+                            {screen.desc}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const consoleStyles = {
+      container: {
+        position: 'sticky',
+        top: 0,
+        zIndex: 9999,
+        width: '100%',
+        backgroundColor: '#1b4d3e',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+      },
+      toggleBtn: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        padding: '8px 24px',
+        backgroundColor: '#133c30',
+        color: '#ffffff',
+        fontSize: '12px',
+        fontWeight: '600',
+        letterSpacing: '0.05em',
+        border: 'none',
+        outline: 'none',
+        cursor: 'pointer',
+      },
+      pulseContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+      },
+      pulseDot: {
+        width: '8px',
+        height: '8px',
+        backgroundColor: '#e07a5f',
+        borderRadius: '50%',
+        animation: 'pulse 1.5s infinite',
+      },
+      toggleText: {
+        color: '#f4f1de',
+      },
+      consoleBody: {
+        padding: '16px 24px 20px 24px',
+        backgroundColor: '#1b4d3e',
+      },
+      header: {
+        marginBottom: '14px',
+      },
+      headerTitle: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        marginBottom: '4px',
+      },
+      badge: {
+        backgroundColor: '#e07a5f',
+        color: '#ffffff',
+        fontSize: '9px',
+        fontWeight: '800',
+        padding: '3px 8px',
+        borderRadius: '4px',
+        letterSpacing: '0.05em',
+      },
+      title: {
+        color: '#ffffff',
+        fontSize: '15px',
+        fontWeight: '700',
+        margin: 0,
+      },
+      subtitle: {
+        color: '#a3c2b8',
+        fontSize: '12px',
+        margin: 0,
+      },
+      sectionsContainer: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '20px',
+      },
+      sectionCol: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+      },
+      sectionTitle: {
+        fontSize: '11px',
+        fontWeight: '800',
+        color: '#f4f1de',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        paddingBottom: '4px',
+        marginBottom: '4px',
+      },
+      btnGrid: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+      },
+      screenBtn: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        padding: '8px 12px',
+        borderRadius: '6px',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        textAlign: 'left',
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+      },
+      activeScreenBtn: {
+        backgroundColor: '#ffffff',
+        border: '1px solid #ffffff',
+        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+      },
+      btnText: {
+        color: '#ffffff',
+        fontSize: '12px',
+        fontWeight: '700',
+        marginBottom: '2px',
+      },
+      activeBtnText: {
+        color: '#1b4d3e',
+      },
+      btnDesc: {
+        color: '#a3c2b8',
+        fontSize: '9.5px',
+        lineHeight: '1.2',
+      },
+      activeBtnDesc: {
+        color: '#6c757d',
+      }
+    };
+
+
+    // --- 2. PASSWORD RECOVERY COMPONENT ---
+    function PasswordRecovery({ onBack }) {
+      const [email, setEmail] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const [isSubmitted, setIsSubmitted] = useState(false);
+      const [error, setError] = useState('');
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!email) {
+          setError('Veuillez entrer une adresse e-mail valide.');
+          return;
+        }
+        if (!/\S+@\S+\.\S+/.test(email)) {
+          setError('Format d’adresse e-mail invalide.');
+          return;
+        }
+        setError('');
+        setIsLoading(true);
+        setTimeout(() => {
+          setIsLoading(false);
+          setIsSubmitted(true);
+        }, 1200);
+      };
+
+      return (
+        <div style={recoveryStyles.pageContainer} className="fade-in">
+          <div style={recoveryStyles.cardContainer}>
+            <div style={recoveryStyles.leftPanel}>
+              <div style={recoveryStyles.brandContainer}>
+                <div style={recoveryStyles.logoCircle}>🌱</div>
+                <span style={recoveryStyles.brandName}>AgroMarket</span>
+              </div>
+              <div style={recoveryStyles.leftContent}>
+                <h1 style={recoveryStyles.leftTitle}>Récupération</h1>
+                <h2 style={recoveryStyles.leftSubtitle}>Mot de passe</h2>
+                <div style={recoveryStyles.divider}></div>
+                <p style={recoveryStyles.leftText}>
+                  Nous vous enverrons un lien de récupération sécurisé pour réinitialiser votre accès.
+                </p>
+              </div>
+              <div style={recoveryStyles.leftFooter}>
+                © 2026 AgroMarket — Sécurité
+              </div>
+            </div>
+
+            <div style={recoveryStyles.rightPanel}>
+              {!isSubmitted ? (
+                <form onSubmit={handleSubmit} style={recoveryStyles.form} noValidate>
+                  <div style={recoveryStyles.formHeader}>
+                    <h3 style={recoveryStyles.formTitle}>Réinitialiser votre mot de passe</h3>
+                    <p style={recoveryStyles.formDescription}>
+                      Entrez l'adresse email associée à votre compte.
+                    </p>
+                  </div>
+
+                  <div style={recoveryStyles.inputGroup}>
+                    <label htmlFor="recovery-email" style={recoveryStyles.label}>
+                      Email ou Nom d'utilisateur
+                    </label>
+                    <div style={recoveryStyles.inputWrapper}>
+                      <svg style={recoveryStyles.inputIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="14" rx="2" ry="2"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                      </svg>
+                      <input
+                        id="recovery-email"
+                        type="email"
+                        placeholder="votre@email.com"
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (error) setError('');
+                        }}
+                        className="custom-input custom-input-with-icon"
+                        style={error ? { borderColor: '#dc3545', backgroundColor: '#fff8f8' } : {}}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    {error && <span style={recoveryStyles.errorText} className="fade-in">{error}</span>}
+                  </div>
+
+                  <div style={recoveryStyles.alertBox}>
+                    <div style={recoveryStyles.alertIcon}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2b6cb0" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                      </svg>
+                    </div>
+                    <div style={recoveryStyles.alertContent}>
+                      <p style={recoveryStyles.alertText}>
+                        Vous recevrez un email avec un lien pour réinitialiser votre mot de passe.
+                      </p>
+                      <p style={recoveryStyles.alertSubtext}>
+                        Le lien sera valide pendant 24 heures.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    style={{
+                      ...recoveryStyles.submitBtn,
+                      ...(isLoading ? recoveryStyles.submitBtnLoading : {})
+                    }}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <span className="loading-spinner"></span>
+                    ) : (
+                      <>
+                        <span>Envoyer le lien</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <line x1="5" y1="12" x2="19" y2="12"/>
+                          <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                      </>
+                    )}
+                  </button>
+
+                  <button type="button" onClick={onBack} style={recoveryStyles.backLink}>
+                    <span>Retour connexion</span>
+                  </button>
+                </form>
+              ) : (
+                <div style={recoveryStyles.successContainer} className="fade-in">
+                  <div style={recoveryStyles.successIconWrapper}>
+                    <div style={recoveryStyles.successIconPulse}></div>
+                    <div style={recoveryStyles.successIcon}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <h3 style={recoveryStyles.successTitle}>E-mail Envoyé !</h3>
+                  <p style={recoveryStyles.successDescription}>
+                    Un lien a été envoyé à : <strong style={recoveryStyles.successEmail}>{email}</strong>
+                  </p>
+                  
+                  <button type="button" onClick={() => setIsSubmitted(false)} style={recoveryStyles.retryBtn}>
+                    Ressayer avec un autre e-mail
+                  </button>
+
+                  <button type="button" onClick={onBack} style={recoveryStyles.backToLoginBtn}>
+                    Retourner à la connexion
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const recoveryStyles = {
+      pageContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 'calc(100vh - 180px)',
+        padding: '30px 20px',
+        backgroundColor: '#f8f9fa',
+      },
+      cardContainer: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        width: '100%',
+        maxWidth: '840px',
+        backgroundColor: '#ffffff',
+        borderRadius: '20px',
+        boxShadow: '0 15px 30px rgba(0, 0, 0, 0.05)',
+        overflow: 'hidden',
+        border: '1px solid rgba(0, 0, 0, 0.04)',
+      },
+      leftPanel: {
+        background: 'linear-gradient(135deg, #1b4d3e 0%, #133c30 100%)',
+        padding: '36px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        color: '#ffffff',
+        flex: '1 1 320px',
+      },
+      brandContainer: { display: 'flex', alignItems: 'center', gap: '10px' },
+      logoCircle: {
+        width: '32px',
+        height: '32px',
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '16px',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+      },
+      brandName: { fontSize: '16px', fontWeight: '800' },
+      leftContent: { margin: '30px 0' },
+      leftTitle: { fontSize: '32px', fontWeight: '800', lineHeight: '1.2' },
+      leftSubtitle: { fontSize: '24px', fontWeight: '400', color: '#a3c2b8', marginBottom: '16px' },
+      divider: { width: '40px', height: '3px', backgroundColor: '#e07a5f', marginBottom: '16px' },
+      leftText: { fontSize: '13px', color: '#e2f0ec' },
+      leftFooter: { fontSize: '10px', color: '#a3c2b8' },
+      rightPanel: {
+        padding: '40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#ffffff',
+        flex: '1.2 1 360px',
+      },
+      form: { width: '100%', maxWidth: '340px' },
+      formHeader: { marginBottom: '20px' },
+      formTitle: { fontSize: '20px', fontWeight: '800', color: '#212529', marginBottom: '6px' },
+      formDescription: { fontSize: '12px', color: '#6c757d' },
+      inputGroup: { marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '6px' },
+      label: { fontSize: '11px', fontWeight: '700', color: '#343a40' },
+      inputWrapper: { position: 'relative', display: 'flex', alignItems: 'center' },
+      inputIcon: { position: 'absolute', left: '16px', color: '#adb5bd' },
+      errorText: { fontSize: '11px', color: '#dc3545', fontWeight: '600' },
+      alertBox: {
+        display: 'flex',
+        gap: '10px',
+        padding: '12px',
+        borderRadius: '10px',
+        backgroundColor: '#ebf8ff',
+        border: '1px solid #bee3f8',
+        marginBottom: '20px',
+      },
+      alertIcon: { flexShrink: 0 },
+      alertContent: { display: 'flex', flexDirection: 'column' },
+      alertText: { fontSize: '11px', fontWeight: '600', color: '#2b6cb0', lineHeight: '1.3' },
+      alertSubtext: { fontSize: '10.5px', color: '#495057' },
+      submitBtn: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px',
+        width: '100%',
+        padding: '12px',
+        borderRadius: '10px',
+        backgroundColor: '#1b4d3e',
+        color: '#ffffff',
+        fontSize: '13px',
+        fontWeight: '700',
+        border: 'none',
+        cursor: 'pointer',
+        boxShadow: '0 4px 10px rgba(27, 77, 62, 0.12)',
+      },
+      submitBtnLoading: { backgroundColor: '#2d6a4f', cursor: 'not-allowed', boxShadow: 'none' },
+      backLink: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        marginTop: '16px',
+        fontSize: '12.5px',
+        fontWeight: '700',
+        color: '#1b4d3e',
+        border: 'none',
+        backgroundColor: 'transparent',
+        cursor: 'pointer',
+      },
+      successContainer: {
+        width: '100%',
+        maxWidth: '340px',
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      },
+      successIconWrapper: { position: 'relative', marginBottom: '16px' },
+      successIconPulse: {
+        position: 'absolute',
+        top: '-4px',
+        left: '-4px',
+        width: '64px',
+        height: '64px',
+        borderRadius: '50%',
+        backgroundColor: 'rgba(45, 106, 79, 0.1)',
+        animation: 'pulse 2s infinite',
+      },
+      successIcon: {
+        width: '56px',
+        height: '56px',
+        borderRadius: '50%',
+        backgroundColor: '#2d6a4f',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1,
+        position: 'relative',
+      },
+      successTitle: { fontSize: '20px', fontWeight: '800', color: '#2d6a4f', marginBottom: '6px' },
+      successDescription: { fontSize: '13px', color: '#495057', marginBottom: '16px' },
+      successEmail: { color: '#1b4d3e', fontWeight: '700' },
+      retryBtn: { fontSize: '11px', color: '#6c757d', marginBottom: '12px', borderBottom: '1px solid #dee2e6', cursor: 'pointer' },
+      backToLoginBtn: { width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#f1f3f5', color: '#343a40', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }
+    };
+
+
+    // --- 3. AGROMARKET HOME COMPONENT ---
+    const INITIAL_PRODUCTS = [
+      { id: 1, name: 'BANANE', category: 'Fruits', price: 2500, unit: 'Régime', imageUrl: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=500&auto=format&fit=crop&q=60', stock: 12, rating: 4.8 },
+      { id: 2, name: 'TOMATE', category: 'Légumes', price: 1500, unit: 'Panier', imageUrl: 'https://images.unsplash.com/photo-1595855759920-86582396756a?w=500&auto=format&fit=crop&q=60', stock: 45, rating: 4.6 },
+      { id: 3, name: 'MAÏS', category: 'Légumes', price: 3000, unit: 'Sac de 5kg', imageUrl: 'https://images.unsplash.com/photo-1551754625-7fc5b945222b?w=500&auto=format&fit=crop&q=60', stock: 22, rating: 4.5 },
+      { id: 4, name: 'LAIT', category: 'Laitier', price: 1200, unit: 'Bouteille 1.5L', imageUrl: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&auto=format&fit=crop&q=60', stock: 18, rating: 4.9 },
+      { id: 5, name: 'MIEL PUR', category: 'Miel', price: 4500, unit: 'Pot de 500g', imageUrl: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=500&auto=format&fit=crop&q=60', stock: 8, rating: 5.0 },
+      { id: 6, name: 'OEUFS DE FERME', category: 'Œufs', price: 1800, unit: 'Plateau de 30', imageUrl: 'https://images.unsplash.com/photo-1516448424440-9dbca97779c1?w=500&auto=format&fit=crop&q=60', stock: 15, rating: 4.7 }
+    ];
+
+    const CATEGORIES = [
+      { id: 'all', name: 'Tous', icon: '🛒' },
+      { id: 'Légumes', name: 'Légumes', icon: '🥕' },
+      { id: 'Fruits', name: 'Fruits', icon: '🍎' },
+      { id: 'Viande', name: 'Viande', icon: '🥩' },
+      { id: 'Laitier', name: 'Laitier', icon: '🥛' },
+      { id: 'Miel', name: 'Miel', icon: '🍯' },
+      { id: 'Œufs', name: 'Œufs', icon: '🥚' }
+    ];
+
+    function AgroMarketHome({ onNavigateToOrders, onNavigateToRecovery, onNavigateToCheckout }) {
+      const [selectedCategory, setSelectedCategory] = useState('all');
+      const [searchQuery, setSearchQuery] = useState('');
+      const [cart, setCart] = useState([]);
+      const [cartAnimate, setCartAnimate] = useState(false);
+      const [notification, setNotification] = useState('');
+
+      const handleAddToCart = (product) => {
+        setCart((prev) => {
+          const existing = prev.find((item) => item.id === product.id);
+          if (existing) {
+            return prev.map((item) => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+          }
+          return [...prev, { ...product, quantity: 1 }];
+        });
+        setCartAnimate(true);
+        setTimeout(() => setCartAnimate(false), 500);
+        setNotification(`${product.name} ajouté au panier !`);
+        setTimeout(() => setNotification(''), 2200);
+      };
+
+      const filteredProducts = useMemo(() => {
+        return INITIAL_PRODUCTS.filter((prod) => {
+          const matchesCategory = selectedCategory === 'all' || prod.category === selectedCategory;
+          const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase()) || prod.category.toLowerCase().includes(searchQuery.toLowerCase());
+          return matchesCategory && matchesSearch;
+        });
+      }, [selectedCategory, searchQuery]);
+
+      const cartItemCount = useMemo(() => cart.reduce((acc, item) => acc + item.quantity, 0), [cart]);
+
+      return (
+        <div style={homeStyles.container} className="fade-in">
+          {notification && (
+            <div style={homeStyles.toast} className="fade-in">
+              <span>✨ {notification}</span>
+            </div>
+          )}
+
+          <header style={homeStyles.header}>
+            <div style={homeStyles.navContainer}>
+              <div style={homeStyles.logo} onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }}>
+                <span style={homeStyles.logoIcon}>🌱</span>
+                <span style={homeStyles.logoText}>AgroMarket</span>
+              </div>
+
+              <nav style={homeStyles.navLinks}>
+                <a href="#accueil" style={{...homeStyles.navLink, ...homeStyles.navLinkActive}}>Accueil</a>
+                <a href="#catalogue" style={homeStyles.navLink} onClick={() => setSelectedCategory('all')}>Catalogue</a>
+                <a href="#commandes" style={homeStyles.navLink} onClick={onNavigateToOrders}>Mes Commandes</a>
+                <a href="#contact" style={homeStyles.navLink}>Contact</a>
+              </nav>
+
+              <div style={homeStyles.userActions}>
+                <button onClick={onNavigateToRecovery} style={homeStyles.authLink}>Login</button>
+                <span style={homeStyles.authDivider}>|</span>
+                <button onClick={onNavigateToRecovery} style={homeStyles.authLink}>Inscription</button>
+                
+                <div 
+                  onClick={onNavigateToCheckout}
+                  style={{...homeStyles.cartButton, ...(cartAnimate ? homeStyles.cartButtonPulse : {})}}
+                  title="Passer à la caisse (Tunnel de Paiement)"
+                  style={{cursor: 'pointer', ...homeStyles.cartButton, ...(cartAnimate ? homeStyles.cartButtonPulse : {})}}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                  </svg>
+                  {cartItemCount > 0 && <span style={homeStyles.cartBadge}>{cartItemCount}</span>}
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <section style={homeStyles.heroSection}>
+            <div style={homeStyles.heroBgPattern}></div>
+            <div style={homeStyles.heroContent}>
+              <h2 style={homeStyles.heroTitle}>Bienvenue sur AgroMarket</h2>
+              <p style={homeStyles.heroSubtitle}>Achetez directement auprès des producteurs locaux</p>
+              
+              <div style={homeStyles.searchWrapper}>
+                <svg style={homeStyles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Chercher un produit..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={homeStyles.searchInput}
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} style={homeStyles.clearSearchBtn}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <main style={homeStyles.mainContent}>
+            <section style={homeStyles.section}>
+              <h3 style={homeStyles.sectionTitle}>Catégories</h3>
+              <div style={homeStyles.categoryGrid}>
+                {CATEGORIES.map((cat) => {
+                  const isActive = selectedCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      style={{...homeStyles.categoryCard, ...(isActive ? homeStyles.categoryCardActive : {})}}
+                    >
+                      <span style={homeStyles.categoryIcon}>{cat.icon}</span>
+                      <span style={{...homeStyles.categoryText, ...(isActive ? homeStyles.categoryTextActive : {})}}>{cat.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section style={homeStyles.section}>
+              <div style={homeStyles.productHeader}>
+                <h3 style={homeStyles.sectionTitle}>Produits populaires</h3>
+                <span style={homeStyles.productCount}>{filteredProducts.length} produits trouvés</span>
+              </div>
+
+              {filteredProducts.length > 0 ? (
+                <div style={homeStyles.productGrid}>
+                  {filteredProducts.map((prod) => (
+                    <div key={prod.id} style={homeStyles.productCard} className="fade-in">
+                      <span style={homeStyles.productTag}>{prod.category}</span>
+                      <div style={homeStyles.imageContainer}>
+                        <img 
+                          src={prod.imageUrl} 
+                          alt={prod.name} 
+                          style={homeStyles.productImage}
+                          className="product-image-zoom"
+                          onError={(e) => {
+                            e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" style="background:%23e2e8f0;"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="24">🌱</text></svg>';
+                          }}
+                        />
+                      </div>
+
+                      <div style={homeStyles.productInfo}>
+                        <div style={homeStyles.titleRow}>
+                          <h4 style={homeStyles.productName}>{prod.name}</h4>
+                          <div style={homeStyles.ratingBox}>
+                            <span style={homeStyles.star}>★</span>
+                            <span style={homeStyles.ratingText}>{prod.rating}</span>
+                          </div>
+                        </div>
+                        <p style={homeStyles.productUnit}>Unité : {prod.unit}</p>
+                        
+                        <div style={homeStyles.priceRow}>
+                          <div style={homeStyles.priceContainer}>
+                            <span style={homeStyles.productPrice}>{prod.price.toLocaleString('fr-FR')}</span>
+                            <span style={homeStyles.priceCurrency}> FCFA</span>
+                          </div>
+                          <button onClick={() => handleAddToCart(prod)} style={homeStyles.addBtn}>
+                            <span>Ajouter</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={homeStyles.emptyProducts}>
+                  <span style={homeStyles.emptyIcon}>🌾</span>
+                  <h4>Aucun produit</h4>
+                  <button onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }} style={homeStyles.resetSearchBtn}>Réinitialiser</button>
+                </div>
+              )}
+            </section>
+          </main>
+
+          <footer style={homeStyles.footer}>
+            <div style={homeStyles.footerContainer}>
+              <p>© 2026 AgroMarket. Tous droits réservés | Mentions légales | Conditions</p>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    const homeStyles = {
+      container: { backgroundColor: '#f8f9fa', minHeight: '100vh', display: 'flex', flexDirection: 'column' },
+      toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#1b4d3e', color: '#ffffff', padding: '12px 18px', borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 999, fontSize: '13px', fontWeight: '700', animation: 'slideInRight 0.3s ease-out forwards' },
+      header: { backgroundColor: '#ffffff', borderBottom: '1px solid #e9ecef', position: 'sticky', top: '0', zIndex: 99 },
+      navContainer: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '1000px', margin: '0 auto', padding: '14px 20px' },
+      logo: { display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' },
+      logoIcon: { fontSize: '20px' },
+      logoText: { fontSize: '18px', fontWeight: '800', color: '#1b4d3e' },
+      navLinks: { display: 'flex', gap: '20px' },
+      navLink: { fontSize: '13px', fontWeight: '600', color: '#495057' },
+      navLinkActive: { color: '#1b4d3e', borderBottom: '2px solid #1b4d3e' },
+      userActions: { display: 'flex', alignItems: 'center', gap: '12px' },
+      authLink: { fontSize: '13px', fontWeight: '700', color: '#1b4d3e', cursor: 'pointer', border: 'none', backgroundColor: 'transparent' },
+      authDivider: { color: '#dee2e6' },
+      cartButton: { position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '8px', backgroundColor: 'rgba(27, 77, 62, 0.06)', color: '#1b4d3e', cursor: 'pointer' },
+      cartButtonPulse: { animation: 'pulse 0.4s ease-out', backgroundColor: '#e07a5f', color: '#ffffff' },
+      cartBadge: { position: 'absolute', top: '-4px', right: '-4px', backgroundColor: '#e07a5f', color: '#ffffff', fontSize: '9px', fontWeight: '800', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #ffffff' },
+      heroSection: { position: 'relative', backgroundColor: '#1b4d3e', backgroundImage: 'linear-gradient(135deg, #1b4d3e 0%, #133c30 100%)', padding: '40px 20px', color: '#ffffff', textAlign: 'center', overflow: 'hidden' },
+      heroBgPattern: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.03, backgroundImage: 'radial-gradient(circle, #ffffff 2px, transparent 2px)', backgroundSize: '24px 24px' },
+      heroContent: { position: 'relative', maxWidth: '500px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' },
+      heroTitle: { fontSize: '28px', fontWeight: '800', marginBottom: '6px' },
+      heroSubtitle: { fontSize: '13px', color: '#a3c2b8', marginBottom: '20px' },
+      searchWrapper: { position: 'relative', width: '100%', maxWidth: '440px', display: 'flex', alignItems: 'center', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.1)' },
+      searchIcon: { position: 'absolute', left: '14px', color: '#adb5bd' },
+      searchInput: { width: '100%', padding: '14px 44px', border: 'none', fontSize: '13.5px', color: '#212529', outline: 'none', fontWeight: '500' },
+      clearSearchBtn: { position: 'absolute', right: '14px', color: '#6c757d', cursor: 'pointer' },
+      mainContent: { maxWidth: '1000px', margin: '0 auto', padding: '24px 20px 50px 20px', width: '100%' },
+      section: { marginBottom: '32px' },
+      sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#212529', marginBottom: '14px', borderLeft: '4px solid #1b4d3e', paddingLeft: '8px' },
+      categoryGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '10px' },
+      categoryCard: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '14px 10px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1px solid #e9ecef', cursor: 'pointer' },
+      categoryCardActive: { backgroundColor: '#f4f1de', borderColor: '#e07a5f' },
+      categoryIcon: { fontSize: '22px', marginBottom: '4px' },
+      categoryText: { fontSize: '11px', fontWeight: '700', color: '#495057' },
+      categoryTextActive: { color: '#e07a5f' },
+      productHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+      productCount: { fontSize: '11px', color: '#6c757d' },
+      productGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '16px', marginTop: '14px' },
+      productCard: { backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e9ecef', padding: '12px', position: 'relative', display: 'flex', flexDirection: 'column' },
+      productTag: { position: 'absolute', top: '16px', left: '16px', backgroundColor: 'rgba(27, 77, 62, 0.85)', color: '#ffffff', fontSize: '8px', fontWeight: '800', padding: '2px 5px', borderRadius: '4px', zIndex: 2 },
+      imageContainer: { width: '100%', height: '140px', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#f1f3f5', marginBottom: '10px' },
+      productImage: { width: '100%', height: '100%', objectFit: 'cover' },
+      productInfo: { display: 'flex', flexDirection: 'column', flexGrow: 1 },
+      titleRow: { display: 'flex', justify: 'space-between', alignItems: 'center', marginBottom: '4px' },
+      productName: { fontSize: '13px', fontWeight: '800', color: '#212529' },
+      ratingBox: { display: 'flex', alignItems: 'center', gap: '2px', backgroundColor: '#fff9db', padding: '1px 3px', borderRadius: '3px' },
+      star: { color: '#fab005', fontSize: '9px' },
+      ratingText: { fontSize: '9px', fontWeight: '700', color: '#868e96' },
+      productUnit: { fontSize: '10.5px', color: '#868e96', marginBottom: '10px' },
+      priceRow: { display: 'flex', alignItems: 'center', justify: 'space-between', marginTop: 'auto' },
+      priceContainer: { display: 'flex', alignItems: 'baseline' },
+      productPrice: { fontSize: '15px', fontWeight: '800', color: '#e07a5f' },
+      priceCurrency: { fontSize: '9px', fontWeight: '700', color: '#e07a5f' },
+      addBtn: { padding: '5px 10px', borderRadius: '5px', backgroundColor: '#1b4d3e', color: '#ffffff', fontSize: '10px', fontWeight: '700', cursor: 'pointer' },
+      emptyProducts: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 20px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1.5px dashed #dee2e6', maxWidth: '360px', margin: '20px auto 0 auto' },
+      emptyIcon: { fontSize: '32px', marginBottom: '8px' },
+      resetSearchBtn: { padding: '6px 12px', borderRadius: '5px', backgroundColor: '#f1f3f5', color: '#343a40', fontSize: '11px', fontWeight: '700', marginTop: '10px', cursor: 'pointer' },
+      footer: { backgroundColor: '#133c30', color: '#ffffff', marginTop: 'auto', padding: '20px', textAlign: 'center' },
+      footerContainer: { maxWidth: '1000px', margin: '0 auto' },
+      footerCopyright: { fontSize: '11px', color: '#a3c2b8' }
+    };
+
+
+    // --- 4. ORDER MANAGEMENT COMPONENT ---
+    const INITIAL_ORDERS = [
+      {
+        id: '#2026-001', date: '15/05/2026', amount: 25000, itemCount: 3, status: 'Livrée',
+        items: [{ name: 'Banane Régime', quantity: 2, price: 5000 }, { name: 'Tomate Panier', quantity: 3, price: 4500 }, { name: 'Lait Bouteille', quantity: 5, price: 1100 }],
+        address: '128 Rue des Maraîchers, Dakar', paymentMethod: 'Orange Money', shippingMethod: 'Express (Moto)',
+        timeline: [{ status: 'Commande reçue', date: '15/05/2026 09:12', done: true }, { status: 'Préparation en cours', date: '15/05/2026 10:30', done: true }, { status: 'En cours de livraison', date: '15/05/2026 11:15', done: true }, { status: 'Livrée', date: '15/05/2026 12:00', done: true }]
+      },
+      {
+        id: '#2026-002', date: '12/05/2026', amount: 45000, itemCount: 5, status: 'En cours',
+        items: [{ name: 'Viande de Bœuf (kg)', quantity: 4, price: 3200 }, { name: 'Miel Pur Pot', quantity: 2, price: 9000 }, { name: 'Sac de Maïs 5kg', quantity: 4, price: 12000 }],
+        address: 'Villa 45, Cité Keur Gorgui, Dakar', paymentMethod: 'Wave', shippingMethod: 'Standard (Camionette)',
+        timeline: [{ status: 'Commande reçue', date: '12/05/2026 14:02', done: true }, { status: 'Préparation en cours', date: '12/05/2026 16:30', done: true }, { status: 'En cours de livraison', date: '13/05/2026 08:00', done: true }, { status: 'Livrée', date: '--', done: false }]
+      },
+      {
+        id: '#2026-003', date: '10/05/2026', amount: 18500, itemCount: 2, status: 'En attente',
+        items: [{ name: 'Plateau d\'Oeufs', quantity: 5, price: 9000 }, { name: 'Banane Régime', quantity: 3, price: 9500 }],
+        address: 'Point E, Dakar', paymentMethod: 'Paiement à la livraison', shippingMethod: 'Express',
+        timeline: [{ status: 'Commande reçue', date: '10/05/2026 11:22', done: true }, { status: 'Validation', date: '--', done: false }, { status: 'Livraison', date: '--', done: false }, { status: 'Livrée', date: '--', done: false }]
+      },
+      {
+        id: '#2026-004', date: '08/05/2026', amount: 62000, itemCount: 7, status: 'Livrée',
+        items: [{ name: 'Miel Pur Pot', quantity: 5, price: 22500 }, { name: 'Lait Bouteille', quantity: 8, price: 9600 }],
+        address: 'Sicap Liberté 4, Dakar', paymentMethod: 'Wave', shippingMethod: 'Standard',
+        timeline: [{ status: 'Commande reçue', date: '08/05/2026 08:30', done: true }, { status: 'Préparation', date: '08/05/2026 09:15', done: true }, { status: 'En cours', date: '08/05/2026 10:45', done: true }, { status: 'Livrée', date: '08/05/2026 12:15', done: true }]
+      }
+    ];
+
+    function OrderManagement({ onBackHome }) {
+      const [activeTab, setActiveTab] = useState('Toutes');
+      const [selectedOrder, setSelectedOrder] = useState(null);
+      const [exporting, setExporting] = useState(false);
+
+      const filteredOrders = useMemo(() => {
+        if (activeTab === 'Toutes') return INITIAL_ORDERS;
+        if (activeTab === 'Livrées') return INITIAL_ORDERS.filter(o => o.status === 'Livrée');
+        return INITIAL_ORDERS.filter(o => o.status === activeTab);
+      }, [activeTab]);
+
+      const handleExportCSV = () => {
+        setExporting(true);
+        const headers = 'Commande #,Date,Montant (FCFA),Articles,Statut,Adresse\n';
+        const rows = filteredOrders.map(o => `"${o.id}","${o.date}","${o.amount}","${o.itemCount}","${o.status}","${o.address}"`).join('\n');
+        const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(headers + rows);
+        const link = document.createElement('a');
+        link.setAttribute('href', csvContent);
+        link.setAttribute('download', `commandes_${activeTab.toLowerCase()}.csv`);
+        document.body.appendChild(link);
+        setTimeout(() => {
+          link.click();
+          document.body.removeChild(link);
+          setExporting(false);
+        }, 600);
+      };
+
+      const getStatusStyle = (status) => {
+        switch (status) {
+          case 'Livrée': return { color: '#2d6a4f', backgroundColor: '#d8f3dc', border: '1px solid #b7e4c7' };
+          case 'En cours': return { color: '#e07a5f', backgroundColor: '#fde8e3', border: '1px solid #f8c8bc' };
+          case 'En attente': return { color: '#b27a00', backgroundColor: '#fff3cd', border: '1px solid #ffeeba' };
+          default: return {};
+        }
+      };
+
+      return (
+        <div style={orderStyles.container} className="fade-in">
+          <div style={orderStyles.header}>
+            <div style={orderStyles.titleWrapper}>
+              <button onClick={onBackHome} style={orderStyles.backBtn}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+                </svg>
+              </button>
+              <h2 style={orderStyles.title}>Mes Commandes</h2>
+            </div>
+          </div>
+
+          <div style={orderStyles.toolbar}>
+            <div style={orderStyles.tabsContainer}>
+              {['Toutes', 'En attente', 'En cours', 'Livrées'].map(tab => {
+                const isActive = activeTab === tab;
+                return (
+                  <button key={tab} onClick={() => setActiveTab(tab)} style={{...orderStyles.tabBtn, ...(isActive ? orderStyles.tabBtnActive : {})}}>
+                    {tab}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={handleExportCSV} style={orderStyles.exportBtn} disabled={exporting || filteredOrders.length === 0}>
+              {exporting ? 'Export...' : 'Export CSV'}
+            </button>
+          </div>
+
+          <div style={orderStyles.tableCard}>
+            {filteredOrders.length > 0 ? (
+              <div className="table-container">
+                <table style={orderStyles.table}>
+                  <thead>
+                    <tr>
+                      <th style={orderStyles.th}>Commande #</th>
+                      <th style={orderStyles.th}>Date</th>
+                      <th style={orderStyles.th}>Montant</th>
+                      <th style={orderStyles.th}>Articles</th>
+                      <th style={orderStyles.th}>Statut</th>
+                      <th style={orderStyles.th}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredOrders.map(order => (
+                      <tr key={order.id} style={orderStyles.tr}>
+                        <td style={orderStyles.tdId}>{order.id}</td>
+                        <td style={orderStyles.td}>{order.date}</td>
+                        <td style={orderStyles.tdAmount}>{order.amount.toLocaleString()} FCFA</td>
+                        <td style={orderStyles.td}>{order.itemCount} articles</td>
+                        <td style={orderStyles.td}>
+                          <span style={{...orderStyles.statusBadge, ...getStatusStyle(order.status)}}>
+                            {order.status}
+                          </span>
+                        </td>
+                        <td style={orderStyles.tdAction}>
+                          <button onClick={() => setSelectedOrder(order)} style={orderStyles.viewLink}>Voir »</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div style={orderStyles.emptyTable}><h4>Aucune commande</h4></div>
+            )}
+          </div>
+
+          {selectedOrder && (
+            <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
+              <div style={orderStyles.modalContent} onClick={e => e.stopPropagation()} className="fade-in">
+                <div style={orderStyles.modalHeader}>
+                  <h3 style={orderStyles.modalTitle}>Commande {selectedOrder.id}</h3>
+                  <button onClick={() => setSelectedOrder(null)} style={orderStyles.closeBtn}>×</button>
+                </div>
+                <div style={orderStyles.modalBody}>
+                  <div style={orderStyles.modalSection}>
+                    <h4 style={orderStyles.modalSectionTitle}>Articles</h4>
+                    {selectedOrder.items.map((item, idx) => (
+                      <div key={idx} style={orderStyles.itemRow}>
+                        <span>{item.name} (x{item.quantity})</span>
+                        <span>{(item.quantity * item.price).toLocaleString()} FCFA</span>
+                      </div>
+                    ))}
+                    <div style={orderStyles.totalRow}>
+                      <span>Total payé</span>
+                      <span style={orderStyles.totalAmount}>{selectedOrder.amount.toLocaleString()} FCFA</span>
+                    </div>
+                  </div>
+                  <div style={orderStyles.modalSection}>
+                    <h4 style={orderStyles.modalSectionTitle}>Informations</h4>
+                    <p style={orderStyles.infoVal}><strong>Adresse :</strong> {selectedOrder.address}</p>
+                    <p style={orderStyles.infoVal}><strong>Paiement :</strong> {selectedOrder.paymentMethod}</p>
+                  </div>
+                </div>
+                <div style={orderStyles.modalFooter}>
+                  <button onClick={() => setSelectedOrder(null)} style={orderStyles.modalCloseBtn}>Fermer</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const orderStyles = {
+      container: { maxWidth: '1000px', margin: '0 auto', padding: '24px 20px 50px 20px', width: '100%' },
+      header: { marginBottom: '20px' },
+      titleWrapper: { display: 'flex', alignItems: 'center', gap: '10px' },
+      backBtn: { width: '34px', height: '34px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1.5px solid #dee2e6', display: 'flex', alignItems: 'center', justify: 'center', cursor: 'pointer' },
+      title: { fontSize: '20px', fontWeight: '800', color: '#212529' },
+      toolbar: { display: 'flex', justify: 'space-between', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' },
+      tabsContainer: { display: 'flex', backgroundColor: '#ffffff', padding: '3px', borderRadius: '8px', border: '1px solid #e9ecef', gap: '2px' },
+      tabBtn: { fontSize: '11.5px', fontWeight: '700', color: '#6c757d', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', border: 'none', backgroundColor: 'transparent' },
+      tabBtnActive: { backgroundColor: '#1b4d3e', color: '#ffffff' },
+      exportBtn: { padding: '8px 14px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1.5px solid #1b4d3e', color: '#1b4d3e', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' },
+      tableCard: { backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e9ecef', overflow: 'hidden' },
+      table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left' },
+      th: { fontSize: '11.5px', fontWeight: '700', color: '#495057', padding: '12px 16px', borderBottom: '2px solid #e9ecef', backgroundColor: '#f8f9fa' },
+      tr: { borderBottom: '1px solid #e9ecef' },
+      td: { fontSize: '12.5px', color: '#495057', padding: '12px 16px' },
+      tdId: { fontSize: '12.5px', fontWeight: '700', color: '#1b4d3e', padding: '12px 16px', fontFamily: 'monospace' },
+      tdAmount: { fontSize: '12.5px', fontWeight: '800', color: '#e07a5f', padding: '12px 16px' },
+      statusBadge: { fontSize: '9.5px', fontWeight: '800', padding: '3px 6px', borderRadius: '4px', display: 'inline-block' },
+      tdAction: { padding: '12px 16px', textAlign: 'right' },
+      viewLink: { fontSize: '12px', fontWeight: '700', color: '#1b4d3e', cursor: 'pointer', backgroundColor: 'transparent', border: 'none' },
+      emptyTable: { padding: '40px 20px', textAlign: 'center', color: '#6c757d' },
+      modalContent: { width: '100%', maxWidth: '440px', backgroundColor: '#ffffff', borderRadius: '14px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 15px 30px rgba(0,0,0,0.15)', margin: 'auto' },
+      modalHeader: { display: 'flex', justify: 'space-between', padding: '16px 20px', borderBottom: '1px solid #e9ecef' },
+      modalTitle: { fontSize: '16px', fontWeight: '800' },
+      closeBtn: { fontSize: '20px', cursor: 'pointer', border: 'none', backgroundColor: 'transparent', color: '#adb5bd' },
+      modalBody: { padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' },
+      modalSection: { display: 'flex', flexDirection: 'column', gap: '6px' },
+      modalSectionTitle: { fontSize: '11px', fontWeight: '800', color: '#495057', textTransform: 'uppercase', borderBottom: '1px solid #f1f3f5', paddingBottom: '3px' },
+      itemRow: { display: 'flex', justify: 'space-between', padding: '6px 8px', backgroundColor: '#f8f9fa', borderRadius: '5px', fontSize: '11.5px' },
+      totalRow: { display: 'flex', justify: 'space-between', borderTop: '2px double #e9ecef', paddingTop: '6px', fontWeight: '800', fontSize: '12px' },
+      totalAmount: { color: '#e07a5f', fontSize: '14.5px' },
+      infoVal: { fontSize: '11.5px', color: '#343a40' },
+      modalFooter: { padding: '10px 20px', borderTop: '1px solid #e9ecef', display: 'flex', justify: 'flex-end', backgroundColor: '#f8f9fa' },
+      modalCloseBtn: { padding: '6px 12px', borderRadius: '5px', backgroundColor: '#6c757d', color: '#ffffff', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', border: 'none' }
+    };
+
+
+    // --- 5. MY PRODUCTS COMPONENT (NEW) ---
+    function MyProducts({ onNavigateToAddProduct, onEditProduct }) {
+      const [products, setProducts] = useState([
+        { id: 1, name: 'Banane Fraîche', category: 'Fruits', stock: 45, unit: 'kg', sales: 124, price: 2500, status: 'Actif', imageUrl: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=150&auto=format&fit=crop&q=60' },
+        { id: 2, name: 'Tomate Bio', category: 'Légumes', stock: 0, unit: 'kg', sales: 89, price: 1500, status: 'Actif', imageUrl: 'https://images.unsplash.com/photo-1595855759920-86582396756a?w=150&auto=format&fit=crop&q=60' },
+        { id: 3, name: 'Maïs Premium', category: 'Céréales', stock: 15, unit: 'kg', sales: 45, price: 3000, status: 'Inactif', imageUrl: 'https://images.unsplash.com/photo-1551754625-7fc5b945222b?w=150&auto=format&fit=crop&q=60' },
+        { id: 4, name: 'Miel de Casamance', category: 'Miel', stock: 8, unit: 'L', sales: 32, price: 4500, status: 'Actif', imageUrl: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=150&auto=format&fit=crop&q=60' }
+      ]);
+      const [filterTab, setFilterTab] = useState('Tous');
+      const [notification, setNotification] = useState('');
+
+      const handleDelete = (id, name) => {
+        if (window.confirm(`Êtes-vous sûr de vouloir supprimer "${name}" ?`)) {
+          setProducts(prev => prev.filter(p => p.id !== id));
+          setNotification(`"${name}" supprimé !`);
+          setTimeout(() => setNotification(''), 2200);
+        }
+      };
+
+      const handleDuplicate = (p) => {
+        const dup = { ...p, id: Date.now(), name: `${p.name} (Copie)`, sales: 0 };
+        setProducts(prev => [...prev, dup]);
+        setNotification(`"${p.name}" dupliqué !`);
+        setTimeout(() => setNotification(''), 2200);
+      };
+
+      const counts = useMemo(() => ({
+        tous: products.length,
+        actifs: products.filter(p => p.status === 'Actif').length,
+        inactifs: products.filter(p => p.status === 'Inactif').length
+      }), [products]);
+
+      const filtered = useMemo(() => {
+        if (filterTab === 'Actifs') return products.filter(p => p.status === 'Actif');
+        if (filterTab === 'Inactifs') return products.filter(p => p.status === 'Inactif');
+        return products;
+      }, [products, filterTab]);
+
+      return (
+        <div style={myProdStyles.container} className="fade-in">
+          {notification && (
+            <div style={myProdStyles.toast} className="fade-in"><span>🔔 {notification}</span></div>
+          )}
+
+          <div style={myProdStyles.header}>
+            <h2 style={myProdStyles.title}>Mes produits</h2>
+            <button onClick={onNavigateToAddProduct} style={myProdStyles.addBtn}>+ Ajouter un produit</button>
+          </div>
+
+          <div style={myProdStyles.filtersBar}>
+            <span style={myProdStyles.filterLabel}>Filtrer :</span>
+            <div style={myProdStyles.tabsContainer}>
+              {['Tous', 'Actifs', 'Inactifs'].map(tab => {
+                const count = tab === 'Tous' ? counts.tous : (tab === 'Actifs' ? counts.actifs : counts.inactifs);
+                return (
+                  <button 
+                    key={tab}
+                    onClick={() => setFilterTab(tab)}
+                    style={{...myProdStyles.tabBtn, ...(filterTab === tab ? myProdStyles.tabBtnActive : {})}}
+                  >
+                    {tab} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={myProdStyles.tableCard}>
+            {filtered.length > 0 ? (
+              <div className="table-container">
+                <table style={myProdStyles.table}>
+                  <thead>
+                    <tr>
+                      <th style={myProdStyles.th}>Image</th>
+                      <th style={myProdStyles.th}>Produit</th>
+                      <th style={myProdStyles.th}>Catégorie</th>
+                      <th style={myProdStyles.th}>Stock</th>
+                      <th style={myProdStyles.th}>Ventes</th>
+                      <th style={myProdStyles.th}>Prix</th>
+                      <th style={myProdStyles.th}>Status</th>
+                      <th style={myProdStyles.th}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(p => (
+                      <tr key={p.id} style={myProdStyles.tr}>
+                        <td style={myProdStyles.tdImage}>
+                          <div style={myProdStyles.imageBox}>
+                            <img src={p.imageUrl} alt="" style={myProdStyles.image} onError={(e) => e.target.src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%23e2e8f0"/></svg>'} />
+                          </div>
+                        </td>
+                        <td style={myProdStyles.tdName}>{p.name}</td>
+                        <td style={myProdStyles.tdCategory}>{p.category}</td>
+                        <td style={myProdStyles.tdStock}>
+                          <span style={{...myProdStyles.stockText, ...(p.stock === 0 ? myProdStyles.outText : {})}}>
+                            {p.stock} {p.unit}
+                          </span>
+                        </td>
+                        <td style={myProdStyles.td}>{p.sales}</td>
+                        <td style={myProdStyles.tdPrice}>{p.price.toLocaleString()} FCFA</td>
+                        <td style={myProdStyles.td}>
+                          <span style={{
+                            ...myProdStyles.statusDot,
+                            backgroundColor: p.status === 'Actif' ? '#2d6a4f' : '#adb5bd'
+                          }}></span>
+                        </td>
+                        <td style={myProdStyles.tdActions}>
+                          <button onClick={() => onEditProduct(p)} style={myProdStyles.actionBtn}>Éditer</button>
+                          <span style={myProdStyles.divider}>|</span>
+                          <button onClick={() => handleDuplicate(p)} style={myProdStyles.actionBtn}>Dupliquer</button>
+                          <span style={myProdStyles.divider}>|</span>
+                          <button onClick={() => handleDelete(p.id, p.name)} style={{...myProdStyles.actionBtn, color: '#dc3545'}}>Supprimer</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div style={myProdStyles.empty}><h4>Aucun produit</h4></div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const myProdStyles = {
+      container: { maxWidth: '1000px', margin: '0 auto', padding: '24px 20px 50px 20px', width: '100%' },
+      toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#1b4d3e', color: '#ffffff', padding: '12px 18px', borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 999, fontSize: '13px', fontWeight: '700' },
+      header: { display: 'flex', justify: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e9ecef', paddingBottom: '16px' },
+      title: { fontSize: '20px', fontWeight: '800' },
+      addBtn: { padding: '10px 16px', borderRadius: '8px', backgroundColor: '#1b4d3e', color: '#ffffff', fontSize: '12px', fontWeight: '700', border: 'none', cursor: 'pointer' },
+      filtersBar: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' },
+      filterLabel: { fontSize: '12px', fontWeight: '700', color: '#6c757d' },
+      tabsContainer: { display: 'flex', backgroundColor: '#ffffff', padding: '3px', borderRadius: '8px', border: '1px solid #e9ecef', gap: '2px' },
+      tabBtn: { fontSize: '11.5px', fontWeight: '700', color: '#6c757d', padding: '6px 12px', borderRadius: '5px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer' },
+      tabBtnActive: { backgroundColor: '#1b4d3e', color: '#ffffff' },
+      tableCard: { backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e9ecef', overflow: 'hidden' },
+      table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left' },
+      th: { fontSize: '11.5px', color: '#495057', padding: '12px 16px', borderBottom: '2px solid #e9ecef', backgroundColor: '#f8f9fa' },
+      tr: { borderBottom: '1px solid #e9ecef' },
+      td: { fontSize: '12.5px', color: '#495057', padding: '12px 16px' },
+      tdImage: { padding: '8px 16px' },
+      imageBox: { width: '36px', height: '36px', borderRadius: '6px', overflow: 'hidden', backgroundColor: '#f1f3f5', border: '1px solid #dee2e6' },
+      image: { width: '100%', height: '100%', objectFit: 'cover' },
+      tdName: { fontSize: '13px', fontWeight: '700', color: '#212529', padding: '12px 16px' },
+      tdCategory: { fontSize: '12px', color: '#6c757d', padding: '12px 16px', fontWeight: '600' },
+      tdStock: { padding: '12px 16px' },
+      stockText: { fontSize: '11.5px', fontWeight: '600', color: '#2d6a4f', backgroundColor: '#e8f5e9', padding: '2px 6px', borderRadius: '4px' },
+      outText: { color: '#dc3545', backgroundColor: '#ffebee' },
+      tdPrice: { fontSize: '13px', fontWeight: '800', color: '#e07a5f', padding: '12px 16px' },
+      statusDot: { width: '10px', height: '10px', borderRadius: '50%', display: 'block' },
+      tdActions: { padding: '12px 16px' },
+      actionBtn: { fontSize: '11.5px', fontWeight: '700', color: '#1b4d3e', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' },
+      divider: { color: '#dee2e6', margin: '0 6px' },
+      empty: { padding: '40px', textAlign: 'center' }
+    };
+
+
+    // --- 6. SUBSCRIPTION PLANS COMPONENT (NEW) ---
+    function SubscriptionPlans() {
+      const [activePlan, setActivePlan] = useState('BASIC');
+      const [notification, setNotification] = useState('');
+
+      const handleSubscribe = (id) => {
+        setActivePlan(id);
+        setNotification(`Abonnement ${id} validé avec succès !`);
+        setTimeout(() => setNotification(''), 2500);
+      };
+
+      const plans = [
+        { id: 'BASIC', name: 'BASIC', price: 0, features: ['Vendre sans limite', 'Support standard'], disabledFeatures: ['Publicité premium'] },
+        { id: 'PRO', name: 'PRO', price: 5000, recommended: true, features: ['Tout de BASIC', 'Mise en avant produits', 'Analytics avancés'], disabledFeatures: [] },
+        { id: 'PREMIUM', name: 'PREMIUM', price: 15000, features: ['Tout de PRO', 'Support prioritaire', 'Personnalisation'], disabledFeatures: [] }
+      ];
+
+      return (
+        <div style={planStyles.container} className="fade-in">
+          {notification && (
+            <div style={planStyles.toast} className="fade-in"><span>🎉 {notification}</span></div>
+          )}
+
+          <div style={planStyles.header}>
+            <h2 style={planStyles.title}>Plans d'abonnement</h2>
+            <p style={planStyles.subtitle}>Optez pour la formule idéale pour élargir votre commerce agricole.</p>
+          </div>
+
+          <div style={planStyles.grid}>
+            {plans.map(p => {
+              const isCurrent = activePlan === p.id;
+              return (
+                <div key={p.id} style={{
+                  ...planStyles.card,
+                  ...(p.recommended ? planStyles.recCard : {}),
+                  ...(isCurrent ? planStyles.activeCard : {})
+                }}>
+                  {p.recommended && <div style={planStyles.recBadge}>RECOMMANDÉ</div>}
+                  
+                  <div style={planStyles.cardHeader}>
+                    <h3 style={planStyles.planName}>{p.name}</h3>
+                    <h2 style={{...planStyles.price, ...(p.recommended ? {color:'#e07a5f'}:{})}}>{p.price.toLocaleString()} FCFA</h2>
+                    <span style={planStyles.period}>/mois</span>
+                  </div>
+
+                  <div style={planStyles.line}></div>
+
+                  <ul style={planStyles.featList}>
+                    {p.features.map((f, i) => (
+                      <li key={i} style={planStyles.featItem}>
+                        <span style={planStyles.check}>✓</span> {f}
+                      </li>
+                    ))}
+                    {p.disabledFeatures.map((f, i) => (
+                      <li key={i} style={{...planStyles.featItem, color:'#adb5bd', textDecoration:'line-through'}}>
+                        <span style={planStyles.cross}>✗</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {isCurrent ? (
+                    <button disabled style={planStyles.currBtn}>Actuel</button>
+                  ) : (
+                    <button onClick={() => handleSubscribe(p.id)} style={{
+                      ...planStyles.subBtn,
+                      ...(p.recommended ? planStyles.recBtn : {})
+                    }}>
+                      S'abonner
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    const planStyles = {
+      container: { maxWidth: '1000px', margin: '0 auto', padding: '24px 20px 50px 20px', width: '100%' },
+      toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#1b4d3e', color: '#ffffff', padding: '12px 18px', borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 999, fontSize: '13px', fontWeight: '700' },
+      header: { textAlign: 'center', marginBottom: '36px', borderBottom: '1px solid #e9ecef', paddingBottom: '16px' },
+      title: { fontSize: '20px', fontWeight: '800' },
+      subtitle: { fontSize: '13px', color: '#6c757d', marginTop: '6px' },
+      grid: { display: 'flex', flexWrap: 'wrap', justify: 'center', gap: '24px', marginTop: '20px' },
+      card: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1.5px solid #dee2e6', padding: '30px 24px', flex: '1 1 260px', maxWidth: '320px', display: 'flex', flexDirection: 'column', position: 'relative' },
+      recCard: { borderColor: '#e07a5f', borderWidth: '2.5px', boxShadow: '0 8px 20px rgba(224, 122, 95, 0.12)' },
+      activeCard: { borderColor: '#1b4d3e' },
+      recBadge: { position: 'absolute', top: '0', left: '0', right: '0', backgroundColor: '#e07a5f', color: '#ffffff', textAlign: 'center', fontSize: '10px', fontWeight: '800', padding: '6px 0', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' },
+      cardHeader: { textAlign: 'center', marginTop: '10px', marginBottom: '20px' },
+      planName: { fontSize: '16px', fontWeight: '800', color: '#212529', marginBottom: '10px' },
+      price: { fontSize: '24px', fontWeight: '800', color: '#495057' },
+      period: { fontSize: '11px', color: '#868e96', fontWeight: '600' },
+      line: { height: '1px', backgroundColor: '#e9ecef', marginBottom: '20px' },
+      featList: { listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '30px', flexGrow: 1 },
+      featItem: { fontSize: '12.5px', color: '#495057', display: 'flex', gap: '8px', alignItems: 'center' },
+      check: { color: '#2d6a4f', fontWeight: '800' },
+      cross: { color: '#dc3545', fontWeight: '800' },
+      currBtn: { width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#adb5bd', color: '#ffffff', fontSize: '12px', fontWeight: '700', border: 'none', cursor: 'not-allowed' },
+      subBtn: { width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#f1f3f5', color: '#495057', fontSize: '12px', fontWeight: '700', border: 'none', cursor: 'pointer' },
+      recBtn: { backgroundColor: '#e07a5f', color: '#ffffff' }
+    };
+
+
+    // --- 7. ADD PRODUCT COMPONENT (NEW) ---
+    const CATEGORY_IMAGES = {
+      'Légumes': 'https://images.unsplash.com/photo-1595855759920-86582396756a?w=400&auto=format&fit=crop&q=60',
+      'Fruits': 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&auto=format&fit=crop&q=60',
+      'Céréales': 'https://images.unsplash.com/photo-1551754625-7fc5b945222b?w=400&auto=format&fit=crop&q=60',
+      'Laitier': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&auto=format&fit=crop&q=60',
+      'Miel': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&auto=format&fit=crop&q=60',
+      'Œufs': 'https://images.unsplash.com/photo-1516448424440-9dbca97779c1?w=400&auto=format&fit=crop&q=60'
+    };
+    const DEFAULT_IMAGE = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" style="background:%23e8f5e9;"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28">🌱</text></svg>';
+
+    function AddProduct({ onProductAdded, onCancel }) {
+      const [activeTab, setActiveTab] = useState('Informations');
+      const [name, setName] = useState('');
+      const [category, setCategory] = useState('Légumes');
+      const [quantity, setQuantity] = useState('');
+      const [price, setPrice] = useState('');
+      const [description, setDescription] = useState('');
+      const [isSubmitting, setIsSubmitting] = useState(false);
+      const [notification, setNotification] = useState('');
+
+      const handlePublish = (e) => {
+        e.preventDefault();
+        if (!name || !price || !quantity) {
+          alert('Veuillez remplir les champs obligatoires.');
+          return;
+        }
+        setIsSubmitting(true);
+        setTimeout(() => {
+          setIsSubmitting(false);
+          if (onProductAdded) {
+            onProductAdded({
+              name, category, price: parseFloat(price), quantity: parseFloat(quantity)
+            });
+          }
+        }, 1000);
+      };
+
+      const handleDraft = () => {
+        setNotification('Brouillon sauvegardé !');
+        setTimeout(() => setNotification(''), 2200);
+      };
+
+      return (
+        <div style={addStyles.container} className="fade-in">
+          {notification && (
+            <div style={addStyles.toast} className="fade-in"><span>💾 {notification}</span></div>
+          )}
+
+          <div style={addStyles.header}>
+            <div style={addStyles.titleWrapper}>
+              <button onClick={onCancel} style={addStyles.backBtn}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+                </svg>
+              </button>
+              <h2 style={addStyles.title}>+ Ajouter un produit</h2>
+            </div>
+          </div>
+
+          <div style={addStyles.tabs}>
+            {['Informations', 'Images', 'Détails', 'SEO'].map(tab => (
+              <button 
+                key={tab} 
+                onClick={() => setActiveTab(tab)} 
+                style={{...addStyles.tabBtn, ...(activeTab === tab ? addStyles.tabBtnActive : {})}}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div style={addStyles.grid}>
+            {/* Form Column */}
+            <div style={addStyles.formCard}>
+              <h3 style={addStyles.cardTitle}>Informations basiques</h3>
+              <form onSubmit={handlePublish} style={addStyles.form}>
+                <div style={addStyles.inputGroup}>
+                  <label style={addStyles.label}>Nom du produit *</label>
+                  <input type="text" placeholder="Ex: Banane Fraîche" value={name} onChange={e => setName(e.target.value)} className="custom-input" required />
+                </div>
+
+                <div style={addStyles.inputGroup}>
+                  <label style={addStyles.label}>Catégorie *</label>
+                  <select value={category} onChange={e => setCategory(e.target.value)} style={addStyles.select}>
+                    {['Légumes', 'Fruits', 'Céréales', 'Laitier', 'Miel', 'Œufs'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={addStyles.inputGroup}>
+                  <label style={addStyles.label}>Quantité disponible *</label>
+                  <input type="number" placeholder="Ex: 45" value={quantity} onChange={e => setQuantity(e.target.value)} className="custom-input" required />
+                </div>
+
+                <div style={addStyles.inputGroup}>
+                  <label style={addStyles.label}>Prix (FCFA) *</label>
+                  <input type="number" placeholder="Ex: 2500" value={price} onChange={e => setPrice(e.target.value)} className="custom-input" required />
+                </div>
+
+                <div style={addStyles.inputGroup}>
+                  <label style={addStyles.label}>Description</label>
+                  <textarea placeholder="Décrivez votre produit..." value={description} onChange={e => setDescription(e.target.value)} style={addStyles.textarea} rows="4"></textarea>
+                </div>
+
+                <div style={addStyles.actions}>
+                  <button type="button" onClick={handleDraft} style={addStyles.draftBtn}>Brouillon</button>
+                  <button type="submit" style={addStyles.pubBtn} disabled={isSubmitting}>
+                    {isSubmitting ? 'Publication...' : 'Publier'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Preview Column */}
+            <div style={addStyles.previewCard}>
+              <h3 style={addStyles.cardTitle}>Aperçu</h3>
+              <div style={addStyles.previewFlex}>
+                <div style={addStyles.mockupCard}>
+                  <span style={addStyles.mockupTag}>{category}</span>
+                  <div style={addStyles.mockupImgBox}>
+                    <img src={CATEGORY_IMAGES[category] || DEFAULT_IMAGE} alt="" style={addStyles.mockupImg} />
+                  </div>
+                  <div style={addStyles.mockupInfo}>
+                    <h4 style={addStyles.mockupName}>{name || 'Nom produit'}</h4>
+                    <p style={{...addStyles.mockupPrice, ...(price ? {color:'#e07a5f'}:{})}}>{price ? Number(price).toLocaleString() : '2500'} FCFA</p>
+                    <p style={addStyles.mockupCat}>Catégorie : {category}</p>
+                    <div style={addStyles.mockupStatus}>
+                      <span style={{...addStyles.statusDot, backgroundColor: (quantity > 0 || !quantity) ? '#2d6a4f' : '#dc3545'}}></span>
+                      <span style={{color: (quantity > 0 || !quantity) ? '#2d6a4f' : '#dc3545', fontSize: '11px', fontWeight: '700'}}>
+                        {(quantity > 0 || !quantity) ? 'En stock' : 'Rupture'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const addStyles = {
+      container: { maxWidth: '1000px', margin: '0 auto', padding: '24px 20px 50px 20px', width: '100%' },
+      toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#1b4d3e', color: '#ffffff', padding: '12px 18px', borderRadius: '10px', zIndex: 999, fontSize: '13px', fontWeight: '700' },
+      header: { marginBottom: '16px' },
+      titleWrapper: { display: 'flex', alignItems: 'center', gap: '10px' },
+      backBtn: { width: '34px', height: '34px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1.5px solid #dee2e6', display: 'flex', alignItems: 'center', justify: 'center', cursor: 'pointer' },
+      title: { fontSize: '20px', fontWeight: '800' },
+      tabs: { display: 'flex', borderBottom: '1px solid #dee2e6', marginBottom: '24px', gap: '4px' },
+      tabBtn: { fontSize: '13px', fontWeight: '700', color: '#6c757d', padding: '10px 16px', border: 'none', background: 'transparent', cursor: 'pointer', borderBottom: '3px solid transparent' },
+      tabBtnActive: { color: '#1b4d3e', borderBottomColor: '#1b4d3e' },
+      grid: { display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px', alignItems: 'start' },
+      formCard: { backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e9ecef', padding: '24px' },
+      previewCard: { backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e9ecef', padding: '24px' },
+      cardTitle: { fontSize: '14px', fontWeight: '800', borderBottom: '1px solid #f1f3f5', paddingBottom: '8px', marginBottom: '16px' },
+      form: { display: 'flex', flexDirection: 'column', gap: '14px' },
+      inputGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
+      label: { fontSize: '12px', fontWeight: '700', color: '#343a40' },
+      select: { width: '100%', padding: '12px', borderRadius: '10px', border: '1.5px solid #dee2e6', fontSize: '14px', backgroundColor: '#f8f9fa', outline: 'none' },
+      textarea: { width: '100%', padding: '12px', borderRadius: '10px', border: '1.5px solid #dee2e6', fontSize: '14px', backgroundColor: '#f8f9fa', outline: 'none', resize: 'vertical', fontFamily: 'inherit' },
+      actions: { display: 'flex', gap: '12px', marginTop: '10px' },
+      draftBtn: { flex: 1, padding: '12px', borderRadius: '10px', backgroundColor: '#f1f3f5', color: '#495057', fontSize: '12px', fontWeight: '700', border: 'none', cursor: 'pointer' },
+      pubBtn: { flex: 1, padding: '12px', borderRadius: '10px', backgroundColor: '#1b4d3e', color: '#ffffff', fontSize: '12px', fontWeight: '700', border: 'none', cursor: 'pointer' },
+      previewFlex: { display: 'flex', justify: 'center', padding: '10px 0' },
+      mockupCard: { width: '100%', maxWidth: '230px', border: '1px solid #e9ecef', borderRadius: '12px', padding: '12px', position: 'relative', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' },
+      mockupTag: { position: 'absolute', top: '18px', left: '18px', backgroundColor: 'rgba(27,77,62,0.85)', color: '#ffffff', fontSize: '8px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px', zIndex: 2 },
+      mockupImgBox: { width: '100%', height: '140px', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#f1f3f5' },
+      mockupImg: { width: '100%', height: '100%', objectFit: 'cover' },
+      mockupInfo: { display: 'flex', flexDirection: 'column', marginTop: '10px' },
+      mockupName: { fontSize: '14px', fontWeight: '800', color: '#212529', marginBottom: '6px' },
+      mockupPrice: { fontSize: '16px', fontWeight: '800', color: '#adb5bd', marginBottom: '4px' },
+      mockupCat: { fontSize: '11px', color: '#868e96', marginBottom: '8px' },
+      mockupStatus: { display: 'flex', alignItems: 'center', gap: '5px' },
+      statusDot: { width: '8px', height: '8px', borderRadius: '50%' }
+    };
+
+
+    // --- 7A. ORDER DETAIL ADMIN COMPONENT ---
+    function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
+      const [status, setStatus] = useState('En préparation');
+      const [notification, setNotification] = useState('');
+      const [isDelivered, setIsDelivered] = useState(false);
+
+      const steps = ['Confirmée', 'En préparation', 'Expédiée', 'Livrée'];
+      
+      const getStepIndex = (currentStatus) => {
+        return steps.indexOf(currentStatus);
+      };
+
+      const handleMarkAsDelivered = () => {
+        setStatus('Livrée');
+        setIsDelivered(true);
+        setNotification('🎉 La commande #2026-001 a été marquée comme LIVRÉE avec succès !');
+        if (onMarkAsDeliveredState) {
+          onMarkAsDeliveredState('001', 'Livrée');
+        }
+        setTimeout(() => setNotification(''), 4000);
+      };
+
+      const handleContactClient = () => {
+        setNotification('✉️ Ouverture de la messagerie de contact pour Flavier Dschang (+237 6XX XXX XXX)...');
+        setTimeout(() => setNotification(''), 4000);
+      };
+
+      const currentStepIdx = getStepIndex(status);
+
+      return (
+        <div style={detailStyles.container} className="fade-in">
+          {notification && (
+            <div style={detailStyles.toast} className="fade-in">
+              <span>{notification}</span>
+            </div>
+          )}
+
+          <div style={detailStyles.header}>
+            <h2 style={detailStyles.title}>Détail commande #2026-001</h2>
+            <button onClick={onBack} style={detailStyles.backBtn}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px' }}>
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+              Retour
+            </button>
+          </div>
+
+          <div style={detailStyles.trackerCard}>
+            <span style={detailStyles.statusLabel}>Statut actuel : <strong style={{ color: status === 'Livrée' ? '#2d6a4f' : '#e07a5f' }}>{status}</strong></span>
+            <div style={detailStyles.timelineWrapper}>
+              {steps.map((step, idx) => {
+                const isCompleted = idx <= currentStepIdx;
+                const isActive = idx === currentStepIdx;
+                return (
+                  <React.Fragment key={step}>
+                    {idx > 0 && (
+                      <div style={{
+                        ...detailStyles.timelineLine,
+                        backgroundColor: idx <= currentStepIdx ? '#2d6a4f' : '#dee2e6'
+                      }} />
+                    )}
+                    
+                    <div style={detailStyles.stepNodeContainer}>
+                      <div style={{
+                        ...detailStyles.stepDot,
+                        backgroundColor: isCompleted ? '#2d6a4f' : '#ffffff',
+                        borderColor: isCompleted ? '#2d6a4f' : '#adb5bd',
+                        boxShadow: isActive ? '0 0 0 4px rgba(45, 106, 79, 0.2)' : 'none'
+                      }}>
+                        {isCompleted ? (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        ) : (
+                          <span style={detailStyles.stepNumber}>{idx + 1}</span>
+                        )}
+                      </div>
+                      <span style={{
+                        ...detailStyles.stepLabelText,
+                        fontWeight: isCompleted ? '700' : '500',
+                        color: isCompleted ? '#212529' : '#6c757d'
+                      }}>
+                        {step}
+                      </span>
+                    </div>
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={detailStyles.layoutGrid}>
+            <div style={detailStyles.leftCard}>
+              <div style={detailStyles.section}>
+                <h3 style={detailStyles.sectionTitle}>🛒 Produits commandés</h3>
+                <div style={detailStyles.productRow}>
+                  <div style={detailStyles.productAvatar}>🍌</div>
+                  <div style={detailStyles.productInfo}>
+                    <h4 style={detailStyles.productName}>Banane Fraîche</h4>
+                    <p style={detailStyles.productMeta}>10 kg × 2,500 FCFA</p>
+                  </div>
+                  <div style={detailStyles.productPrice}>25,000 FCFA</div>
+                </div>
+              </div>
+
+              <div style={detailStyles.divider}></div>
+
+              <div style={detailStyles.section}>
+                <h3 style={detailStyles.sectionTitle}>👤 Informations client</h3>
+                <div style={detailStyles.clientDetail}>
+                  <p style={detailStyles.detailName}>Flavier Dschang</p>
+                  <p style={detailStyles.detailContact}>flavier@gmail.com  |  +237 6XX XXX XXX</p>
+                </div>
+              </div>
+
+              <div style={detailStyles.divider}></div>
+
+              <div style={detailStyles.section}>
+                <h3 style={detailStyles.sectionTitle}>📍 Adresse livraison</h3>
+                <p style={detailStyles.detailText}>123 rue de la Paix, Dschang</p>
+              </div>
+
+              <div style={detailStyles.divider}></div>
+
+              <div style={detailStyles.section}>
+                <h3 style={detailStyles.sectionTitle}>💳 Paiement</h3>
+                <div style={detailStyles.paymentBadge}>
+                  <span style={detailStyles.paymentMethod}>Mobile Money</span>
+                  <span style={detailStyles.paymentAmount}>25,000 FCFA</span>
+                </div>
+              </div>
+
+              <div style={detailStyles.divider}></div>
+
+              <div style={detailStyles.section}>
+                <h3 style={detailStyles.sectionTitle}>📅 Date commande</h3>
+                <p style={detailStyles.detailText}>15 mai 2026 - 14:30</p>
+              </div>
+
+              <div style={detailStyles.buttonGroup}>
+                <button 
+                  onClick={handleMarkAsDelivered} 
+                  style={{
+                    ...detailStyles.btnPrimary,
+                    ...(status === 'Livrée' ? detailStyles.btnDisabled : {})
+                  }}
+                  disabled={status === 'Livrée'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  {status === 'Livrée' ? 'Livraison validée' : 'Marquer livrée'}
+                </button>
+                
+                <button onClick={handleContactClient} style={detailStyles.btnSecondary}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                  Contacter client
+                </button>
+              </div>
+            </div>
+
+            <div style={detailStyles.rightCard}>
+              <h3 style={detailStyles.summaryTitle}>Résumé</h3>
+              
+              <div style={detailStyles.summaryRow}>
+                <span style={detailStyles.summaryLabel}>Sous-total</span>
+                <span style={detailStyles.summaryValue}>25,000 FCFA</span>
+              </div>
+
+              <div style={detailStyles.summaryRow}>
+                <span style={detailStyles.summaryLabel}>Frais livraison</span>
+                <span style={detailStyles.summaryValue}>5,000 FCFA</span>
+              </div>
+
+              <div style={detailStyles.summaryDivider}></div>
+
+              <div style={{ ...detailStyles.summaryRow, marginBottom: '24px' }}>
+                <span style={detailStyles.totalLabel}>Total</span>
+                <span style={detailStyles.totalValue}>30,000 FCFA</span>
+              </div>
+
+              <div style={detailStyles.logisticsBlock}>
+                <div style={detailStyles.logisticsItem}>
+                  <span style={detailStyles.logisticsLabel}>Numéro suivi</span>
+                  <span style={detailStyles.trackingLink}>AGM-2026-001-Z345</span>
+                </div>
+
+                <div style={detailStyles.logisticsItem}>
+                  <span style={detailStyles.logisticsLabel}>Transporteur</span>
+                  <span style={detailStyles.carrierVal}>DHL Express</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const detailStyles = {
+      container: { maxWidth: '1100px', margin: '0 auto', padding: '24px 20px 50px 20px', width: '100%' },
+      toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#1b4d3e', color: '#ffffff', padding: '14px 20px', borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 9999, fontSize: '13px', fontWeight: '700' },
+      header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1.5px solid #dee2e6', paddingBottom: '14px' },
+      title: { fontSize: '20px', fontWeight: '800', color: '#212529', letterSpacing: '-0.02em' },
+      backBtn: { display: 'flex', alignItems: 'center', padding: '8px 14px', borderRadius: '8px', backgroundColor: '#ffffff', color: '#1b4d3e', fontSize: '13px', fontWeight: '700', border: '1.5px solid #dee2e6', cursor: 'pointer' },
+      trackerCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '20px', marginBottom: '24px' },
+      statusLabel: { fontSize: '12px', fontWeight: '600', color: '#6c757d', display: 'block', marginBottom: '16px' },
+      timelineWrapper: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', padding: '0 10px' },
+      timelineLine: { flexGrow: 1, height: '4px', margin: '0 -15px', transform: 'translateY(-10px)', borderRadius: '2px' },
+      stepNodeContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 2, position: 'relative' },
+      stepDot: { width: '28px', height: '28px', borderRadius: '50%', border: '2px solid', display: 'flex', alignItems: 'center', justify: 'center' },
+      stepNumber: { fontSize: '11px', fontWeight: '800', color: '#adb5bd' },
+      stepLabelText: { fontSize: '11px', textAlign: 'center' },
+      layoutGrid: { display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px', alignItems: 'start' },
+      leftCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '24px' },
+      section: { display: 'flex', flexDirection: 'column', gap: '8px' },
+      sectionTitle: { fontSize: '12px', fontWeight: '800', color: '#1b4d3e', textTransform: 'uppercase', letterSpacing: '0.05em' },
+      divider: { height: '1px', backgroundColor: '#f1f3f5', margin: '16px 0' },
+      productRow: { display: 'flex', alignItems: 'center', gap: '14px' },
+      productAvatar: { width: '40px', height: '40px', backgroundColor: '#fcf8f2', borderRadius: '8px', display: 'flex', alignItems: 'center', justify: 'center', fontSize: '20px', border: '1px solid #f8e5d0' },
+      productInfo: { flexGrow: 1 },
+      productName: { fontSize: '14px', fontWeight: '700', color: '#212529' },
+      productMeta: { fontSize: '11px', color: '#6c757d' },
+      productPrice: { fontSize: '14px', fontWeight: '800', color: '#e07a5f' },
+      clientDetail: { display: 'flex', flexDirection: 'column', gap: '2px' },
+      detailName: { fontSize: '14px', fontWeight: '700', color: '#212529' },
+      detailContact: { fontSize: '12px', color: '#6c757d' },
+      detailText: { fontSize: '13px', color: '#343a40', fontWeight: '500' },
+      paymentBadge: { display: 'flex', alignItems: 'center', gap: '10px' },
+      paymentMethod: { fontSize: '12px', fontWeight: '700', color: '#2d6a4f', backgroundColor: '#d8f3dc', padding: '3px 8px', borderRadius: '6px' },
+      paymentAmount: { fontSize: '13px', fontWeight: '700', color: '#495057' },
+      buttonGroup: { display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap' },
+      btnPrimary: { flex: 1.2, minWidth: '140px', display: 'flex', alignItems: 'center', justify: 'center', gap: '6px', padding: '12px 16px', borderRadius: '8px', backgroundColor: '#1b4d3e', color: '#ffffff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' },
+      btnDisabled: { backgroundColor: '#adb5bd', cursor: 'not-allowed' },
+      btnSecondary: { flex: 1, minWidth: '140px', display: 'flex', alignItems: 'center', justify: 'center', gap: '6px', padding: '12px 16px', borderRadius: '8px', backgroundColor: '#f8f9fa', color: '#343a40', fontSize: '13px', fontWeight: '700', border: '1.5px solid #dee2e6', cursor: 'pointer' },
+      rightCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '24px' },
+      summaryTitle: { fontSize: '15px', fontWeight: '800', color: '#212529', marginBottom: '16px', borderBottom: '1px solid #f1f3f5', paddingBottom: '8px' },
+      summaryRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '13px' },
+      summaryLabel: { color: '#6c757d', fontWeight: '500' },
+      summaryValue: { color: '#212529', fontWeight: '700' },
+      summaryDivider: { height: '1px', backgroundColor: '#e9ecef', margin: '12px 0' },
+      totalLabel: { fontSize: '14px', fontWeight: '800', color: '#212529' },
+      totalValue: { fontSize: '16px', fontWeight: '800', color: '#e07a5f' },
+      logisticsBlock: { backgroundColor: '#f8f9fa', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid #e9ecef' },
+      logisticsItem: { display: 'flex', flexDirection: 'column' },
+      logisticsLabel: { fontSize: '10px', fontWeight: '700', color: '#868e96', textTransform: 'uppercase' },
+      trackingLink: { fontSize: '12px', fontWeight: '700', color: '#1b4d3e', textDecoration: 'underline', cursor: 'pointer' },
+      carrierVal: { fontSize: '12px', fontWeight: '600', color: '#343a40' }
+    };
+
+
+    // --- 7B. ORDER MANAGEMENT ADMIN COMPONENT ---
+    function OrderManagementAdmin({ onViewOrder, ordersData }) {
+      const [activeTab, setActiveTab] = useState('Toutes');
+      const [searchQuery, setSearchQuery] = useState('');
+      
+      const defaultOrders = [
+        { id: '001', client: 'Client A', amount: 25000, status: 'Livrée', date: '15/05' },
+        { id: '002', client: 'Client B', amount: 45500, status: 'En livraison', date: '13/05' },
+        { id: '003', client: 'Client C', amount: 18500, status: 'En attente', date: '12/05' }
+      ];
+
+      const orders = ordersData || defaultOrders;
+      const tabs = ['Toutes', 'En attente', 'Confirmées', 'En livraison', 'Livrées'];
+
+      const getStatusStyle = (status) => {
+        switch (status) {
+          case 'Livrée': return { color: '#2d6a4f', backgroundColor: '#d8f3dc' };
+          case 'En livraison': return { color: '#e07a5f', backgroundColor: '#fde8e3' };
+          case 'En attente': return { color: '#dfa116', backgroundColor: '#fef5d1' };
+          case 'Confirmée':
+          case 'Confirmées': return { color: '#2b6cb0', backgroundColor: '#ebf8ff' };
+          default: return { color: '#6c757d', backgroundColor: '#f1f3f5' };
+        }
+      };
+
+      const filteredOrders = orders.filter(order => {
+        const matchesTab = activeTab === 'Toutes' || 
+                           (activeTab === 'En attente' && order.status === 'En attente') ||
+                           (activeTab === 'Confirmées' && (order.status === 'Confirmée' || order.status === 'Confirmées')) ||
+                           (activeTab === 'En livraison' && order.status === 'En livraison') ||
+                           (activeTab === 'Livrées' && order.status === 'Livrée');
+
+        const matchesSearch = order.client.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              `#${order.id}`.includes(searchQuery);
+        return matchesTab && matchesSearch;
+      });
+
+      return (
+        <div style={adminOrdersStyles.container} className="fade-in">
+          <div style={adminOrdersStyles.header}>
+            <div style={adminOrdersStyles.titleArea}>
+              <h2 style={adminOrdersStyles.title}>Gestion commandes</h2>
+              <p style={adminOrdersStyles.subtitle}>Supervisez et gérez les flux logistiques des commandes AgroMarket.</p>
+            </div>
+          </div>
+
+          <div style={adminOrdersStyles.controlsBar}>
+            <div style={adminOrdersStyles.tabsWrapper}>
+              {tabs.map(tab => {
+                const isActive = activeTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    style={{
+                      ...adminOrdersStyles.tabBtn,
+                      ...(isActive ? adminOrdersStyles.activeTabBtn : {})
+                    }}
+                  >
+                    {tab}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={adminOrdersStyles.searchWrapper}>
+              <svg style={adminOrdersStyles.searchIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Rechercher client, N°..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={adminOrdersStyles.searchInput}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={adminOrdersStyles.clearSearchBtn}>×</button>
+              )}
+            </div>
+          </div>
+
+          <div style={adminOrdersStyles.tableCard}>
+            <div className="table-container">
+              <table style={adminOrdersStyles.table}>
+                <thead>
+                  <tr style={adminOrdersStyles.tableHeadRow}>
+                    <th style={adminOrdersStyles.th}>Commande</th>
+                    <th style={adminOrdersStyles.th}>Client</th>
+                    <th style={adminOrdersStyles.th}>Montant</th>
+                    <th style={adminOrdersStyles.th}>Statut</th>
+                    <th style={adminOrdersStyles.th}>Date</th>
+                    <th style={adminOrdersStyles.thAlignRight}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((order, idx) => {
+                      const statusStyle = getStatusStyle(order.status);
+                      return (
+                        <tr key={order.id} style={{
+                          ...adminOrdersStyles.tableRow,
+                          backgroundColor: idx % 2 === 1 ? '#f8f9fa' : '#ffffff'
+                        }}>
+                          <td style={adminOrdersStyles.tdOrderCode}>#{order.id}</td>
+                          <td style={adminOrdersStyles.tdClient}>{order.client}</td>
+                          <td style={adminOrdersStyles.tdAmount}>{order.amount.toLocaleString()} FCFA</td>
+                          <td style={adminOrdersStyles.td}>
+                            <span style={{ ...adminOrdersStyles.statusBadge, ...statusStyle }}>
+                              {order.status}
+                            </span>
+                          </td>
+                          <td style={adminOrdersStyles.tdDate}>{order.date}</td>
+                          <td style={adminOrdersStyles.tdActions}>
+                            <button onClick={() => onViewOrder(order.id)} style={adminOrdersStyles.actionBtn}>
+                              Voir | Éditer
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="6" style={adminOrdersStyles.noDataCell}>
+                        <div style={adminOrdersStyles.noDataContent}>
+                          <span>📦</span>
+                          <p>Aucune commande trouvée.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            <div style={adminOrdersStyles.tableFooter}>
+              <span style={adminOrdersStyles.footerInfo}>
+                Affichage de <strong>{filteredOrders.length}</strong> commande(s) sur <strong>{orders.length}</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const adminOrdersStyles = {
+      container: { maxWidth: '1100px', margin: '0 auto', padding: '24px 20px 50px 20px', width: '100%' },
+      header: { marginBottom: '20px', borderBottom: '1.5px solid #dee2e6', paddingBottom: '14px' },
+      titleArea: { display: 'flex', flexDirection: 'column', gap: '4px' },
+      title: { fontSize: '20px', fontWeight: '800', color: '#212529', letterSpacing: '-0.02em' },
+      subtitle: { fontSize: '12px', color: '#6c757d' },
+      controlsBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' },
+      tabsWrapper: { display: 'flex', gap: '4px', backgroundColor: '#ffffff', padding: '4px', borderRadius: '8px', border: '1px solid #e9ecef', flexWrap: 'wrap' },
+      tabBtn: { padding: '6px 12px', borderRadius: '5px', fontSize: '12px', fontWeight: '600', color: '#495057', cursor: 'pointer' },
+      activeTabBtn: { backgroundColor: '#1b4d3e', color: '#ffffff' },
+      searchWrapper: { position: 'relative', display: 'flex', alignItems: 'center', minWidth: '220px', backgroundColor: '#ffffff', borderRadius: '8px', border: '1.5px solid #dee2e6', padding: '0px 10px' },
+      searchIcon: { color: '#adb5bd', marginRight: '6px' },
+      searchInput: { width: '100%', border: 'none', outline: 'none', padding: '6px 0', fontSize: '12px', color: '#212529' },
+      clearSearchBtn: { backgroundColor: 'transparent', border: 'none', fontSize: '14px', color: '#adb5bd', cursor: 'pointer' },
+      tableCard: { backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e9ecef', overflow: 'hidden' },
+      table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left' },
+      tableHeadRow: { borderBottom: '1.5px solid #dee2e6', backgroundColor: '#f8f9fa' },
+      th: { padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: '#495057', textTransform: 'uppercase', letterSpacing: '0.05em' },
+      thAlignRight: { padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: '#495057', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' },
+      tableRow: { borderBottom: '1px solid #e9ecef' },
+      td: { padding: '12px 16px', verticalAlign: 'middle' },
+      tdOrderCode: { padding: '12px 16px', verticalAlign: 'middle', fontSize: '13px', fontWeight: '700', color: '#1b4d3e' },
+      tdClient: { padding: '12px 16px', verticalAlign: 'middle', fontSize: '13px', fontWeight: '600', color: '#212529' },
+      tdAmount: { padding: '12px 16px', verticalAlign: 'middle', fontSize: '13px', fontWeight: '800', color: '#e07a5f' },
+      tdDate: { padding: '12px 16px', verticalAlign: 'middle', fontSize: '12px', color: '#6c757d' },
+      tdActions: { padding: '12px 16px', verticalAlign: 'middle', textAlign: 'right' },
+      actionBtn: { color: '#1b4d3e', fontWeight: '700', fontSize: '12px', cursor: 'pointer' },
+      statusBadge: { display: 'inline-block', padding: '3px 8px', borderRadius: '5px', fontSize: '10.5px', fontWeight: '800' },
+      noDataCell: { padding: '30px' },
+      noDataContent: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' },
+      tableFooter: { padding: '12px 16px', borderTop: '1px solid #e9ecef', backgroundColor: '#ffffff' },
+      footerInfo: { fontSize: '11px', color: '#6c757d' }
+    };
+
+
+    // --- 7C. CHECKOUT WIZARD COMPONENT ---
+    function CheckoutWizard({ onCancel, onOrderSuccess }) {
+      const [step, setStep] = useState(1);
+      const [formData, setFormData] = useState({ fullName: '', phone: '', address: '', zipCode: '', city: '' });
+      const [errors, setErrors] = useState({});
+      const [shippingMethod, setShippingMethod] = useState('express');
+      const [paymentMethod, setPaymentMethod] = useState('momo');
+      const [notification, setNotification] = useState('');
+
+      const baseSubtotal = 92500;
+      const promoDiscount = -10000;
+      
+      const getShippingCost = () => shippingMethod === 'express' ? 5000 : 2000;
+      const getShippingLabel = () => shippingMethod === 'express' ? 'Express (DHL)' : 'Standard (Point Relais)';
+      const getTotal = () => baseSubtotal + promoDiscount + getShippingCost();
+
+      const validateStep1 = () => {
+        const tempErrors = {};
+        if (!formData.fullName.trim()) tempErrors.fullName = 'Le nom complet est requis.';
+        if (!formData.phone.trim()) tempErrors.phone = 'Le numéro de téléphone est requis.';
+        if (!formData.address.trim()) tempErrors.address = 'L’adresse de livraison est requise.';
+        if (!formData.city.trim()) tempErrors.city = 'La ville est requise.';
+        setErrors(tempErrors);
+        return Object.keys(tempErrors).length === 0;
+      };
+
+      const handleNext = () => {
+        if (step === 1) {
+          if (validateStep1()) {
+            setStep(2);
+          } else {
+            setNotification('⚠️ Veuillez remplir correctement tous les champs obligatoires.');
+            setTimeout(() => setNotification(''), 3000);
+          }
+        } else if (step === 2) {
+          setStep(3);
+        } else if (step === 3) {
+          setStep(4);
+          if (onOrderSuccess) {
+            onOrderSuccess({
+              id: '2026-004',
+              client: formData.fullName,
+              amount: getTotal(),
+              status: 'En attente',
+              date: 'Aujourd\'hui'
+            });
+          }
+        }
+      };
+
+      const handleBack = () => {
+        if (step > 1 && step < 4) setStep(step - 1);
+      };
+
+      const handleInputChange = (field, val) => {
+        setFormData(prev => ({ ...prev, [field]: val }));
+        if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
+      };
+
+      return (
+        <div style={wizardStyles.container} className="fade-in">
+          {notification && (
+            <div style={wizardStyles.toast} className="fade-in">
+              <span>{notification}</span>
+            </div>
+          )}
+
+          {step < 4 && (
+            <div style={wizardStyles.header}>
+              <h2 style={wizardStyles.title}>Tunnel de Paiement</h2>
+              <button onClick={onCancel} style={{ fontSize: '12px', fontWeight: '700', color: '#6c757d', borderBottom: '1px dashed #adb5bd', cursor: 'pointer' }}>
+                Annuler l'achat
+              </button>
+            </div>
+          )}
+
+          <div style={wizardStyles.wizardCard}>
+            <div style={wizardStyles.wizardSteps}>
+              {['Adresse', 'Livraison', 'Paiement', 'Confirmation'].map((name, idx) => {
+                const stepNum = idx + 1;
+                const isCompleted = step > stepNum;
+                const isActive = step === stepNum;
+                return (
+                  <div key={name} style={wizardStyles.wizardStepContainer}>
+                    <div style={{
+                      ...wizardStyles.wizardDot,
+                      backgroundColor: isCompleted ? '#2d6a4f' : (isActive ? '#1b4d3e' : '#ffffff'),
+                      borderColor: isCompleted || isActive ? '#1b4d3e' : '#adb5bd',
+                    }}>
+                      {isCompleted ? (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        <span style={{ ...wizardStyles.wizardNumber, color: isActive ? '#ffffff' : '#adb5bd' }}>{stepNum}</span>
+                      )}
+                    </div>
+                    <span style={{ ...wizardStyles.wizardLabel, color: isActive || isCompleted ? '#212529' : '#868e96', fontWeight: isActive || isCompleted ? '700' : '500' }}>{name}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {step === 4 ? (
+            <div style={wizardStyles.successCard} className="fade-in">
+              <div style={wizardStyles.successIconWrapper}>
+                <div style={wizardStyles.successIconPulse}></div>
+                <div style={wizardStyles.successIcon}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              </div>
+
+              <h3 style={wizardStyles.successTitle}>Commande validée !</h3>
+              <p style={wizardStyles.successSubtitle}>Votre commande a été enregistrée avec succès.</p>
+
+              <div style={wizardStyles.orderSummaryBox}>
+                <div style={wizardStyles.orderInfoLine}><span style={wizardStyles.infoLabel}>Numéro de commande</span><span style={wizardStyles.infoValue}>#2026-004</span></div>
+                <div style={wizardStyles.orderInfoLine}><span style={wizardStyles.infoLabel}>Client</span><span style={wizardStyles.infoValue}>{formData.fullName || 'Client AgroMarket'}</span></div>
+                <div style={wizardStyles.orderInfoLine}><span style={wizardStyles.infoLabel}>Montant débité</span><span style={{ ...wizardStyles.infoValue, color: '#e07a5f' }}>{getTotal().toLocaleString()} FCFA</span></div>
+                <div style={wizardStyles.orderInfoLine}><span style={wizardStyles.infoLabel}>Livraison</span><span style={wizardStyles.infoValue}>{getShippingLabel()}</span></div>
+              </div>
+
+              <button onClick={onCancel} style={wizardStyles.successBtn}>Retourner à l'accueil</button>
+            </div>
+          ) : (
+            <div style={wizardStyles.layoutGrid}>
+              <div style={wizardStyles.leftCard}>
+                {step === 1 && (
+                  <div className="fade-in">
+                    <h3 style={wizardStyles.sectionTitle}>Adresse de livraison</h3>
+                    <div style={wizardStyles.formGrid}>
+                      <div style={wizardStyles.inputGroup}>
+                        <label style={wizardStyles.label}>Nom complet *</label>
+                        <input type="text" placeholder="Ex: Flavier Dschang" value={formData.fullName} onChange={e => handleInputChange('fullName', e.target.value)} className="custom-input" style={errors.fullName ? {borderColor:'#dc3545'} : {}} />
+                        {errors.fullName && <span style={wizardStyles.errorText}>{errors.fullName}</span>}
+                      </div>
+
+                      <div style={wizardStyles.inputGroup}>
+                        <label style={wizardStyles.label}>Téléphone *</label>
+                        <input type="text" placeholder="Ex: +237 6XX XXX XXX" value={formData.phone} onChange={e => handleInputChange('phone', e.target.value)} className="custom-input" style={errors.phone ? {borderColor:'#dc3545'} : {}} />
+                        {errors.phone && <span style={wizardStyles.errorText}>{errors.phone}</span>}
+                      </div>
+
+                      <div style={{ ...wizardStyles.inputGroup, gridColumn: 'span 2' }}>
+                        <label style={wizardStyles.label}>Adresse *</label>
+                        <input type="text" placeholder="Ex: 123 Rue de la Paix" value={formData.address} onChange={e => handleInputChange('address', e.target.value)} className="custom-input" style={errors.address ? {borderColor:'#dc3545'} : {}} />
+                        {errors.address && <span style={wizardStyles.errorText}>{errors.address}</span>}
+                      </div>
+
+                      <div style={wizardStyles.inputGroup}>
+                        <label style={wizardStyles.label}>Ville *</label>
+                        <input type="text" placeholder="Ex: Dschang" value={formData.city} onChange={e => handleInputChange('city', e.target.value)} className="custom-input" style={errors.city ? {borderColor:'#dc3545'} : {}} />
+                        {errors.city && <span style={wizardStyles.errorText}>{errors.city}</span>}
+                      </div>
+
+                      <div style={wizardStyles.inputGroup}>
+                        <label style={wizardStyles.label}>Code postal</label>
+                        <input type="text" placeholder="Ex: 00237" value={formData.zipCode} onChange={e => handleInputChange('zipCode', e.target.value)} className="custom-input" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {step === 2 && (
+                  <div className="fade-in">
+                    <h3 style={wizardStyles.sectionTitle}>Mode de livraison</h3>
+                    <div style={wizardStyles.selectionGrid}>
+                      <div onClick={() => setShippingMethod('express')} style={{ ...wizardStyles.selectionCard, ...(shippingMethod === 'express' ? wizardStyles.selectionCardActive : {}) }}>
+                        <div style={wizardStyles.selectionRadioWrapper}>
+                          <span style={{ ...wizardStyles.selectionRadio, ...(shippingMethod === 'express' ? wizardStyles.selectionRadioActive : {}) }} />
+                          <div style={wizardStyles.selectionInfo}>
+                            <h4 style={wizardStyles.selectionTitleText}>Livraison Express (DHL)</h4>
+                            <p style={wizardStyles.selectionDesc}>Livraison à domicile en 24h à 48h. Remise en main propre.</p>
+                          </div>
+                        </div>
+                        <span style={wizardStyles.selectionPrice}>5,000 FCFA</span>
+                      </div>
+
+                      <div onClick={() => setShippingMethod('standard')} style={{ ...wizardStyles.selectionCard, ...(shippingMethod === 'standard' ? wizardStyles.selectionCardActive : {}) }}>
+                        <div style={wizardStyles.selectionRadioWrapper}>
+                          <span style={{ ...wizardStyles.selectionRadio, ...(shippingMethod === 'standard' ? wizardStyles.selectionRadioActive : {}) }} />
+                          <div style={wizardStyles.selectionInfo}>
+                            <h4 style={wizardStyles.selectionTitleText}>Livraison Standard (Point Relais)</h4>
+                            <p style={wizardStyles.selectionDesc}>Disponible sous 3 à 5 jours dans le point de retrait AgroMarket.</p>
+                          </div>
+                        </div>
+                        <span style={wizardStyles.selectionPrice}>2,000 FCFA</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div className="fade-in">
+                    <h3 style={wizardStyles.sectionTitle}>Moyen de paiement</h3>
+                    <div style={wizardStyles.selectionGrid}>
+                      <div onClick={() => setPaymentMethod('momo')} style={{ ...wizardStyles.selectionCard, ...(paymentMethod === 'momo' ? wizardStyles.selectionCardActive : {}) }}>
+                        <div style={wizardStyles.selectionRadioWrapper}>
+                          <span style={{ ...wizardStyles.selectionRadio, ...(paymentMethod === 'momo' ? wizardStyles.selectionRadioActive : {}) }} />
+                          <div style={wizardStyles.selectionInfo}>
+                            <h4 style={wizardStyles.selectionTitleText}>MTN Mobile Money</h4>
+                            <p style={wizardStyles.selectionDesc}>Un message de validation USSD s'affichera sur votre téléphone.</p>
+                          </div>
+                        </div>
+                        <span style={wizardStyles.paymentLogo}>mtn</span>
+                      </div>
+
+                      <div onClick={() => setPaymentMethod('om')} style={{ ...wizardStyles.selectionCard, ...(paymentMethod === 'om' ? wizardStyles.selectionCardActive : {}) }}>
+                        <div style={wizardStyles.selectionRadioWrapper}>
+                          <span style={{ ...wizardStyles.selectionRadio, ...(paymentMethod === 'om' ? wizardStyles.selectionRadioActive : {}) }} />
+                          <div style={wizardStyles.selectionInfo}>
+                            <h4 style={wizardStyles.selectionTitleText}>Orange Money</h4>
+                            <p style={wizardStyles.selectionDesc}>Paiement sécurisé par code d'autorisation Orange Money.</p>
+                          </div>
+                        </div>
+                        <span style={wizardStyles.paymentLogo}>om</span>
+                      </div>
+
+                      <div onClick={() => setPaymentMethod('card')} style={{ ...wizardStyles.selectionCard, ...(paymentMethod === 'card' ? wizardStyles.selectionCardActive : {}) }}>
+                        <div style={wizardStyles.selectionRadioWrapper}>
+                          <span style={{ ...wizardStyles.selectionRadio, ...(paymentMethod === 'card' ? wizardStyles.selectionRadioActive : {}) }} />
+                          <div style={wizardStyles.selectionInfo}>
+                            <h4 style={wizardStyles.selectionTitleText}>Carte Bancaire Visa / MasterCard</h4>
+                            <p style={wizardStyles.selectionDesc}>Paiement international supporté avec 3D Secure.</p>
+                          </div>
+                        </div>
+                        <span style={wizardStyles.paymentLogo}>carte</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div style={wizardStyles.wizardActions}>
+                  {step > 1 ? (
+                    <button onClick={handleBack} style={wizardStyles.backBtn}>Précédent</button>
+                  ) : (
+                    <button onClick={onCancel} style={{ fontSize: '13px', fontWeight: '700', color: '#6c757d', cursor: 'pointer' }}>Retour</button>
+                  )}
+                  <button onClick={handleNext} style={wizardStyles.nextBtn}>
+                    {step === 3 ? 'Confirmer le paiement' : 'Suivant'}
+                  </button>
+                </div>
+              </div>
+
+              <div style={wizardStyles.rightCard}>
+                <h3 style={wizardStyles.summaryTitle}>Résumé</h3>
+                
+                <div style={wizardStyles.summaryRow}>
+                  <span style={wizardStyles.summaryLabel}>Articles (3)</span>
+                  <span style={wizardStyles.summaryValue}>{baseSubtotal.toLocaleString()} FCFA</span>
+                </div>
+
+                <div style={wizardStyles.summaryRow}>
+                  <span style={wizardStyles.summaryLabel}>Livraison</span>
+                  <span style={wizardStyles.summaryValue}>{getShippingCost().toLocaleString()} FCFA</span>
+                </div>
+
+                <div style={wizardStyles.summaryRow}>
+                  <span style={wizardStyles.summaryLabel}>Code Promo</span>
+                  <span style={wizardStyles.promoValue}>{promoDiscount.toLocaleString()} FCFA</span>
+                </div>
+
+                <div style={wizardStyles.summaryDivider}></div>
+
+                <div style={{ ...wizardStyles.summaryRow, marginBottom: '20px' }}>
+                  <span style={wizardStyles.totalLabel}>Total</span>
+                  <span style={wizardStyles.totalValue}>{getTotal().toLocaleString()} FCFA</span>
+                </div>
+
+                <div style={wizardStyles.logisticsBlock}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#868e96' }}>
+                    <span>Livraison :</span><strong>{getShippingLabel()}</strong>
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#adb5bd', textAlign: 'center', marginTop: '4px' }}>
+                    Paiement sécurisé par cryptage SSL
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const wizardStyles = {
+      container: { maxWidth: '1100px', margin: '0 auto', padding: '24px 20px 50px 20px', width: '100%' },
+      toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#e07a5f', color: '#ffffff', padding: '12px 18px', borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 9999, fontSize: '13px', fontWeight: '700' },
+      header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1.5px solid #dee2e6', paddingBottom: '14px' },
+      title: { fontSize: '20px', fontWeight: '800', color: '#212529', letterSpacing: '-0.02em' },
+      wizardCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '16px 20px', marginBottom: '24px' },
+      wizardSteps: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' },
+      wizardStepContainer: { display: 'flex', alignItems: 'center', gap: '8px' },
+      wizardDot: { width: '24px', height: '24px', borderRadius: '50%', border: '2px solid', display: 'flex', alignItems: 'center', justify: 'center' },
+      wizardNumber: { fontSize: '10px', fontWeight: '800' },
+      wizardLabel: { fontSize: '12px' },
+      layoutGrid: { display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px', alignItems: 'start' },
+      leftCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '24px' },
+      sectionTitle: { fontSize: '15px', fontWeight: '800', color: '#1b4d3e', marginBottom: '20px', borderBottom: '1px solid #f1f3f5', paddingBottom: '8px' },
+      formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' },
+      inputGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
+      label: { fontSize: '11px', fontWeight: '700', color: '#495057' },
+      errorText: { fontSize: '10px', color: '#dc3545', fontWeight: '600', marginTop: '2px' },
+      selectionGrid: { display: 'flex', flexDirection: 'column', gap: '12px' },
+      selectionCard: { display: 'flex', justify: 'space-between', alignItems: 'center', padding: '14px', borderRadius: '10px', border: '2px solid #dee2e6', cursor: 'pointer' },
+      selectionCardActive: { borderColor: '#1b4d3e', backgroundColor: 'rgba(27,77,62,0.02)' },
+      selectionRadioWrapper: { display: 'flex', alignItems: 'center', gap: '12px' },
+      selectionRadio: { width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #adb5bd' },
+      selectionRadioActive: { borderColor: '#1b4d3e', borderWidth: '5px', backgroundColor: '#ffffff' },
+      selectionInfo: { display: 'flex', flexDirection: 'column' },
+      selectionTitleText: { fontSize: '13px', fontWeight: '700', color: '#212529' },
+      selectionDesc: { fontSize: '11px', color: '#6c757d', lineHeight: '1.3' },
+      selectionPrice: { fontSize: '13px', fontWeight: '800', color: '#e07a5f' },
+      paymentLogo: { fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#f1f3f5', color: '#495057' },
+      wizardActions: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', borderTop: '1px solid #f1f3f5', paddingTop: '16px' },
+      backBtn: { padding: '10px 20px', borderRadius: '8px', backgroundColor: '#f1f3f5', color: '#495057', fontSize: '12px', fontWeight: '700', cursor: 'pointer' },
+      nextBtn: { padding: '10px 24px', borderRadius: '8px', backgroundColor: '#1b4d3e', color: '#ffffff', fontSize: '12px', fontWeight: '700', cursor: 'pointer' },
+      rightCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '24px' },
+      summaryTitle: { fontSize: '15px', fontWeight: '800', color: '#212529', marginBottom: '16px', borderBottom: '1px solid #f1f3f5', paddingBottom: '8px' },
+      summaryRow: { display: 'flex', justify: 'space-between', marginBottom: '10px', fontSize: '13px' },
+      summaryLabel: { color: '#6c757d', fontWeight: '500' },
+      summaryValue: { color: '#212529', fontWeight: '700' },
+      promoValue: { color: '#2d6a4f', fontWeight: '700' },
+      summaryDivider: { height: '1px', backgroundColor: '#e9ecef', margin: '12px 0' },
+      totalLabel: { fontSize: '14px', fontWeight: '800', color: '#212529' },
+      totalValue: { fontSize: '16px', fontWeight: '800', color: '#e07a5f' },
+      logisticsBlock: { backgroundColor: '#f8f9fa', borderRadius: '8px', padding: '12px', border: '1px solid #e9ecef' },
+      successCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '36px 20px', maxWidth: '480px', margin: '20px auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' },
+      successIconWrapper: { position: 'relative', marginBottom: '16px' },
+      successIconPulse: { position: 'absolute', top: '-4px', left: '-4px', width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(45, 106, 79, 0.1)', animation: 'pulse 2s infinite' },
+      successIcon: { width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#2d6a4f', display: 'flex', alignItems: 'center', justify: 'center', zIndex: 1, position: 'relative' },
+      successTitle: { fontSize: '20px', fontWeight: '800', color: '#2d6a4f', marginBottom: '6px' },
+      successSubtitle: { fontSize: '13px', color: '#6c757d', marginBottom: '20px' },
+      orderSummaryBox: { backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '10px', padding: '16px', width: '100%', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' },
+      orderInfoLine: { display: 'flex', justifyContent: 'space-between', fontSize: '12.5px' },
+      infoLabel: { color: '#868e96', fontWeight: '600' },
+      infoValue: { color: '#212529', fontWeight: '700' },
+      successBtn: { width: '100%', padding: '12px', borderRadius: '8px', backgroundColor: '#1b4d3e', color: '#ffffff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }
+    };
+
+
+    // --- 10. SELLER DASHBOARD COMPONENT ---
+    function SellerDashboard({ onNavigate }) {
+      const [hoveredBar, setHoveredBar] = useState(null);
+      const [tooltip, setTooltip] = useState('');
+
+      const maxVal = Math.max(...[42, 68, 55, 80, 72, 95, 88, 110, 102, 130, 118, 145]);
+
+      const showToast = (msg) => {
+        setTooltip(msg);
+        setTimeout(() => setTooltip(''), 3000);
+      };
+
+      const kpis = [
+        { id: 'revenue', label: 'Revenus du mois', value: '1 248 500', unit: 'FCFA', change: '+18.4%', up: true, icon: '💰', color: '#2d6a4f', bg: '#d8f3dc' },
+        { id: 'orders', label: 'Commandes reçues', value: '87', unit: 'commandes', change: '+12.1%', up: true, icon: '📦', color: '#1b4d3e', bg: '#e9f5ee' },
+        { id: 'products', label: 'Produits actifs', value: '34', unit: 'articles', change: '+3', up: true, icon: '🌿', color: '#40916c', bg: '#f0faf3' },
+        { id: 'rating', label: 'Note moyenne', value: '4.8', unit: '/ 5', change: '▲ 0.2', up: true, icon: '⭐', color: '#e07a5f', bg: '#fdf1ed' }
+      ];
+
+      const chartDataList = [42, 68, 55, 80, 72, 95, 88, 110, 102, 130, 118, 145];
+      const monthsList = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+
+      const recentOrdersList = [
+        { id: '#2026-087', client: 'Bakari Sow', product: 'Mangue Premium', amount: '45,000 FCFA', status: 'Livrée', statusColor: '#2d6a4f', statusBg: '#d8f3dc' },
+        { id: '#2026-086', client: 'Aminata Fall', product: 'Tomate fraîche', amount: '12,500 FCFA', status: 'En livraison', statusColor: '#0066cc', statusBg: '#e0f0ff' },
+        { id: '#2026-085', client: 'Kofi Mensah', product: 'Ananas Bio', amount: '28,000 FCFA', status: 'En préparation', statusColor: '#e07a5f', statusBg: '#fdf1ed' },
+        { id: '#2026-084', client: 'Fatou Diallo', product: 'Gombo séché', amount: '8,500 FCFA', status: 'En attente', statusColor: '#6c757d', statusBg: '#f1f3f5' }
+      ];
+
+      const topProductsList = [
+        { name: 'Mangue Premium', sold: 234, revenue: '351,000', emoji: '🥭', pct: 84 },
+        { name: 'Ananas Bio', sold: 178, revenue: '267,000', emoji: '🍍', pct: 64 },
+        { name: 'Banane Fraîche', sold: 145, revenue: '217,500', emoji: '🍌', pct: 52 },
+        { name: 'Tomate fraîche', sold: 89, revenue: '111,250', emoji: '🍅', pct: 32 }
+      ];
+
+      const quickActionsList = [
+        { label: 'Ajouter un produit', icon: '➕', action: 'add-product', color: '#1b4d3e' },
+        { label: 'Voir les commandes', icon: '📋', action: 'order-management-admin', color: '#2d6a4f' },
+        { label: 'Mes produits', icon: '🌿', action: 'my-products', color: '#40916c' },
+        { label: 'Mon abonnement', icon: '💎', action: 'plans', color: '#e07a5f' }
+      ];
+
+      return (
+        <div style={sellerDashboardStyles.container} className="fade-in">
+          {tooltip && <div style={sellerDashboardStyles.toast} className="fade-in">{tooltip}</div>}
+
+          <div style={sellerDashboardStyles.pageHeader}>
+            <div>
+              <p style={sellerDashboardStyles.greeting}>Bonjour, Jean-Pierre 👋</p>
+              <h2 style={sellerDashboardStyles.pageTitle}>Tableau de bord Vendeur</h2>
+              <p style={sellerDashboardStyles.pageSubtitle}>Juin 2026 · AgroMarket Pro</p>
+            </div>
+            <div style={sellerDashboardStyles.headerActions}>
+              <button style={sellerDashboardStyles.exportBtn} onClick={() => showToast('📊 Export du rapport mensuel en cours...')}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Exporter rapport
+              </button>
+            </div>
+          </div>
+
+          <div style={sellerDashboardStyles.kpiGrid}>
+            {kpis.map((kpi) => (
+              <div key={kpi.id} style={sellerDashboardStyles.kpiCard}>
+                <div style={sellerDashboardStyles.kpiTop}>
+                  <div style={{ ...sellerDashboardStyles.kpiIconWrap, backgroundColor: kpi.bg }}>
+                    <span style={sellerDashboardStyles.kpiIcon}>{kpi.icon}</span>
+                  </div>
+                  <span style={{ ...sellerDashboardStyles.kpiChange, color: kpi.up ? '#2d6a4f' : '#dc3545', backgroundColor: kpi.up ? '#d8f3dc' : '#fde8ea' }}>
+                    {kpi.change}
+                  </span>
+                </div>
+                <p style={sellerDashboardStyles.kpiLabel}>{kpi.label}</p>
+                <p style={sellerDashboardStyles.kpiValue}>{kpi.value}<span style={sellerDashboardStyles.kpiUnit}> {kpi.unit}</span></p>
+              </div>
+            ))}
+          </div>
+
+          <div style={sellerDashboardStyles.mainGrid}>
+            <div style={sellerDashboardStyles.chartCard}>
+              <div style={sellerDashboardStyles.cardHeader}>
+                <div>
+                  <h3 style={sellerDashboardStyles.cardTitle}>Évolution des revenus</h3>
+                  <p style={sellerDashboardStyles.cardSubtitle}>Ventes mensuelles en FCFA (2026)</p>
+                </div>
+                <div style={sellerDashboardStyles.chartLegend}>
+                  <span style={sellerDashboardStyles.legendDot}></span>
+                  <span style={sellerDashboardStyles.legendText}>Revenus</span>
+                </div>
+              </div>
+              <div style={sellerDashboardStyles.chartArea}>
+                {chartDataList.map((val, i) => {
+                  const barHeight = (val / maxVal) * 120;
+                  const isHovered = hoveredBar === i;
+                  return (
+                    <div key={i} style={sellerDashboardStyles.barGroup} onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)}>
+                      {isHovered && <div style={sellerDashboardStyles.barTooltip}>{(val * 10000).toLocaleString('fr-FR')} FCFA</div>}
+                      <div style={{ ...sellerDashboardStyles.bar, height: `${barHeight}px`, backgroundColor: isHovered ? '#1b4d3e' : '#2d6a4f', opacity: isHovered ? 1 : 0.8 }} />
+                      <span style={sellerDashboardStyles.barLabel}>{monthsList[i]}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={sellerDashboardStyles.topProductsCard}>
+              <div style={sellerDashboardStyles.cardHeader}>
+                <div>
+                  <h3 style={sellerDashboardStyles.cardTitle}>Top produits</h3>
+                  <p style={sellerDashboardStyles.cardSubtitle}>Classement par ventes</p>
+                </div>
+              </div>
+              <div style={sellerDashboardStyles.productsList}>
+                {topProductsList.map((p, i) => (
+                  <div key={p.name} style={sellerDashboardStyles.productItem}>
+                    <div style={sellerDashboardStyles.productLeft}>
+                      <span style={sellerDashboardStyles.productRank}>#{i + 1}</span>
+                      <span style={sellerDashboardStyles.productEmoji}>{p.emoji}</span>
+                      <div>
+                        <p style={sellerDashboardStyles.productName}>{p.name}</p>
+                        <p style={sellerDashboardStyles.productSold}>{p.sold} ventes</p>
+                      </div>
+                    </div>
+                    <div style={sellerDashboardStyles.productRight}>
+                      <p style={sellerDashboardStyles.productRevenue}>{p.revenue} FCFA</p>
+                      <div style={sellerDashboardStyles.progressBar}><div style={{ ...sellerDashboardStyles.progressFill, width: `${p.pct}%` }} /></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={sellerDashboardStyles.bottomGrid}>
+            <div style={sellerDashboardStyles.recentOrdersCard}>
+              <div style={sellerDashboardStyles.cardHeader}>
+                <div><h3 style={sellerDashboardStyles.cardTitle}>Commandes récentes</h3><p style={sellerDashboardStyles.cardSubtitle}>4 dernières commandes</p></div>
+                {onNavigate && <button style={sellerDashboardStyles.viewAllBtn} onClick={() => onNavigate('order-management-admin')}>Tout voir →</button>}
+              </div>
+              <table style={sellerDashboardStyles.table}>
+                <thead>
+                  <tr>
+                    <th style={sellerDashboardStyles.th}>N° Commande</th>
+                    <th style={sellerDashboardStyles.th}>Client</th>
+                    <th style={sellerDashboardStyles.th}>Produit</th>
+                    <th style={sellerDashboardStyles.th}>Montant</th>
+                    <th style={sellerDashboardStyles.th}>Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentOrdersList.map((order) => (
+                    <tr key={order.id} style={sellerDashboardStyles.tr}>
+                      <td style={sellerDashboardStyles.td}><span style={sellerDashboardStyles.orderId}>{order.id}</span></td>
+                      <td style={sellerDashboardStyles.td}>{order.client}</td>
+                      <td style={sellerDashboardStyles.td}>{order.product}</td>
+                      <td style={sellerDashboardStyles.td}><strong style={{ color: '#e07a5f' }}>{order.amount}</strong></td>
+                      <td style={sellerDashboardStyles.td}><span style={{ ...sellerDashboardStyles.statusBadge, color: order.statusColor, backgroundColor: order.statusBg }}>{order.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={sellerDashboardStyles.quickActionsCard}>
+              <div style={sellerDashboardStyles.cardHeader}>
+                <div><h3 style={sellerDashboardStyles.cardTitle}>Actions rapides</h3><p style={sellerDashboardStyles.cardSubtitle}>Raccourcis vendeur</p></div>
+              </div>
+              <div style={sellerDashboardStyles.actionsGrid}>
+                {quickActionsList.map((qa) => (
+                  <button key={qa.action} style={{ ...sellerDashboardStyles.actionBtn, borderColor: qa.color + '30' }} onClick={() => onNavigate ? onNavigate(qa.action) : showToast(`Navigation vers ${qa.label}`)}>
+                    <span style={sellerDashboardStyles.actionIcon}>{qa.icon}</span><span style={sellerDashboardStyles.actionLabel}>{qa.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div style={sellerDashboardStyles.summaryStrip}>
+                <div style={sellerDashboardStyles.stripItem}><span style={sellerDashboardStyles.stripLabel}>Taux conversion</span><span style={sellerDashboardStyles.stripValue}>72.4%</span></div>
+                <div style={sellerDashboardStyles.stripDivider} />
+                <div style={sellerDashboardStyles.stripItem}><span style={sellerDashboardStyles.stripLabel}>Panier moyen</span><span style={sellerDashboardStyles.stripValue}>14,350 F</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const sellerDashboardStyles = {
+      container: { maxWidth: '1200px', margin: '0 auto', padding: '30px 20px 60px 20px', width: '100%' },
+      toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#1b4d3e', color: '#ffffff', padding: '14px 20px', borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 9999, fontSize: '13px', fontWeight: '700' },
+      pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px', borderBottom: '1.5px solid #dee2e6', paddingBottom: '20px', flexWrap: 'wrap', gap: '12px' },
+      greeting: { fontSize: '13px', color: '#6c757d', fontWeight: '600', marginBottom: '4px' },
+      pageTitle: { fontSize: '26px', fontWeight: '800', color: '#212529', letterSpacing: '-0.02em', margin: 0 },
+      pageSubtitle: { fontSize: '12px', color: '#adb5bd', fontWeight: '600', marginTop: '4px' },
+      headerActions: { display: 'flex', gap: '10px' },
+      exportBtn: { display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1.5px solid #dee2e6', color: '#343a40', fontSize: '13px', fontWeight: '700', cursor: 'pointer' },
+      kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '28px' },
+      kpiCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '22px 20px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' },
+      kpiTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' },
+      kpiIconWrap: { width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justify: 'center' },
+      kpiIcon: { fontSize: '18px' },
+      kpiChange: { fontSize: '11px', fontWeight: '700', padding: '3px 8px', borderRadius: '20px' },
+      kpiLabel: { fontSize: '12px', color: '#6c757d', fontWeight: '600', marginBottom: '4px' },
+      kpiValue: { fontSize: '22px', fontWeight: '800', color: '#212529', letterSpacing: '-0.02em' },
+      kpiUnit: { fontSize: '12px', fontWeight: '600', color: '#adb5bd' },
+      mainGrid: { display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '24px', marginBottom: '24px' },
+      chartCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.01)' },
+      cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' },
+      cardTitle: { fontSize: '15px', fontWeight: '800', color: '#212529', marginBottom: '2px' },
+      cardSubtitle: { fontSize: '12px', color: '#adb5bd', fontWeight: '500' },
+      chartLegend: { display: 'flex', alignItems: 'center', gap: '6px' },
+      legendDot: { width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#2d6a4f', display: 'inline-block' },
+      legendText: { fontSize: '11px', color: '#6c757d', fontWeight: '600' },
+      chartArea: { display: 'flex', alignItems: 'flex-end', gap: '8px', height: '150px', borderBottom: '2px solid #f1f3f5', paddingBottom: '6px' },
+      barGroup: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', cursor: 'pointer', position: 'relative' },
+      barTooltip: { position: 'absolute', top: '-36px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#212529', color: '#ffffff', fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '6px', whiteSpace: 'nowrap', zIndex: 10 },
+      bar: { width: '100%', borderRadius: '6px 6px 0 0', transition: 'all 0.2s ease', transformOrigin: 'bottom' },
+      barLabel: { fontSize: '9px', color: '#adb5bd', fontWeight: '600', textAlign: 'center' },
+      topProductsCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.01)' },
+      productsList: { display: 'flex', flexDirection: 'column', gap: '18px' },
+      productItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' },
+      productLeft: { display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 },
+      productRank: { fontSize: '11px', fontWeight: '800', color: '#adb5bd', width: '20px', flexShrink: 0 },
+      productEmoji: { fontSize: '20px' },
+      productName: { fontSize: '13px', fontWeight: '700', color: '#212529', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+      productSold: { fontSize: '11px', color: '#adb5bd', fontWeight: '500' },
+      productRight: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', flexShrink: 0 },
+      productRevenue: { fontSize: '12px', fontWeight: '700', color: '#2d6a4f', whiteSpace: 'nowrap' },
+      progressBar: { width: '80px', height: '5px', backgroundColor: '#e9ecef', borderRadius: '4px', overflow: 'hidden' },
+      progressFill: { height: '100%', backgroundColor: '#2d6a4f', borderRadius: '4px', transition: 'width 0.4s ease' },
+      bottomGrid: { display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '24px' },
+      recentOrdersCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.01)', overflowX: 'auto' },
+      viewAllBtn: { fontSize: '12px', fontWeight: '700', color: '#1b4d3e', cursor: 'pointer', background: 'none', border: 'none', padding: '4px 0', textDecoration: 'underline' },
+      table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px' },
+      th: { textAlign: 'left', padding: '10px 12px', fontSize: '11px', fontWeight: '700', color: '#868e96', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1.5px solid #f1f3f5', whiteSpace: 'nowrap' },
+      tr: { borderBottom: '1px solid #f8f9fa' },
+      td: { padding: '12px 12px', verticalAlign: 'middle', color: '#343a40', fontWeight: '500', whiteSpace: 'nowrap' },
+      orderId: { fontWeight: '700', color: '#1b4d3e', fontFamily: 'monospace' },
+      statusBadge: { display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700' },
+      quickActionsCard: { backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e9ecef', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.01)' },
+      actionsGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' },
+      actionBtn: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '16px 10px', borderRadius: '12px', backgroundColor: '#ffffff', border: '1.5px solid', cursor: 'pointer', transition: 'all 0.2s ease', color: '#212529', fontSize: '12px', fontWeight: '600' },
+      actionIcon: { fontSize: '22px' },
+      actionLabel: { textAlign: 'center', lineHeight: '1.2', fontSize: '12px' },
+      summaryStrip: { display: 'flex', backgroundColor: '#f8f9fa', borderRadius: '10px', padding: '12px 16px', border: '1px solid #e9ecef' },
+      stripItem: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
+      stripLabel: { fontSize: '10px', color: '#868e96', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' },
+      stripValue: { fontSize: '15px', fontWeight: '800', color: '#212529' },
+      stripDivider: { width: '1px', backgroundColor: '#dee2e6', alignSelf: 'stretch', margin: '0 10px' }
+    };
+
+    // --- 11. PREMIUM PLACEHOLDER (For Modules under finalization) ---
+    function PremiumPlaceholder({ title, icon, onBack }) {
+      return (
+        <div style={placeholderStyles.container} className="fade-in">
+          <div style={placeholderStyles.card}>
+            <div style={placeholderStyles.iconWrap}>
+              <div style={placeholderStyles.iconPulse}></div>
+              <span style={placeholderStyles.icon}>{icon}</span>
+            </div>
+            <h2 style={placeholderStyles.title}>{title}</h2>
+            <p style={placeholderStyles.subtitle}>
+              Ce module a été intégré dans l'application principale (React src) et sera bientôt visible dans cet aperçu autonome avec son design ultra-moderne.
+            </p>
+            {onBack && (
+              <button 
+                style={placeholderStyles.backBtn} 
+                onClick={onBack}
+                onMouseEnter={(e) => { e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 6px 16px rgba(27, 77, 62, 0.3)'; }}
+                onMouseLeave={(e) => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 12px rgba(27, 77, 62, 0.2)'; }}
+              >
+                Retour
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const placeholderStyles = {
+      container: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', backgroundColor: '#f8f9fa' },
+      card: { backgroundColor: '#ffffff', borderRadius: '24px', padding: '48px 32px', textAlign: 'center', maxWidth: '440px', width: '100%', boxShadow: '0 12px 36px rgba(0,0,0,0.06)', border: '1px solid #e9ecef', display: 'flex', flexDirection: 'column', alignItems: 'center' },
+      iconWrap: { position: 'relative', width: '88px', height: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' },
+      iconPulse: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(45, 106, 79, 0.08)', borderRadius: '50%', animation: 'pulse 2s infinite' },
+      icon: { fontSize: '40px', zIndex: 1 },
+      title: { fontSize: '24px', fontWeight: '800', color: '#212529', marginBottom: '12px', letterSpacing: '-0.02em' },
+      subtitle: { fontSize: '14.5px', color: '#6c757d', lineHeight: '1.6', marginBottom: '32px' },
+      backBtn: { padding: '14px 32px', backgroundColor: '#1b4d3e', color: '#ffffff', borderRadius: '12px', fontSize: '14px', fontWeight: '700', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 4px 12px rgba(27, 77, 62, 0.2)' }
+    };
+
+
+    // --- 8. MAIN APP CONTAINER ---
+    function App() {
+      const [screen, setScreen] = useState('home');
+      const [adminOrders, setAdminOrders] = useState([
+        { id: '001', client: 'Client A', amount: 25000, status: 'En préparation', date: '15/05' },
+        { id: '002', client: 'Client B', amount: 45500, status: 'En livraison', date: '13/05' },
+        { id: '003', client: 'Client C', amount: 18500, status: 'En attente', date: '12/05' }
+      ]);
+
+      const renderScreen = () => {
+        switch (screen) {
+          case 'recovery':
+            return <PasswordRecovery onBack={() => setScreen('home')} />;
+          case 'home':
+            return (
+              <AgroMarketHome 
+                onNavigateToOrders={() => setScreen('orders')} 
+                onNavigateToRecovery={() => setScreen('recovery')} 
+                onNavigateToCheckout={() => setScreen('checkout-wizard')}
+              />
+            );
+          case 'orders':
+            return <OrderManagement onBackHome={() => setScreen('home')} />;
+          case 'my-products':
+            return (
+              <MyProducts 
+                onNavigateToAddProduct={() => setScreen('add-product')} 
+                onEditProduct={() => setScreen('add-product')}
+              />
+            );
+          case 'plans':
+            return <SubscriptionPlans />;
+          case 'add-product':
+            return (
+              <AddProduct 
+                onProductAdded={(p) => {
+                  alert(`Produit "${p.name}" publié avec succès !`);
+                  setScreen('my-products');
+                }}
+                onCancel={() => setScreen('my-products')}
+              />
+            );
+          case 'order-detail-admin':
+            return (
+              <OrderDetailAdmin 
+                onBack={() => setScreen('order-management-admin')}
+                onMarkAsDeliveredState={(id, newStatus) => {
+                  setAdminOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+                }}
+              />
+            );
+          case 'order-management-admin':
+            return (
+              <OrderManagementAdmin 
+                ordersData={adminOrders}
+                onViewOrder={(id) => setScreen('order-detail-admin')} 
+              />
+            );
+          case 'checkout-wizard':
+            return (
+              <CheckoutWizard 
+                onCancel={() => setScreen('home')}
+                onOrderSuccess={(newOrder) => {
+                  setAdminOrders(prev => [
+                    ...prev,
+                    { id: newOrder.id, client: newOrder.client, amount: newOrder.amount, status: newOrder.status, date: newOrder.date }
+                  ]);
+                }}
+              />
+            );
+          case 'seller-dashboard':
+            return <SellerDashboard onNavigate={(s) => setScreen(s)} />;
+          case 'user-profile':
+            return <PremiumPlaceholder title="Profil & Paramètres" icon="👤" onBack={() => setScreen('home')} />;
+          case 'notifications':
+            return <PremiumPlaceholder title="Centre de Notifications" icon="🔔" onBack={() => setScreen('home')} />;
+          case 'login-page':
+            return <PremiumPlaceholder title="Page de Connexion" icon="🔐" onBack={() => setScreen('home')} />;
+          case 'admin-dashboard':
+            return <PremiumPlaceholder title="Tableau de bord Admin" icon="👑" onBack={() => setScreen('home')} />;
+          case 'sales-history':
+            return <PremiumPlaceholder title="Historique des Ventes" icon="📈" onBack={() => setScreen('seller-dashboard')} />;
+          case 'stock-alerts':
+            return <PremiumPlaceholder title="Alertes de Stocks" icon="⚠️" onBack={() => setScreen('seller-dashboard')} />;
+          case 'moderation-panel':
+            return <PremiumPlaceholder title="Modération & Signalements" icon="🛡️" onBack={() => setScreen('seller-dashboard')} />;
+          case 'cart':
+            return <PremiumPlaceholder title="Mon Panier" icon="🛒" onBack={() => setScreen('home')} />;
+          case 'faq':
+            return <PremiumPlaceholder title="Foire aux questions" icon="❓" onBack={() => setScreen('home')} />;
+          case 'product-detail':
+            return <PremiumPlaceholder title="Détail Produit" icon="🍌" onBack={() => setScreen('home')} />;
+          case 'edit-profile':
+            return <PremiumPlaceholder title="Éditer Profil" icon="📝" onBack={() => setScreen('user-profile')} />;
+          default:
+            return <AgroMarketHome onNavigateToOrders={() => setScreen('orders')} onNavigateToRecovery={() => setScreen('recovery')} onNavigateToCheckout={() => setScreen('checkout-wizard')} />;
+        }
+      };
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
+          <NavigationConsole currentScreen={screen} setScreen={setScreen} />
+          <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', width: '100%' }}>
+            {renderScreen()}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

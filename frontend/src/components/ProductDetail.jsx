@@ -1,0 +1,279 @@
+import React, { useState } from 'react';
+import { ArrowLeft, Star, Share2, Heart, Shield, Truck, Package, Plus, Minus, ShoppingCart, MessageCircle, Flag, ChevronRight } from 'lucide-react';
+import SignalementModal from './SignalementModal';
+
+export default function ProductDetail({ onBack, onAddToCart, onContactVendor, onNavigateToProducerProfile, product: propProduct }) {
+
+  const defaultProduct = {
+    name: 'Banane Fraîche Premium',
+    category: 'Fruits',
+    rating: 4.8,
+    reviews: 245,
+    farm: 'Ferme Dschang',
+    price: 2500,
+    stock: 45,
+    image: '/images/banane.jpg',
+    description: [
+      'Produit frais provenant de notre ferme certifiée.',
+      'Biologique et sans pesticides',
+      'Récolté à la main',
+      'Livraison rapide',
+      'Garantie fraîcheur'
+    ]
+  };
+
+  const product = propProduct || defaultProduct;
+  const [quantity, setQuantity] = useState(1);
+  const [isHoveringImg, setIsHoveringImg] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showSignalement, setShowSignalement] = useState(false);
+
+  const handleDecrease = () => setQuantity(Math.max(1, quantity - 1));
+  const handleIncrease = () => setQuantity(Math.min(product.stock || 30, quantity + 1));
+
+  // producteurId vient de produit-service (ProduitResponse.producteurId), propagé
+  // par productMapping.mapProduitPourVitrine. C'est le vrai id utilisateur du
+  // producteur, nécessaire pour la messagerie et le profil producteur.
+  const producteur = {
+    id: product.producteurId,
+    produitId: product.id,
+    nom: product.farm,
+    verificationStatus: 'approved',
+  };
+
+  return (
+    <div style={styles.pageWrapper} className="fade-in">
+      {/* Top Bar */}
+      <div style={styles.topBar}>
+        <div style={styles.topBarInner}>
+          <button style={styles.backBtn} onClick={onBack}>
+            <ArrowLeft size={18} /> Retour
+          </button>
+          <div style={styles.breadcrumbs}>
+            <span style={styles.crumbInactive}>Produits</span>
+            <span style={styles.crumbSeparator}>/</span>
+            <span style={styles.crumbInactive}>{product.category}</span>
+            <span style={styles.crumbSeparator}>/</span>
+            <span style={styles.crumbActive}>{product.name}</span>
+          </div>
+          <div style={styles.topActions}>
+            <button style={{...styles.iconBtn, color: isFavorite ? '#e07a5f' : '#6c757d'}} onClick={() => setIsFavorite(!isFavorite)}>
+              <Heart size={20} fill={isFavorite ? '#e07a5f' : 'none'} />
+            </button>
+            <button style={styles.actionBtn}><Share2 size={18} /> Partager</button>
+            <button style={styles.signalBtn} onClick={() => setShowSignalement(true)}>
+              <Flag size={16} /> Signaler
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style={styles.container}>
+        <div style={styles.mainGrid}>
+
+          {/* Image */}
+          <div style={styles.imageColumn}>
+            <div
+              style={{
+                ...styles.mainImageWrapper,
+                transform: isHoveringImg ? 'scale(1.02)' : 'scale(1)',
+                boxShadow: isHoveringImg ? '0 24px 48px rgba(0,0,0,0.12)' : '0 12px 36px rgba(0,0,0,0.06)'
+              }}
+              onMouseEnter={() => setIsHoveringImg(true)}
+              onMouseLeave={() => setIsHoveringImg(false)}
+            >
+              <img src={product.image} alt={product.name} style={styles.productImg} />
+              <div style={styles.badgeWrap}>
+                <span style={styles.organicBadge}>100% Bio</span>
+              </div>
+              <div style={styles.catBadgeWrap}>
+                <span style={styles.catBadge}>{product.category}</span>
+              </div>
+            </div>
+            <div style={styles.thumbnailsList}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} style={{...styles.thumbnailCard, ...(i === 1 ? styles.thumbnailActive : {})}}>
+                  <img src={product.image} alt="" style={styles.thumbImg} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Détails */}
+          <div style={styles.detailsColumn}>
+            <div style={styles.productHeader}>
+              <h1 style={styles.productTitle}>{product.name}</h1>
+              <div style={styles.ratingRow}>
+                <div style={styles.stars}>
+                  {[1,2,3,4,5].map(i => <Star key={i} size={16} fill={i <= 4 ? "#f5b041" : "none"} color="#f5b041" />)}
+                </div>
+                <span style={styles.reviewCount}>({product.reviews || 128} avis)</span>
+              </div>
+            </div>
+
+            {/* Ferme + bouton Contacter */}
+            <div style={styles.farmBanner}>
+              <div
+                style={styles.farmInfo}
+                onClick={() => onNavigateToProducerProfile && onNavigateToProducerProfile(producteur)}
+              >
+                <div style={styles.farmAvatar}>{(product.farm || 'F')[0]}</div>
+                <div>
+                  <h3 style={styles.farmName}>{product.farm}</h3>
+                  <div style={styles.verifiedWrap}>
+                    <Shield size={12} color="#2d6a4f" />
+                    <span style={styles.verifiedText}>Producteur vérifié</span>
+                  </div>
+                  {onNavigateToProducerProfile && (
+                    <button
+                      style={styles.viewProfileLink}
+                      onClick={(e) => { e.stopPropagation(); onNavigateToProducerProfile(producteur); }}
+                    >
+                      Voir le profil et les avis <ChevronRight size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
+              {/* BOUTON CONTACTER CLIQUABLE */}
+              <button
+                style={styles.contactBtn}
+                onClick={() => onContactVendor && onContactVendor({ id: product.producteurId, name: product.farm, product: product.name })}
+              >
+                <MessageCircle size={16} />
+                Contacter
+              </button>
+            </div>
+
+            <div style={styles.infoStrip}>
+              <div style={styles.infoBox}>
+                <span style={styles.infoLabel}>Prix</span>
+                <span style={styles.priceValue}>{product.price.toLocaleString()} FCFA</span>
+              </div>
+              <div style={styles.infoDivider} />
+              <div style={styles.infoBox}>
+                <span style={styles.infoLabel}>Stock</span>
+                <span style={styles.stockValue}>{product.stock || 30} kg dispo</span>
+              </div>
+              <div style={styles.infoDivider} />
+              <div style={styles.infoBox}>
+                <span style={styles.infoLabel}>Livraison</span>
+                <div style={styles.deliveryWrap}>
+                  <Truck size={16} color="#6c757d" />
+                  <span style={styles.deliveryValue}>2-3 jours</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.actionArea}>
+              <div style={styles.qtySection}>
+                <span style={styles.qtyLabel}>Quantité (kg)</span>
+                <div style={styles.qtySelector}>
+                  <button style={styles.qtyBtn} onClick={handleDecrease}><Minus size={18} /></button>
+                  <input style={styles.qtyInput} value={quantity} readOnly />
+                  <button style={styles.qtyBtn} onClick={handleIncrease}><Plus size={18} /></button>
+                </div>
+              </div>
+              <button style={styles.addToCartBtn} onClick={() => onAddToCart ? onAddToCart(quantity) : alert(`Ajouté: ${quantity} kg`)}>
+                <ShoppingCart size={20} />
+                Ajouter au panier • {(product.price * quantity).toLocaleString()} FCFA
+              </button>
+            </div>
+
+            <div style={styles.descriptionArea}>
+              <h3 style={styles.descTitle}>Description</h3>
+              <div style={styles.descContent}>
+                {(product.description || ['Produit frais de qualité supérieure.', 'Livraison rapide garantie.']).map((line, idx) => (
+                  <p key={idx} style={styles.descLine}>
+                    {idx > 0 && <span style={styles.bullet}>•</span>}
+                    {line}
+                  </p>
+                ))}
+              </div>
+              <div style={styles.guaranteeRow}>
+                <div style={styles.guaranteeItem}><Package size={18} color="#2d6a4f" /><span>Emballage sécurisé</span></div>
+                <div style={styles.guaranteeItem}><Shield size={18} color="#2d6a4f" /><span>Qualité garantie</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal Signalement */}
+      {showSignalement && (
+        <SignalementModal
+          product={product}
+          onClose={() => setShowSignalement(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+const styles = {
+  pageWrapper: { backgroundColor: '#f8f9fa', minHeight: '100vh', width: '100%', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+  topBar: { backgroundColor: '#ffffff', borderBottom: '1px solid #e9ecef', position: 'sticky', top: 0, zIndex: 100 },
+  topBarInner: { maxWidth: '1200px', margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  backBtn: { display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#212529', fontSize: '14px', fontWeight: '700', cursor: 'pointer' },
+  breadcrumbs: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600' },
+  crumbInactive: { color: '#adb5bd' },
+  crumbSeparator: { color: '#dee2e6' },
+  crumbActive: { color: '#212529' },
+  topActions: { display: 'flex', alignItems: 'center', gap: '12px' },
+  iconBtn: { background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center' },
+  actionBtn: { display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#e07a5f', fontSize: '14px', fontWeight: '700', cursor: 'pointer', padding: '8px 16px', borderRadius: '8px' },
+  signalBtn: { display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#fff5f2', color: '#e07a5f', border: '1px solid #f5d4c8', borderRadius: '10px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' },
+  container: { maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' },
+  mainGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'start' },
+  imageColumn: { display: 'flex', flexDirection: 'column', gap: '24px' },
+  mainImageWrapper: { width: '100%', aspectRatio: '1/1', borderRadius: '32px', overflow: 'hidden', position: 'relative', transition: 'all 0.3s ease' },
+  productImg: { width: '100%', height: '100%', objectFit: 'cover' },
+  badgeWrap: { position: 'absolute', top: '24px', left: '24px', zIndex: 3 },
+  organicBadge: { backgroundColor: '#ffffff', color: '#2d6a4f', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '800', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' },
+  catBadgeWrap: { position: 'absolute', top: '24px', right: '24px', zIndex: 3 },
+  catBadge: { backgroundColor: '#2d6a4f', color: '#ffffff', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '800' },
+  thumbnailsList: { display: 'flex', gap: '16px' },
+  thumbnailCard: { width: '80px', height: '80px', borderRadius: '16px', overflow: 'hidden', border: '2px solid transparent', cursor: 'pointer' },
+  thumbnailActive: { borderColor: '#2d6a4f' },
+  thumbImg: { width: '100%', height: '100%', objectFit: 'cover' },
+  detailsColumn: { display: 'flex', flexDirection: 'column', gap: '32px' },
+  productHeader: { display: 'flex', flexDirection: 'column', gap: '12px' },
+  productTitle: { fontSize: '36px', fontWeight: '800', color: '#212529', margin: 0, lineHeight: '1.2', letterSpacing: '-0.02em' },
+  ratingRow: { display: 'flex', alignItems: 'center', gap: '12px' },
+  stars: { display: 'flex', gap: '4px' },
+  reviewCount: { fontSize: '14px', color: '#6c757d', fontWeight: '600' },
+  farmBanner: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', backgroundColor: '#ffffff', borderRadius: '20px', border: '1px solid #e9ecef' },
+  farmInfo: { display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer' },
+  farmAvatar: { width: '48px', height: '48px', backgroundColor: '#1b4d3e', color: '#ffffff', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '800' },
+  farmName: { fontSize: '16px', fontWeight: '800', color: '#212529', margin: '0 0 4px 0' },
+  verifiedWrap: { display: 'flex', alignItems: 'center', gap: '6px' },
+  verifiedText: { fontSize: '12px', color: '#2d6a4f', fontWeight: '700' },
+  viewProfileLink: { display: 'flex', alignItems: 'center', gap: '2px', background: 'none', border: 'none', color: '#6c757d', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', padding: '4px 0 0 0' },
+  contactBtn: {
+    display: 'flex', alignItems: 'center', gap: '8px',
+    padding: '10px 20px', backgroundColor: '#2d6a4f', color: '#ffffff',
+    border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: '700',
+    cursor: 'pointer', boxShadow: '0 4px 12px rgba(45,106,79,0.3)'
+  },
+  infoStrip: { display: 'flex', alignItems: 'center', padding: '24px 0', borderTop: '1px solid #e9ecef', borderBottom: '1px solid #e9ecef' },
+  infoBox: { flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' },
+  infoDivider: { width: '1px', height: '40px', backgroundColor: '#e9ecef' },
+  infoLabel: { fontSize: '13px', color: '#6c757d', fontWeight: '600', textTransform: 'uppercase' },
+  priceValue: { fontSize: '28px', fontWeight: '900', color: '#e07a5f' },
+  stockValue: { fontSize: '16px', fontWeight: '700', color: '#2d6a4f' },
+  deliveryWrap: { display: 'flex', alignItems: 'center', gap: '8px' },
+  deliveryValue: { fontSize: '16px', fontWeight: '700', color: '#212529' },
+  actionArea: { display: 'flex', flexDirection: 'column', gap: '24px' },
+  qtySection: { display: 'flex', flexDirection: 'column', gap: '12px' },
+  qtyLabel: { fontSize: '14px', fontWeight: '700', color: '#212529' },
+  qtySelector: { display: 'flex', alignItems: 'center', width: '160px', backgroundColor: '#ffffff', border: '1px solid #dee2e6', borderRadius: '12px', overflow: 'hidden' },
+  qtyBtn: { width: '48px', height: '48px', background: 'none', border: 'none', color: '#495057', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' },
+  qtyInput: { flex: 1, height: '48px', border: 'none', borderLeft: '1px solid #dee2e6', borderRight: '1px solid #dee2e6', textAlign: 'center', fontSize: '16px', fontWeight: '700', color: '#212529', backgroundColor: '#f8f9fa', outline: 'none' },
+  addToCartBtn: { width: '100%', padding: '20px', backgroundColor: '#e07a5f', color: 'white', border: 'none', borderRadius: '16px', fontSize: '16px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 8px 24px rgba(224,122,95,0.25)' },
+  descriptionArea: { backgroundColor: '#ffffff', borderRadius: '24px', padding: '32px', border: '1px solid #e9ecef' },
+  descTitle: { fontSize: '18px', fontWeight: '800', color: '#212529', margin: '0 0 16px 0' },
+  descContent: { display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' },
+  descLine: { fontSize: '15px', color: '#495057', margin: 0, lineHeight: '1.6', display: 'flex', alignItems: 'flex-start', gap: '8px' },
+  bullet: { color: '#adb5bd', fontSize: '18px' },
+  guaranteeRow: { display: 'flex', alignItems: 'center', gap: '24px', paddingTop: '24px', borderTop: '1px dashed #dee2e6' },
+  guaranteeItem: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: '600', color: '#2d6a4f' },
+};
