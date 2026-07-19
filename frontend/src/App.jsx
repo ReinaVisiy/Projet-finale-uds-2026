@@ -819,6 +819,7 @@ export default function App() {
           onContactVendor={goToMessage}
           onSignaler={() => openSignalement(selectedProduct)}
           onNavigateToProducerProfile={goToProducerProfile}
+          currentUser={currentUser}
         />;
       case 'add-product':
         return <AddProduct
@@ -1015,6 +1016,8 @@ export default function App() {
           currentUser={currentUser}
           notifications={notifications}
           onNavigate={navigate}
+          onNavigateToVendorVerification={() => navigate('vendor-verification')}
+          onNavigateToModeration={() => { chargerSignalements(); navigate('moderation-panel'); }}
           onLogout={handleLogout}
           onApproveCertification={handleApproveVerification}
           onRejectCertification={handleRejectVerification}

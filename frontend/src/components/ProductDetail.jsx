@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Star, Share2, Heart, Shield, Truck, Package, Plus, Minus, ShoppingCart, MessageCircle, Flag, ChevronRight } from 'lucide-react';
-import SignalementModal from './SignalementModal';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Star, Share2, Shield, Truck, Package, Plus, Minus, ShoppingCart, MessageCircle, Flag, ChevronRight } from 'lucide-react';
+import { getAvisParProduit, getAvisStats, publierAvis } from '../services/api/avisApi';
 
-export default function ProductDetail({ onBack, onAddToCart, onContactVendor, onNavigateToProducerProfile, product: propProduct }) {
+export default function ProductDetail({ onBack, onAddToCart, onContactVendor, onNavigateToProducerProfile, onSignaler, currentUser, product: propProduct }) {
 
   const defaultProduct = {
     name: 'Banane Fraîche Premium',
@@ -25,8 +25,83 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
   const product = propProduct || defaultProduct;
   const [quantity, setQuantity] = useState(1);
   const [isHoveringImg, setIsHoveringImg] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [showSignalement, setShowSignalement] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+
+  // ===== AVIS (reçus du backend avis-service, plus de valeurs factices) =====
+  const [avisList, setAvisList] = useState([]);
+  const [avisStats, setAvisStats] = useState({ noteMoyenne: 0, nombreAvis: 0 });
+  const [avisLoading, setAvisLoading] = useState(true);
+  const [noteChoisie, setNoteChoisie] = useState(0);
+  const [commentaire, setCommentaire] = useState('');
+  const [envoiEnCours, setEnvoiEnCours] = useState(false);
+
+  const chargerAvis = async () => {
+    if (!product?.id) { setAvisLoading(false); return; }
+    setAvisLoading(true);
+    try {
+      const [liste, stats] = await Promise.all([
+        getAvisParProduit(product.id),
+        getAvisStats(product.id),
+      ]);
+      setAvisList(liste || []);
+      setAvisStats({ noteMoyenne: stats?.noteMoyenne || 0, nombreAvis: stats?.nombreAvis || 0 });
+    } catch (err) {
+      console.error('Impossible de charger les avis :', err);
+    } finally {
+      setAvisLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    chargerAvis();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
+
+  const dejaNote = currentUser && avisList.some(a => a.clientId === currentUser.id);
+
+  const handlePublierAvis = async (e) => {
+    e.preventDefault();
+    if (!currentUser) { alert('Connectez-vous pour laisser un avis.'); return; }
+    if (!noteChoisie) { alert('Choisissez une note (1 à 5 étoiles).'); return; }
+    setEnvoiEnCours(true);
+    try {
+      await publierAvis({ produitId: product.id, note: noteChoisie, commentaire });
+      setNoteChoisie(0);
+      setCommentaire('');
+      await chargerAvis();
+    } catch (err) {
+      alert(err?.message || "La publication de l'avis a échoué.");
+    } finally {
+      setEnvoiEnCours(false);
+    }
+  };
+
+  // Répartition du nombre de partage par plateforme (ouvre un lien de partage standard)
+  const partagerSur = (plateforme) => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    const texte = encodeURIComponent(`${product.name} sur Agriconnect`);
+    const urlEncodee = encodeURIComponent(url);
+    const liens = {
+      whatsapp: `https://wa.me/?text=${texte}%20${urlEncodee}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${urlEncodee}`,
+      twitter: `https://twitter.com/intent/tweet?text=${texte}&url=${urlEncodee}`,
+    };
+    if (plateforme === 'copier') {
+      navigator.clipboard?.writeText(url);
+      alert('Lien copié !');
+    } else {
+      window.open(liens[plateforme], '_blank', 'noopener,noreferrer');
+    }
+    setShowShareMenu(false);
+  };
+
+  const handlePartager = () => {
+    if (navigator.share) {
+      navigator.share({ title: product.name, url: window.location.href }).catch(() => {});
+    } else {
+      setShowShareMenu(true);
+    }
+  };
 
   const handleDecrease = () => setQuantity(Math.max(1, quantity - 1));
   const handleIncrease = () => setQuantity(Math.min(product.stock || 30, quantity + 1));
@@ -57,11 +132,18 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
             <span style={styles.crumbActive}>{product.name}</span>
           </div>
           <div style={styles.topActions}>
-            <button style={{...styles.iconBtn, color: isFavorite ? '#e07a5f' : '#6c757d'}} onClick={() => setIsFavorite(!isFavorite)}>
-              <Heart size={20} fill={isFavorite ? '#e07a5f' : 'none'} />
-            </button>
-            <button style={styles.actionBtn}><Share2 size={18} /> Partager</button>
-            <button style={styles.signalBtn} onClick={() => setShowSignalement(true)}>
+            <div style={{ position: 'relative' }}>
+              <button style={styles.actionBtn} onClick={handlePartager}><Share2 size={18} /> Partager</button>
+              {showShareMenu && (
+                <div style={styles.shareMenu} onMouseLeave={() => setShowShareMenu(false)}>
+                  <button style={styles.shareMenuItem} onClick={() => partagerSur('whatsapp')}>WhatsApp</button>
+                  <button style={styles.shareMenuItem} onClick={() => partagerSur('facebook')}>Facebook</button>
+                  <button style={styles.shareMenuItem} onClick={() => partagerSur('twitter')}>X (Twitter)</button>
+                  <button style={styles.shareMenuItem} onClick={() => partagerSur('copier')}>Copier le lien</button>
+                </div>
+              )}
+            </div>
+            <button style={styles.signalBtn} onClick={() => onSignaler && onSignaler(product)}>
               <Flag size={16} /> Signaler
             </button>
           </div>
@@ -105,9 +187,11 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
               <h1 style={styles.productTitle}>{product.name}</h1>
               <div style={styles.ratingRow}>
                 <div style={styles.stars}>
-                  {[1,2,3,4,5].map(i => <Star key={i} size={16} fill={i <= 4 ? "#f5b041" : "none"} color="#f5b041" />)}
+                  {[1,2,3,4,5].map(i => (
+                    <Star key={i} size={16} fill={i <= Math.round(avisStats.noteMoyenne) ? "#f5b041" : "none"} color="#f5b041" />
+                  ))}
                 </div>
-                <span style={styles.reviewCount}>({product.reviews || 128} avis)</span>
+                <span style={styles.reviewCount}>({avisStats.nombreAvis} avis)</span>
               </div>
             </div>
 
@@ -196,15 +280,94 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Modal Signalement */}
-      {showSignalement && (
-        <SignalementModal
-          product={product}
-          onClose={() => setShowSignalement(false)}
-        />
-      )}
+        {/* AVIS */}
+        <div style={styles.reviewsArea}>
+          <h3 style={styles.descTitle}>Avis clients</h3>
+
+          <div style={styles.reviewsSummaryRow}>
+            <div style={styles.reviewsSummaryScore}>
+              <span style={styles.reviewsSummaryNum}>{avisStats.noteMoyenne.toFixed(1)}</span>
+              <div style={styles.stars}>
+                {[1,2,3,4,5].map(i => (
+                  <Star key={i} size={16} fill={i <= Math.round(avisStats.noteMoyenne) ? "#f5b041" : "none"} color="#f5b041" />
+                ))}
+              </div>
+              <span style={styles.reviewCount}>{avisStats.nombreAvis} avis</span>
+            </div>
+            <div style={styles.reviewsBars}>
+              {[5,4,3,2,1].map(n => {
+                const count = avisList.filter(a => a.note === n).length;
+                const pct = avisStats.nombreAvis > 0 ? Math.round((count / avisStats.nombreAvis) * 100) : 0;
+                return (
+                  <div key={n} style={styles.reviewsBarRow}>
+                    <span style={styles.reviewsBarLabel}>{n} ★</span>
+                    <div style={styles.reviewsBarTrack}><div style={{...styles.reviewsBarFill, width: `${pct}%`}} /></div>
+                    <span style={styles.reviewsBarPct}>{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Laisser un avis */}
+          {currentUser ? (
+            dejaNote ? (
+              <p style={styles.dejaNoteMsg}>Vous avez déjà laissé un avis sur ce produit.</p>
+            ) : (
+              <form style={styles.reviewForm} onSubmit={handlePublierAvis}>
+                <span style={styles.qtyLabel}>Laisser un avis</span>
+                <div style={styles.stars}>
+                  {[1,2,3,4,5].map(i => (
+                    <Star
+                      key={i}
+                      size={22}
+                      style={{ cursor: 'pointer' }}
+                      fill={i <= noteChoisie ? "#f5b041" : "none"}
+                      color="#f5b041"
+                      onClick={() => setNoteChoisie(i)}
+                    />
+                  ))}
+                </div>
+                <textarea
+                  style={styles.reviewTextarea}
+                  rows="3"
+                  placeholder="Votre commentaire (optionnel)..."
+                  value={commentaire}
+                  onChange={(e) => setCommentaire(e.target.value)}
+                />
+                <button type="submit" style={styles.addToCartBtn} disabled={envoiEnCours}>
+                  {envoiEnCours ? 'Envoi...' : 'Publier mon avis'}
+                </button>
+              </form>
+            )
+          ) : (
+            <p style={styles.dejaNoteMsg}>Connectez-vous pour laisser un avis sur ce produit.</p>
+          )}
+
+          {/* Liste des avis */}
+          <div style={styles.reviewsList}>
+            {avisLoading ? (
+              <p style={{ color: '#6c757d' }}>Chargement des avis...</p>
+            ) : avisList.length === 0 ? (
+              <p style={{ color: '#adb5bd' }}>Aucun avis pour ce produit pour le moment.</p>
+            ) : (
+              avisList.map(a => (
+                <div key={a.id} style={styles.reviewCard}>
+                  <div style={styles.reviewCardHeader}>
+                    <span style={styles.reviewAuthor}>{a.clientNom || 'Client'}</span>
+                    <div style={styles.stars}>
+                      {[1,2,3,4,5].map(i => <Star key={i} size={13} fill={i <= a.note ? "#f5b041" : "none"} color="#f5b041" />)}
+                    </div>
+                    <span style={styles.reviewDate}>{a.date ? new Date(a.date).toLocaleDateString('fr-FR') : ''}</span>
+                  </div>
+                  {a.commentaire && <p style={styles.reviewComment}>{a.commentaire}</p>}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -276,4 +439,25 @@ const styles = {
   bullet: { color: '#adb5bd', fontSize: '18px' },
   guaranteeRow: { display: 'flex', alignItems: 'center', gap: '24px', paddingTop: '24px', borderTop: '1px dashed #dee2e6' },
   guaranteeItem: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: '600', color: '#2d6a4f' },
+  shareMenu: { position: 'absolute', top: '100%', right: 0, backgroundColor: '#fff', border: '1px solid #e9ecef', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', display: 'flex', flexDirection: 'column', minWidth: '160px', zIndex: 20, overflow: 'hidden' },
+  shareMenuItem: { padding: '10px 16px', background: 'none', border: 'none', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#212529', cursor: 'pointer' },
+  reviewsArea: { backgroundColor: '#ffffff', borderRadius: '24px', padding: '32px', border: '1px solid #e9ecef', marginTop: '32px' },
+  reviewsSummaryRow: { display: 'flex', gap: '48px', flexWrap: 'wrap', paddingBottom: '24px', marginBottom: '24px', borderBottom: '1px solid #e9ecef' },
+  reviewsSummaryScore: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', minWidth: '120px' },
+  reviewsSummaryNum: { fontSize: '40px', fontWeight: '900', color: '#212529', lineHeight: 1 },
+  reviewsBars: { flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' },
+  reviewsBarRow: { display: 'flex', alignItems: 'center', gap: '10px' },
+  reviewsBarLabel: { fontSize: '12px', fontWeight: '700', color: '#6c757d', width: '28px' },
+  reviewsBarTrack: { flex: 1, height: '8px', backgroundColor: '#f1f3f5', borderRadius: '10px', overflow: 'hidden' },
+  reviewsBarFill: { height: '100%', backgroundColor: '#f5b041', borderRadius: '10px' },
+  reviewsBarPct: { fontSize: '12px', fontWeight: '700', color: '#adb5bd', width: '20px', textAlign: 'right' },
+  reviewForm: { display: 'flex', flexDirection: 'column', gap: '12px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '16px', marginBottom: '24px' },
+  reviewTextarea: { border: '1px solid #dee2e6', borderRadius: '12px', padding: '12px', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' },
+  dejaNoteMsg: { color: '#6c757d', fontSize: '14px', fontWeight: '600', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '12px', marginBottom: '24px' },
+  reviewsList: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  reviewCard: { padding: '16px 0', borderBottom: '1px solid #f1f3f5' },
+  reviewCardHeader: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', flexWrap: 'wrap' },
+  reviewAuthor: { fontSize: '14px', fontWeight: '800', color: '#212529' },
+  reviewDate: { fontSize: '12px', color: '#adb5bd' },
+  reviewComment: { fontSize: '14px', color: '#495057', margin: 0, lineHeight: 1.5 },
 };
