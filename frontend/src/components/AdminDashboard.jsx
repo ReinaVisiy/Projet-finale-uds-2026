@@ -71,7 +71,8 @@ export default function AdminDashboard({
   const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
   const monthlyOrders = months.map((_, idx) => {
     const count = adminOrders.filter(o => {
-      const d = new Date(o.date);
+      if (!o.dateISO) return false;
+      const d = new Date(o.dateISO);
       return d.getMonth() === idx && d.getFullYear() === new Date().getFullYear();
     }).length;
     return count;

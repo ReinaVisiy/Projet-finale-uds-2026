@@ -88,7 +88,8 @@ export default function SellerDashboard({
   const monthlyRevenue = months.map((_, idx) => {
     return adminOrders
       .filter(o => {
-        const d = new Date(o.date);
+        if (!o.dateISO) return false;
+        const d = new Date(o.dateISO);
         return d.getMonth() === idx && d.getFullYear() === new Date().getFullYear();
       })
       .reduce((sum, order) => {

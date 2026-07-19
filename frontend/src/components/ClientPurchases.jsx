@@ -16,6 +16,10 @@ export default function ClientPurchases({ orders, onBackHome }) {
           quantite: item.quantity || 1,
           prixTotal: item.subtotal || (item.quantity * item.price) || 0,
           date: order.date || new Date().toLocaleDateString('fr-FR'),
+          // Date brute (ISO) utilisée pour le tri, distincte de "date"
+          // ci-dessus qui est déjà formatée en français et n'est pas
+          // fiable à repasser dans `new Date()`.
+          dateISO: order.dateISO || null,
           orderId: order.id,
         });
       });
@@ -25,13 +29,14 @@ export default function ClientPurchases({ orders, onBackHome }) {
         quantite: 1,
         prixTotal: order.amount || 0,
         date: order.date || new Date().toLocaleDateString('fr-FR'),
+        dateISO: order.dateISO || null,
         orderId: order.id,
       });
     }
   });
 
   // Trier par date décroissante
-  purchases.sort((a, b) => new Date(b.date) - new Date(a.date));
+  purchases.sort((a, b) => new Date(b.dateISO || 0) - new Date(a.dateISO || 0));
 
   const totalItems = purchases.length;
   const totalSpent = purchases.reduce((sum, p) => sum + p.prixTotal, 0);

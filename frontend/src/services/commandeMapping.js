@@ -52,7 +52,16 @@ export function mapCommandePourAffichage(dto, clientNom, clientEmail, nomsProdui
     clientEmail: clientEmail || '',
     amount: dto.montantTotal,
     status: STATUT_BACKEND_TO_FRANCAIS[dto.statut] || dto.statut,
+    // "date" reste une chaîne formatée en français, pour l'affichage
+    // dans les tableaux (ex. "20/07/2026").
     date: dto.dateCommande ? new Date(dto.dateCommande).toLocaleDateString('fr-FR') : '',
+    // "dateISO" garde la date brute renvoyée par le backend, pour tout
+    // calcul (ex. graphique des ventes mensuelles). On ne doit jamais
+    // refaire un `new Date()` sur le champ "date" ci-dessus : son format
+    // JJ/MM/AAAA n'est pas reconnu de façon fiable par le parseur JS
+    // natif (il l'interprète comme MM/JJ/AAAA, ce qui donne un mois
+    // erroné, voire une "Invalid Date" dès que le jour dépasse 12).
+    dateISO: dto.dateCommande || null,
     items,
   };
 }
