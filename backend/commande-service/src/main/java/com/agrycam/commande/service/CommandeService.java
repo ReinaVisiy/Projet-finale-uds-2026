@@ -38,6 +38,13 @@ public class CommandeService {
     @Value("${produit.service.url}")
     private String produitServiceUrl;
 
+    // Stat publique pour la page d'accueil : uniquement un total, jamais les
+    // commandes elles-mêmes (qui restent privées, cf. SecurityConfig).
+    @Transactional(readOnly = true)
+    public long compterCommandesLivrees() {
+        return commandeRepository.countByStatut(StatutCommande.LIVREE);
+    }
+
     @Value("${utilisateur.service.url}")
     private String utilisateurServiceUrl;
 

@@ -1,7 +1,10 @@
 // src/components/AgroMarketHome.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ShoppingBag, Leaf, ShieldCheck, Truck, Star, ArrowRight, UserPlus, PackageSearch } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
+import { getStatsPubliques as getStatsUtilisateurs } from '../services/api/utilisateurApi';
+import { getStatsPubliques as getStatsCertifications } from '../services/api/certificationApi';
+import { getStatsPubliques as getStatsCommandes } from '../services/api/commandeApi';
 
 // Couleurs/images par défaut pour les vignettes de catégorie (le backend ne
 // fournit qu'un id + un nom, pas de style visuel). On associe l'image en se
@@ -96,6 +99,34 @@ export default function AgroMarketHome({
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProducts, setFilteredProducts] = useState(null);
   const [activeCategory, setActiveCategory] = useState(null);
+
+  // ===== STATS RÉELLES (visiteurs non connectés uniquement) =====
+  // Remplace les chiffres codés en dur ('5,000+' etc.) par de vrais totaux
+  // récupérés auprès de chaque microservice via des endpoints publics dédiés
+  // (ils ne renvoient qu'un total, jamais la liste des comptes/commandes).
+  const [statsReelles, setStatsReelles] = useState({
+    totalUtilisateurs: null,
+    producteursVerifies: null,
+    commandesLivrees: null,
+  });
+
+  useEffect(() => {
+    if (currentUser) return; // section masquée une fois connecté, inutile d'appeler
+    let annule = false;
+    Promise.all([
+      getStatsUtilisateurs().catch(() => null),
+      getStatsCertifications().catch(() => null),
+      getStatsCommandes().catch(() => null),
+    ]).then(([utilisateurs, certifications, commandes]) => {
+      if (annule) return;
+      setStatsReelles({
+        totalUtilisateurs: utilisateurs?.totalUtilisateurs ?? null,
+        producteursVerifies: certifications?.producteursVerifies ?? null,
+        commandesLivrees: commandes?.commandesLivrees ?? null,
+      });
+    });
+    return () => { annule = true; };
+  }, [currentUser]);
 
   const t = translations[lang];
 
@@ -338,19 +369,19 @@ export default function AgroMarketHome({
           </div>
         </div>
 
-        {/* STATS (uniquement pour les visiteurs non connectés — chiffres à brancher sur de vraies données) */}
+        {/* STATS (uniquement pour les visiteurs non connectés — chiffres réels) */}
         {!currentUser && (
           <div style={styles.section}>
             <h2 style={styles.sectionTitle}>{t.statsTitle}</h2>
             <div style={styles.statsGrid}>
               {[
-                { num: '5,000+', label: t.stat1 },
-                { num: '500+', label: t.stat2 },
-                { num: '10,000+', label: t.stat3 },
-                { num: '50,000+', label: t.stat4 }
+                { num: statsReelles.totalUtilisateurs, label: t.stat1 },
+                { num: statsReelles.producteursVerifies, label: t.stat2 },
+                { num: allProducts.length, label: t.stat3 },
+                { num: statsReelles.commandesLivrees, label: t.stat4 }
               ].map((stat, i) => (
                 <div key={i} style={styles.statCard}>
-                  <h3 style={styles.statNum}>{stat.num}</h3>
+                  <h3 style={styles.statNum}>{stat.num == null ? '…' : stat.num.toLocaleString()}</h3>
                   <p style={styles.statLabel}>{stat.label}</p>
                 </div>
               ))}

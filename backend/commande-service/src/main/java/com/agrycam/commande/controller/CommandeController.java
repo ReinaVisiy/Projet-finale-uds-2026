@@ -47,6 +47,14 @@ public class CommandeController {
         return principal instanceof Long && principal.equals(clientId);
     }
 
+    // Stat publique pour la page d'accueil : un seul total, aucune commande
+    // individuelle exposée (celles-ci restent réservées aux admins/producteurs/
+    // propriétaires, cf. SecurityConfig).
+    @GetMapping("/stats/publiques")
+    public ResponseEntity<java.util.Map<String, Long>> getStatsPubliques() {
+        return ResponseEntity.ok(java.util.Map.of("commandesLivrees", commandeService.compterCommandesLivrees()));
+    }
+
     /**
      * Crée une nouvelle commande.
      * @param commandeRequest La requête de création de commande.

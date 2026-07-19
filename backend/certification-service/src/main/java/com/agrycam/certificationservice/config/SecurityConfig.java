@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/certifications/statut-actif/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/certifications/payment-information").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/certifications/stats/publiques").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

@@ -9,6 +9,9 @@ const BASE = API_URLS.utilisateur;
 /** Get all users (admin use). */
 export const getAllUtilisateurs = () => httpGet(BASE, '/api/utilisateurs');
 
+/** Public aggregate stats for the home page (totals only, no account data). */
+export const getStatsPubliques = () => httpGet(BASE, '/api/utilisateurs/stats/publiques', { auth: false });
+
 /** Get a single user by id. */
 export const getUtilisateurById = (id) => httpGet(BASE, `/api/utilisateurs/${id}`);
 

@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/commandes/stats/publiques").permitAll()
                         // Contrairement au catalogue produits, les commandes contiennent des
                         // données privées (client, montants, statut) : rien n'est public ici,
                         // à la différence de l'ancienne règle qui exposait GET /api/commandes/**

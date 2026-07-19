@@ -28,6 +28,15 @@ public class UtilisateurService {
                 .collect(Collectors.toList());
     }
 
+    // Stat publique pour la page d'accueil : uniquement des totaux, jamais
+    // la liste des comptes (noms, emails...) elle-même.
+    public java.util.Map<String, Long> getStatsPubliques() {
+        return java.util.Map.of(
+                "totalUtilisateurs", utilisateurRepository.count(),
+                "totalProducteurs", utilisateurRepository.countByRole(Utilisateur.Role.PRODUCTEUR)
+        );
+    }
+
     public UtilisateurDTO getUtilisateurById(Long id) {
         Utilisateur user = utilisateurRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouve"));

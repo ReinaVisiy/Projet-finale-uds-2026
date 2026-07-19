@@ -45,6 +45,11 @@ public class CertificationService {
     }
 
     @Transactional(readOnly = true)
+    public long compterProducteursVerifies() {
+        return certificationRepository.countProducteursDistinctsByStatut(StatutCertification.APPROUVEE);
+    }
+
+    @Transactional(readOnly = true)
     public List<CertificationResponse> getMesCertifications(Long producteurId) {
         List<Certification> list = certificationRepository.findByProducteurId(producteurId);
         return list.stream()

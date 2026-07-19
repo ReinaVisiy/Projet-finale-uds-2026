@@ -17,6 +17,9 @@ export const createCommande = (commandeRequest) =>
 /** Get all orders (admin use). */
 export const getAllCommandes = () => httpGet(BASE, '/api/commandes');
 
+/** Public aggregate stats for the home page (no auth, no individual orders exposed). */
+export const getStatsPubliques = () => httpGet(BASE, '/api/commandes/stats/publiques', { auth: false });
+
 export const getCommandeById = (id) => httpGet(BASE, `/api/commandes/${id}`);
 
 /** Get all orders for a given client. */

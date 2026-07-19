@@ -33,6 +33,11 @@ public class UtilisateurController {
         return ResponseEntity.ok(utilisateurService.getAllUtilisateurs());
     }
 
+    @GetMapping("/stats/publiques")
+    public ResponseEntity<java.util.Map<String, Long>> getStatsPubliques() {
+        return ResponseEntity.ok(utilisateurService.getStatsPubliques());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<UtilisateurDTO> getUtilisateurById(@PathVariable Long id) {
         return ResponseEntity.ok(utilisateurService.getUtilisateurById(id));

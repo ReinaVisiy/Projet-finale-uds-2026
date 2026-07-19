@@ -23,6 +23,10 @@ export const estCertifieActif = (producteurId) =>
 export const getPaymentInformation = () =>
   httpGet(BASE, '/api/certifications/payment-information', { auth: false });
 
+/** Public aggregate stats for the home page ("Producteurs vérifiés"). */
+export const getStatsPubliques = () =>
+  httpGet(BASE, '/api/certifications/stats/publiques', { auth: false });
+
 // ---- Admin only ----
 
 /** List certifications pending review. Requires ADMIN role. */

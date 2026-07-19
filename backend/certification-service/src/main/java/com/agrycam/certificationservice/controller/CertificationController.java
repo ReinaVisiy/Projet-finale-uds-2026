@@ -34,6 +34,13 @@ public class CertificationController {
         return ResponseEntity.ok(response);
     }
 
+    // Stat publique pour la page d'accueil ("Producteurs vérifiés") — un seul
+    // nombre, aucune donnée privée sur les producteurs ou leurs documents.
+    @GetMapping("/stats/publiques")
+    public ResponseEntity<java.util.Map<String, Long>> getStatsPubliques() {
+        return ResponseEntity.ok(java.util.Map.of("producteursVerifies", certificationService.compterProducteursVerifies()));
+    }
+
     @GetMapping("/mes-certifications")
     public ResponseEntity<List<CertificationResponse>> getMesCertifications(
             Authentication authentication) {
