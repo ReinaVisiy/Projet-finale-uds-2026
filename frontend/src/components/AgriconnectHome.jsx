@@ -3,12 +3,29 @@ import React, { useState } from 'react';
 import { Search, ShoppingBag, Leaf, ShieldCheck, Truck, Star, ArrowRight, UserPlus, PackageSearch } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
 
-// Couleurs/images par défaut pour les vignettes de catégorie, appliquées en
-// tournant (le backend ne fournit qu'un id + un nom, pas de style visuel).
-const STYLE_CATEGORIES_PAR_DEFAUT = [
-  { image: '/image/marche.jpg', color: '#e9f5ee' },
-  { image: '/image/poulet.jpg', color: '#fdf1ed' },
-];
+// Couleurs/images par défaut pour les vignettes de catégorie (le backend ne
+// fournit qu'un id + un nom, pas de style visuel). On associe l'image en se
+// basant sur le NOM de la catégorie (et non sa position dans la liste) pour
+// éviter que l'ordre renvoyé par le backend n'inverse les images (ex :
+// élevage affiché avec la photo de légumes).
+const STYLE_CATEGORIES_PAR_NOM = {
+  agriculture: { image: '/image/marche.jpg', color: '#e9f5ee' },
+  agricole: { image: '/image/marche.jpg', color: '#e9f5ee' },
+  elevage: { image: '/image/poulet.jpg', color: '#fdf1ed' },
+  élevage: { image: '/image/poulet.jpg', color: '#fdf1ed' },
+};
+// Repli si une catégorie porte un autre nom (nouvelle catégorie ajoutée par un admin).
+const STYLE_CATEGORIE_PAR_DEFAUT = { image: '/image/marche.jpg', color: '#e9f5ee' };
+
+// Le backend stocke "Agriculture" mais l'affichage doit dire "Agricole" —
+// on ne change que le libellé affiché, pas la donnée backend.
+const LIBELLE_CATEGORIE_AFFICHE = {
+  agriculture: 'Agricole',
+};
+
+function normaliserNomCategorie(nom) {
+  return (nom || '').trim().toLowerCase();
+}
 
 const translations = {
   fr: {
@@ -26,7 +43,7 @@ const translations = {
     heroCta: 'Commencer à acheter',
     searchPlaceholder: 'Cherchez un produit, une ferme ou une catégorie (ex: agricole, élevage)...',
     filterBtn: 'Filtrer',
-    catTitle: 'Catégories populaires',
+    catTitle: 'Catégories',
     trendTitle: 'Produits disponibles',
     searchResults: 'Résultats de recherche',
     noResult: 'Aucun produit trouvé pour',
@@ -82,13 +99,17 @@ export default function AgroMarketHome({
 
   const t = translations[lang];
 
-  const categories = categoriesBrutes.map((c, i) => ({
-    id: c.id,
-    name: c.name,
-    count: allProducts.filter(p => p.categoryId === c.id).length,
-    image: STYLE_CATEGORIES_PAR_DEFAUT[i % STYLE_CATEGORIES_PAR_DEFAUT.length].image,
-    color: STYLE_CATEGORIES_PAR_DEFAUT[i % STYLE_CATEGORIES_PAR_DEFAUT.length].color,
-  }));
+  const categories = categoriesBrutes.map((c) => {
+    const cle = normaliserNomCategorie(c.name);
+    const style = STYLE_CATEGORIES_PAR_NOM[cle] || STYLE_CATEGORIE_PAR_DEFAUT;
+    return {
+      id: c.id,
+      name: LIBELLE_CATEGORIE_AFFICHE[cle] || c.name,
+      count: allProducts.filter(p => p.categoryId === c.id).length,
+      image: style.image,
+      color: style.color,
+    };
+  });
 
   // Fonction de filtrage
   const applyFilter = (query) => {
@@ -257,7 +278,18 @@ export default function AgroMarketHome({
                     <p style={styles.prodFarm}>{prod.farm}</p>
                     <div style={styles.prodFooter}>
                       <div style={styles.stars}>
-                        {[1,2,3,4,5].map(i => <Star key={i} size={12} fill="#f5b041" color="#f5b041" />)}
+                        {[1,2,3,4,5].map(i => {
+                          const note = prod.reviews > 0 ? Math.round(prod.rating || 0) : 0;
+                          const rempli = i <= note;
+                          return (
+                            <Star
+                              key={i}
+                              size={12}
+                              fill={rempli ? '#f5b041' : '#d9d9d9'}
+                              color={rempli ? '#f5b041' : '#d9d9d9'}
+                            />
+                          );
+                        })}
                       </div>
                       <span style={{
                         ...styles.stockBadge,
@@ -306,43 +338,47 @@ export default function AgroMarketHome({
           </div>
         </div>
 
-        {/* STATS */}
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>{t.statsTitle}</h2>
-          <div style={styles.statsGrid}>
-            {[
-              { num: '5,000+', label: t.stat1 },
-              { num: '500+', label: t.stat2 },
-              { num: '10,000+', label: t.stat3 },
-              { num: '50,000+', label: t.stat4 }
-            ].map((stat, i) => (
-              <div key={i} style={styles.statCard}>
-                <h3 style={styles.statNum}>{stat.num}</h3>
-                <p style={styles.statLabel}>{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* TÉMOIGNAGES */}
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>{t.testiTitle}</h2>
-          <div style={styles.testimonialGrid}>
-            {[
-              { name: 'Ravie D.', text: '"Produits très frais et livraison ultra-rapide ! Je recommande à 100%."' },
-              { name: 'Farmer X', text: '"Plateforme fiable qui me permet de vendre à des prix équitables sans intermédiaire."' },
-              { name: 'Client Y', text: '"Le meilleur rapport qualité/prix par rapport au marché local."' }
-            ].map((testi, i) => (
-              <div key={i} style={styles.testimonialCard}>
-                <div style={{display:'flex', gap:'2px', marginBottom:'12px'}}>
-                  {[1,2,3,4,5].map(j => <Star key={j} size={14} fill="#f5b041" color="#f5b041" />)}
+        {/* STATS (uniquement pour les visiteurs non connectés — chiffres à brancher sur de vraies données) */}
+        {!currentUser && (
+          <div style={styles.section}>
+            <h2 style={styles.sectionTitle}>{t.statsTitle}</h2>
+            <div style={styles.statsGrid}>
+              {[
+                { num: '5,000+', label: t.stat1 },
+                { num: '500+', label: t.stat2 },
+                { num: '10,000+', label: t.stat3 },
+                { num: '50,000+', label: t.stat4 }
+              ].map((stat, i) => (
+                <div key={i} style={styles.statCard}>
+                  <h3 style={styles.statNum}>{stat.num}</h3>
+                  <p style={styles.statLabel}>{stat.label}</p>
                 </div>
-                <p style={styles.testiText}>{testi.text}</p>
-                <h4 style={styles.testiName}>{testi.name}</h4>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* TÉMOIGNAGES (uniquement pour les visiteurs non connectés) */}
+        {!currentUser && (
+          <div style={styles.section}>
+            <h2 style={styles.sectionTitle}>{t.testiTitle}</h2>
+            <div style={styles.testimonialGrid}>
+              {[
+                { name: 'Ravie D.', text: '"Produits très frais et livraison ultra-rapide ! Je recommande à 100%."' },
+                { name: 'Farmer X', text: '"Plateforme fiable qui me permet de vendre à des prix équitables sans intermédiaire."' },
+                { name: 'Client Y', text: '"Le meilleur rapport qualité/prix par rapport au marché local."' }
+              ].map((testi, i) => (
+                <div key={i} style={styles.testimonialCard}>
+                  <div style={{display:'flex', gap:'2px', marginBottom:'12px'}}>
+                    {[1,2,3,4,5].map(j => <Star key={j} size={14} fill="#f5b041" color="#f5b041" />)}
+                  </div>
+                  <p style={styles.testiText}>{testi.text}</p>
+                  <h4 style={styles.testiName}>{testi.name}</h4>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* PRE-FOOTER (si non connecté) */}
