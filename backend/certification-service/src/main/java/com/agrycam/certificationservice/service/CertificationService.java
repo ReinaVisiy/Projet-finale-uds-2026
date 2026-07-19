@@ -73,6 +73,21 @@ public class CertificationService {
                 .collect(Collectors.toList());
     }
 
+    // Contrairement à getEnAttente(), renvoie TOUTES les certifications
+    // (en attente, approuvées, rejetées), triées des plus récentes aux
+    // plus anciennes. Nécessaire pour que les onglets "Approuvées" /
+    // "Rejetées" du tableau de bord admin restent alimentés après une
+    // décision (auparavant, la certification disparaissait purement et
+    // simplement dès qu'elle quittait le statut EN_ATTENTE).
+    @Transactional(readOnly = true)
+    public List<CertificationResponse> getToutes() {
+        List<Certification> list = certificationRepository.findAll();
+        return list.stream()
+                .sorted((a, b) -> b.getDateDemande().compareTo(a.getDateDemande()))
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public CertificationResponse confirmerPaiement(Long id, PaymentConfirmationRequest request) {
         Certification certification = certificationRepository.findById(id)

@@ -69,6 +69,16 @@ public class CertificationController {
         return ResponseEntity.ok(responses);
     }
 
+    // Toutes les certifications (en attente + approuvées + rejetées),
+    // utilisé par le tableau de bord admin pour que les certifications
+    // ne disparaissent pas une fois traitées.
+    @GetMapping("/admin/toutes")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<CertificationResponse>> getToutes() {
+        List<CertificationResponse> responses = certificationService.getToutes();
+        return ResponseEntity.ok(responses);
+    }
+
     @PutMapping("/admin/{id}/paiement")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CertificationResponse> confirmerPaiement(

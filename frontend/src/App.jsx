@@ -265,7 +265,7 @@ export default function App() {
     if (currentUser?.role === 'admin') {
       chargerSignalements();
       chargerUtilisateurs();
-      chargerCertificationsEnAttente();
+      chargerCertifications();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, currentUser?.role]);
@@ -282,14 +282,18 @@ export default function App() {
     }
   };
 
-  // ===== CERTIFICATIONS EN ATTENTE (vérification vendeurs, admin) =====
-  // Remplace l'ancien stockage local (vendorVerifications, jamais rempli
-  // en pratique) : vraies demandes depuis certification-service, avec
-  // le nom/email/téléphone du producteur résolus via utilisateur-service
+  // ===== CERTIFICATIONS (vérification vendeurs, admin) =====
+  // Vraies demandes depuis certification-service, avec le nom/email/
+  // téléphone du producteur résolus via utilisateur-service
   // (certification-service ne connaît que producteurId).
-  const chargerCertificationsEnAttente = async () => {
+  // On récupère TOUTES les certifications (pas seulement celles en
+  // attente) : sinon, dès qu'une certification était approuvée ou
+  // rejetée, elle disparaissait purement et simplement du tableau de
+  // bord admin, alors que les onglets "Approuvées"/"Rejetées" sont
+  // censés continuer à l'afficher.
+  const chargerCertifications = async () => {
     try {
-      const dtos = await certificationApi.getCertificationsEnAttente();
+      const dtos = await certificationApi.getToutesCertifications();
       const enrichies = await Promise.all(
         (dtos || []).map(async (dto) => {
           let producteurInfo = {};
@@ -305,7 +309,7 @@ export default function App() {
       );
       setVendorVerifications(enrichies);
     } catch (err) {
-      console.error('Impossible de charger les certifications en attente :', err);
+      console.error('Impossible de charger les certifications :', err);
     }
   };
 
@@ -653,7 +657,7 @@ export default function App() {
   const handleConfirmerPaiementVerification = async (id) => {
     try {
       await certificationApi.confirmerPaiementCertification(id, { paye: true });
-      await chargerCertificationsEnAttente();
+      await chargerCertifications();
     } catch (err) {
       alert(err?.message || "La confirmation du paiement a échoué.");
     }
@@ -662,7 +666,7 @@ export default function App() {
   const handleApproveVerification = async (id) => {
     try {
       await certificationApi.reviserCertification(id, { approuve: true });
-      await chargerCertificationsEnAttente();
+      await chargerCertifications();
     } catch (err) {
       alert(err?.message || "L'approbation a échoué.");
     }
@@ -671,7 +675,7 @@ export default function App() {
   const handleRejectVerification = async (id, motifRejet) => {
     try {
       await certificationApi.reviserCertification(id, { approuve: false, motifRejet });
-      await chargerCertificationsEnAttente();
+      await chargerCertifications();
     } catch (err) {
       alert(err?.message || "Le rejet a échoué.");
     }

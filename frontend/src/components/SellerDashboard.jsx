@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Package, ShoppingBag, Bell, User,
   BarChart3, AlertTriangle, LogOut, Menu, X,
-  ShoppingCart, DollarSign, Award, CheckCircle, XCircle,
+  ShoppingCart, DollarSign, CheckCircle, XCircle,
   Shield, Clock, Plus, Edit, Trash2, Send, CreditCard,
   Upload
 } from 'lucide-react';
@@ -16,22 +16,9 @@ const menuItems = [
   { id: 'products', label: 'Mes produits', icon: <Package size={18} /> },
   { id: 'stock', label: 'Alertes stock', icon: <AlertTriangle size={18} /> },
   { id: 'orders', label: 'Mes commandes', icon: <ShoppingBag size={18} /> },
-  { id: 'subscriptions', label: 'Mon abonnement', icon: <Award size={18} /> },
   { id: 'certification', label: 'Ma certification', icon: <Shield size={18} /> },
   { id: 'notifications', label: 'Notifications', icon: <Bell size={18} /> },
   { id: 'profile', label: 'Mon profil', icon: <User size={18} /> },
-];
-
-const plans = [
-  { id: 'gratuit', name: 'Gratuit', price: 0, features: ['5 produits max', 'Position normale'] },
-  { id: 'starter', name: 'Starter', price: 2000, features: ['20 produits', '2 produits sponsorisés'] },
-  { id: 'premium', name: 'Premium', price: 5000, features: ['Produits illimités', '5 produits sponsorisés'] },
-  { id: 'gold', name: 'Gold', price: 10000, features: ['Produits illimités', 'Tous sponsorisés'] },
-];
-
-const paymentMethods = [
-  { id: 'orange-money', label: 'Orange Money', icon: '📱' },
-  { id: 'mtn-money', label: 'MTN Mobile Money', icon: '📱' },
 ];
 
 export default function SellerDashboard({
@@ -40,18 +27,10 @@ export default function SellerDashboard({
   currentUser,
   vendeurProducts = [],
   adminOrders = [],
-  activePlan = 'gratuit',
-  onSelectPlan,
   onUpdateOrderStatus,
 }) {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showPlanModal, setShowPlanModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [paymentLoading, setPaymentLoading] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const [certificationStatus, setCertificationStatus] = useState('none');
 
@@ -100,43 +79,6 @@ export default function SellerDashboard({
       }, 0);
   });
   const maxRevenue = Math.max(1, ...monthlyRevenue);
-
-  
-  const handleSelectPlanClick = (plan) => {
-    if (plan.price === 0) {
-      if (onSelectPlan) {
-        onSelectPlan(plan);
-        alert(`✅ Abonnement ${plan.name} activé avec succès !`);
-      }
-      return;
-    }
-    setSelectedPlan(plan);
-    setPaymentMethod('');
-    setPaymentSuccess(false);
-    setShowPaymentModal(true);
-    setShowPlanModal(false);
-  };
-
-  const handlePaymentSubmit = () => {
-    if (!paymentMethod) {
-      alert('Veuillez sélectionner un mode de paiement');
-      return;
-    }
-    setPaymentLoading(true);
-    setTimeout(() => {
-      setPaymentLoading(false);
-      setPaymentSuccess(true);
-      if (onSelectPlan && selectedPlan) {
-        onSelectPlan(selectedPlan);
-      }
-      setTimeout(() => {
-        setShowPaymentModal(false);
-        setSelectedPlan(null);
-        setPaymentMethod('');
-        setPaymentSuccess(false);
-      }, 2000);
-    }, 1500);
-  };
 
   // ===== RENDER FUNCTIONS =====
   const renderDashboard = () => (
@@ -381,140 +323,6 @@ export default function SellerDashboard({
     />
   );
 
-  const renderSubscriptions = () => {
-    const currentPlan = plans.find(p => p.id === activePlan) || plans[0];
-    return (
-      <>
-        <div style={styles.pageHeader}>
-          <h2 style={styles.pageTitle}>Mon abonnement</h2>
-          <p style={styles.pageSubtitle}>Gérez votre plan d'abonnement</p>
-        </div>
-
-        <div style={styles.currentPlanCard}>
-          <div style={styles.currentPlanHeader}>
-            <Award size={32} color="#2d6a4f" />
-            <div>
-              <h3 style={styles.currentPlanName}>{currentPlan.name}</h3>
-              <p style={styles.currentPlanPrice}>
-                {currentPlan.price === 0 ? 'Gratuit' : `${currentPlan.price.toLocaleString()} FCFA/mois`}
-              </p>
-            </div>
-          </div>
-          <ul style={styles.featureList}>
-            {currentPlan.features.map((f, i) => (
-              <li key={i} style={styles.featureItem}>✅ {f}</li>
-            ))}
-          </ul>
-          <button style={styles.actionBtn} onClick={() => setShowPlanModal(true)}>
-            Changer d'abonnement
-          </button>
-        </div>
-
-        {showPlanModal && (
-          <div style={styles.modalOverlay} onClick={() => setShowPlanModal(false)}>
-            <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-              <div style={styles.modalHeader}>
-                <h3 style={styles.modalTitle}>Choisissez votre abonnement</h3>
-                <button style={styles.closeBtn} onClick={() => setShowPlanModal(false)}>✕</button>
-              </div>
-              <div style={styles.plansGrid}>
-                {plans.map(plan => {
-                  const isActive = activePlan === plan.id;
-                  return (
-                    <div key={plan.id} style={{
-                      ...styles.planCard,
-                      border: isActive ? '2px solid #2d6a4f' : '1px solid #e9ecef',
-                      backgroundColor: isActive ? '#e9f5ee' : '#ffffff',
-                    }}>
-                      <h4 style={styles.planName}>{plan.name}</h4>
-                      <p style={styles.planPrice}>
-                        {plan.price === 0 ? 'Gratuit' : `${plan.price.toLocaleString()} FCFA/mois`}
-                      </p>
-                      <ul style={styles.planFeatures}>
-                        {plan.features.map((f, i) => (
-                          <li key={i} style={styles.planFeature}>✅ {f}</li>
-                        ))}
-                      </ul>
-                      <button
-                        style={{
-                          ...styles.selectPlanBtn,
-                          backgroundColor: isActive ? '#e9ecef' : '#2d6a4f',
-                          color: isActive ? '#6c757d' : '#ffffff',
-                          cursor: isActive ? 'default' : 'pointer',
-                        }}
-                        onClick={() => {
-                          if (!isActive) handleSelectPlanClick(plan);
-                        }}
-                        disabled={isActive}
-                      >
-                        {isActive ? '✅ Actif' : 'Sélectionner'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showPaymentModal && selectedPlan && (
-          <div style={styles.modalOverlay} onClick={() => setShowPaymentModal(false)}>
-            <div style={{ ...styles.modal, maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
-              <div style={styles.modalHeader}>
-                <h3 style={styles.modalTitle}>💳 Paiement</h3>
-                <button style={styles.closeBtn} onClick={() => setShowPaymentModal(false)}>✕</button>
-              </div>
-              <div style={styles.paymentInfo}>
-                <p style={styles.paymentPlan}>Plan : <strong>{selectedPlan.name}</strong></p>
-                <p style={styles.paymentAmount}>Montant : <strong>{selectedPlan.price.toLocaleString()} FCFA</strong></p>
-              </div>
-              <div style={styles.paymentMethods}>
-                <p style={styles.paymentLabel}>Choisissez votre mode de paiement :</p>
-                {paymentMethods.map(method => (
-                  <label key={method.id} style={{
-                    ...styles.paymentOption,
-                    backgroundColor: paymentMethod === method.id ? '#e9f5ee' : '#ffffff',
-                    borderColor: paymentMethod === method.id ? '#2d6a4f' : '#dee2e6',
-                  }}>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={method.id}
-                      checked={paymentMethod === method.id}
-                      onChange={() => setPaymentMethod(method.id)}
-                      style={{ display: 'none' }}
-                    />
-                    <span style={styles.paymentIcon}>{method.icon}</span>
-                    <span style={styles.paymentLabelText}>{method.label}</span>
-                  </label>
-                ))}
-              </div>
-              {paymentSuccess && (
-                <div style={styles.successBox}>
-                  <CheckCircle size={20} color="#2d6a4f" />
-                  <span>✅ Paiement effectué avec succès !</span>
-                </div>
-              )}
-              <div style={styles.paymentActions}>
-                <button style={styles.cancelBtn} onClick={() => setShowPaymentModal(false)}>Annuler</button>
-                <button
-                  style={{
-                    ...styles.payBtn,
-                    opacity: paymentLoading ? 0.7 : 1,
-                  }}
-                  onClick={handlePaymentSubmit}
-                  disabled={paymentLoading || paymentSuccess}
-                >
-                  {paymentLoading ? 'Traitement...' : paymentSuccess ? '✅ Payé' : `Payer ${selectedPlan.price.toLocaleString()} FCFA`}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </>
-    );
-  };
-
   const renderNotifications = () => (
     <>
       <div style={styles.pageHeader}>
@@ -567,7 +375,6 @@ export default function SellerDashboard({
       case 'products': return renderProducts();
       case 'stock': return renderStockAlerts();
       case 'orders': return renderOrders();
-      case 'subscriptions': return renderSubscriptions();
       case 'notifications': return renderNotifications();
       case 'profile': return renderProfile();
       default: return renderDashboard();
@@ -685,39 +492,6 @@ const styles = {
   certUpload: { display: 'flex', alignItems: 'center', gap: '10px' },
   uploadLabel: { padding: '10px 16px', backgroundColor: '#f8f9fa', border: '1px dashed #dee2e6', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', color: '#495057', display: 'flex', alignItems: 'center', gap: '8px' },
   submitBtn: { padding: '12px 24px', backgroundColor: '#2d6a4f', color: '#ffffff', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' },
-
-  currentPlanCard: { backgroundColor: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #e9ecef', marginBottom: '24px' },
-  currentPlanHeader: { display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' },
-  currentPlanName: { fontSize: '20px', fontWeight: '800', color: '#212529', margin: 0 },
-  currentPlanPrice: { fontSize: '16px', fontWeight: '600', color: '#2d6a4f', margin: 0 },
-  featureList: { listStyle: 'none', padding: 0, margin: '0 0 16px 0' },
-  featureItem: { fontSize: '14px', color: '#495057', padding: '4px 0' },
-
-  modalOverlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modal: { backgroundColor: '#ffffff', borderRadius: '20px', padding: '28px', maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto' },
-  modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-  modalTitle: { fontSize: '20px', fontWeight: '900', color: '#212529', margin: 0 },
-  closeBtn: { background: 'none', border: 'none', fontSize: '24px', color: '#6c757d', cursor: 'pointer' },
-  plansGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
-  planCard: { padding: '16px', borderRadius: '14px', border: '1px solid #e9ecef', textAlign: 'center' },
-  planName: { fontSize: '16px', fontWeight: '800', color: '#212529', margin: '0 0 4px 0' },
-  planPrice: { fontSize: '14px', fontWeight: '700', color: '#e07a5f', margin: '0 0 12px 0' },
-  planFeatures: { listStyle: 'none', padding: 0, margin: '0 0 12px 0', textAlign: 'left' },
-  planFeature: { fontSize: '13px', color: '#495057', padding: '3px 0' },
-  selectPlanBtn: { padding: '8px 16px', borderRadius: '10px', border: 'none', fontSize: '13px', fontWeight: '700', width: '100%' },
-
-  paymentInfo: { backgroundColor: '#f8f9fa', padding: '14px 16px', borderRadius: '12px', marginBottom: '16px' },
-  paymentPlan: { fontSize: '14px', color: '#495057', margin: '0 0 4px 0' },
-  paymentAmount: { fontSize: '16px', fontWeight: '800', color: '#e07a5f', margin: 0 },
-  paymentMethods: { marginBottom: '20px' },
-  paymentLabel: { fontSize: '14px', fontWeight: '700', color: '#212529', marginBottom: '10px' },
-  paymentOption: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #dee2e6', marginBottom: '8px', cursor: 'pointer' },
-  paymentIcon: { fontSize: '20px' },
-  paymentLabelText: { fontSize: '14px', fontWeight: '600', color: '#212529' },
-  paymentActions: { display: 'flex', gap: '12px', marginTop: '16px' },
-  cancelBtn: { flex: 1, padding: '12px', backgroundColor: '#f1f3f5', color: '#495057', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '700', cursor: 'pointer' },
-  payBtn: { flex: 2, padding: '12px', backgroundColor: '#2d6a4f', color: '#ffffff', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '800', cursor: 'pointer' },
-  successBox: { display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', backgroundColor: '#e9f5ee', borderRadius: '12px', border: '1px solid #b7e4c7', marginBottom: '16px' },
 
   profileCard: { display: 'flex', alignItems: 'center', gap: '24px', backgroundColor: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #e9ecef' },
   profilePhoto: { flexShrink: 0 },

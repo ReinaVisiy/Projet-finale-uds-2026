@@ -28,6 +28,9 @@ export const getPaymentInformation = () =>
 /** List certifications pending review. Requires ADMIN role. */
 export const getCertificationsEnAttente = () => httpGet(BASE, '/api/certifications/admin/en-attente');
 
+/** List ALL certifications (en attente + approuvées + rejetées). Requires ADMIN role. */
+export const getToutesCertifications = () => httpGet(BASE, '/api/certifications/admin/toutes');
+
 /** Confirm payment for a certification request. Requires ADMIN role. */
 export const confirmerPaiementCertification = (id, paymentConfirmation) =>
   httpPut(BASE, `/api/certifications/admin/${id}/paiement`, paymentConfirmation);

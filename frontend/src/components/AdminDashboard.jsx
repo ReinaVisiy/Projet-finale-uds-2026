@@ -8,10 +8,7 @@ const navItems = [
   { id: 'certifications', label: 'Certifications', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
   { id: 'signalements', label: 'Signalements', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> },
   { id: 'users', label: 'Utilisateurs', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
-  { id: 'vendor-verification', label: 'Vérif. Vendeurs', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
   { id: 'sales', label: 'Ventes', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> },
-  { id: 'subscription', label: 'Abonnement', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> },
-  { id: 'settings', label: 'Paramètres', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
 ];
 
 export default function AdminDashboard({
@@ -42,11 +39,6 @@ export default function AdminDashboard({
     : 0;
   const [toast, setToast] = useState('');
   const [hoveredBar, setHoveredBar] = useState(null);
-  const [selectedCert, setSelectedCert] = useState(null);
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [rejectReason, setRejectReason] = useState('');
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [certToReject, setCertToReject] = useState(null);
 
   // ===== STATISTIQUES =====
   const totalUsers = registeredUsers.length;
@@ -59,7 +51,6 @@ export default function AdminDashboard({
   const pendingCertifications = vendorVerifications.filter(v => v.status === 'pending').length;
   const approvedCertifications = vendorVerifications.filter(v => v.status === 'approved').length;
   const rejectedCertifications = vendorVerifications.filter(v => v.status === 'rejected').length;
-  const activeSubscriptions = registeredUsers.filter(u => u.role === 'vendeur' && u.plan && u.plan !== 'gratuit').length;
 
   // ===== DERNIÈRES COMMANDES =====
   const lastOrders = adminOrders.slice(-3).reverse();
@@ -95,144 +86,25 @@ export default function AdminDashboard({
     return nom || `Producteur #${cert.producteurId ?? ''}`;
   };
 
-  // ===== ACTIONS CERTIFICATIONS =====
-  const handleApprove = async (id) => {
-    // On appelle le vrai handler passé par App (certificationApi.reviserCertification)
-    if (onApproveCertification) await onApproveCertification(id);
-    setSelectedCert(null);
-    showToast('✅ Certification approuvée avec succès !');
-  };
-
-  const handleReject = async (id) => {
-    if (!rejectReason.trim()) { alert('Veuillez indiquer une raison de rejet'); return; }
-    // On appelle le vrai handler passé par App (certificationApi.reviserCertification)
-    if (onRejectCertification) await onRejectCertification(id, rejectReason);
-    setShowRejectModal(false);
-    setSelectedCert(null);
-    setRejectReason('');
-    setCertToReject(null);
-    showToast('❌ Certification rejetée.');
-  };
-
-  const openRejectModal = (cert) => {
-    setCertToReject(cert);
-    setShowRejectModal(true);
-  };
-
-  const getStatusStyle = (status) => {
-    if (status === 'approved') return { color: '#2d6a4f', bg: '#e9f5ee', label: '✅ Approuvée' };
-    if (status === 'rejected') return { color: '#e07a5f', bg: '#fdf1ed', label: '❌ Rejetée' };
-    return { color: '#f5b041', bg: '#fffbea', label: '⏳ En attente' };
-  };
-
   // ===== NAVIGATION =====
   const handleNavClick = (item) => {
     setActiveNav(item.id);
     if (item.id === 'orders') {
       onNavigate && onNavigate('order-management-admin');
-    } else if (item.id === 'vendor-verification') {
+    } else if (item.id === 'certifications') {
       onNavigateToVendorVerification && onNavigateToVendorVerification();
     } else if (item.id === 'signalements') {
       onNavigateToModeration && onNavigateToModeration();
     } else if (item.id === 'users') {
       // reste sur le dashboard : affiche l'onglet Utilisateurs ci-dessous
-    } else if (item.id !== 'home' && item.id !== 'certifications') {
+    } else if (item.id !== 'home') {
       showToast(`Navigation → ${item.label}`);
     }
   };
 
-  const filteredCerts = vendorVerifications.filter(c =>
-    filterStatus === 'all' ? true : c.status === filterStatus
-  );
-
   return (
     <div style={styles.wrapper}>
       {toast && <div style={styles.toast}>{toast}</div>}
-
-      {/* Modal rejet */}
-      {showRejectModal && certToReject && (
-        <div style={styles.overlay}>
-          <div style={styles.rejectModal}>
-            <h3 style={styles.rejectTitle}>❌ Rejeter la certification</h3>
-            <p style={styles.rejectSubtitle}>Producteur : <strong>{nomCompletProducteur(certToReject)}</strong></p>
-            <div style={styles.field}>
-              <label style={styles.label}>Raison du rejet *</label>
-              <textarea
-                style={styles.textarea}
-                rows="4"
-                placeholder="Ex: Documents insuffisants, informations incorrectes..."
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-              />
-            </div>
-            <div style={styles.rejectActions}>
-              <button style={styles.cancelBtn} onClick={() => { setShowRejectModal(false); setRejectReason(''); }}>Annuler</button>
-              <button style={styles.rejectBtn} onClick={() => handleReject(certToReject.id)}>Confirmer le rejet</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Détail certification */}
-      {selectedCert && (
-        <div style={styles.overlay} onClick={() => setSelectedCert(null)}>
-          <div style={styles.detailModal} onClick={e => e.stopPropagation()}>
-            <div style={styles.detailHeader}>
-              <div style={styles.detailHeaderLeft}>
-                <div style={styles.detailAvatar}>{selectedCert.prenom ? selectedCert.prenom[0] : '?'}</div>
-                <div>
-                  <h3 style={styles.detailTitle}>{nomCompletProducteur(selectedCert)}</h3>
-                  <p style={styles.detailSub}>{selectedCert.email}</p>
-                </div>
-              </div>
-              <button style={styles.closeBtn} onClick={() => setSelectedCert(null)}>✕</button>
-            </div>
-
-            <div style={styles.detailGrid}>
-              <div style={styles.detailItem}>
-                <span style={styles.detailLabel}>Localisation</span>
-                <span style={styles.detailValue}>📍 {selectedCert.location || 'Non renseignée'}</span>
-              </div>
-              <div style={styles.detailItem}>
-                <span style={styles.detailLabel}>Documents</span>
-                <span style={styles.detailValue}>📄 {selectedCert.documents ? selectedCert.documents.length : 0} fichier(s)</span>
-              </div>
-              <div style={styles.detailItem}>
-                <span style={styles.detailLabel}>Date de demande</span>
-                <span style={styles.detailValue}>📅 {selectedCert.dateDemande ? new Date(selectedCert.dateDemande).toLocaleDateString('fr-FR') : 'N/A'}</span>
-              </div>
-              <div style={styles.detailItem}>
-                <span style={styles.detailLabel}>Statut</span>
-                <span style={{
-                  ...styles.statusBadge,
-                  color: getStatusStyle(selectedCert.status).color,
-                  backgroundColor: getStatusStyle(selectedCert.status).bg,
-                }}>
-                  {getStatusStyle(selectedCert.status).label}
-                </span>
-              </div>
-            </div>
-
-            {selectedCert.rejectReason && (
-              <div style={styles.rejectReasonBox}>
-                <p style={styles.rejectReasonLabel}>Raison du rejet :</p>
-                <p style={styles.rejectReasonText}>{selectedCert.rejectReason}</p>
-              </div>
-            )}
-
-            {selectedCert.status === 'pending' && (
-              <div style={styles.detailActions}>
-                <button style={styles.rejectBtnOutline} onClick={() => { setSelectedCert(null); openRejectModal(selectedCert); }}>
-                  ❌ Rejeter
-                </button>
-                <button style={styles.approveBtn} onClick={() => handleApprove(selectedCert.id)}>
-                  ✅ Approuver la certification
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* SIDEBAR (inchangé) */}
       <aside style={{ ...styles.sidebar, width: sidebarCollapsed ? '72px' : '220px' }}>
@@ -259,9 +131,6 @@ export default function AdminDashboard({
                 )}
                 {!sidebarCollapsed && item.id === 'certifications' && pendingCertifications > 0 && (
                   <span style={styles.navBadge}>{pendingCertifications}</span>
-                )}
-                {!sidebarCollapsed && item.id === 'vendor-verification' && pendingVerificationCount > 0 && (
-                  <span style={styles.navBadge}>{pendingVerificationCount}</span>
                 )}
                 {!sidebarCollapsed && item.id === 'orders' && totalOrders > 0 && (
                   <span style={styles.navBadge}>{totalOrders}</span>
@@ -381,14 +250,6 @@ export default function AdminDashboard({
                   <p style={styles.kpiLabel}>Certifications</p>
                   <p style={styles.kpiValue}>{pendingCertifications} en attente</p>
                 </div>
-                <div style={styles.kpiCard}>
-                  <div style={styles.kpiTop}>
-                    <div style={{ ...styles.kpiIcon, backgroundColor: '#e9f5ee' }}>📊</div>
-                    <span style={{ ...styles.kpiChange, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{activeSubscriptions}</span>
-                  </div>
-                  <p style={styles.kpiLabel}>Abonnements payants</p>
-                  <p style={styles.kpiValue}>{activeSubscriptions}</p>
-                </div>
               </div>
 
               {/* Graphique + Commandes récentes */}
@@ -473,80 +334,6 @@ export default function AdminDashboard({
           )}
 
           {/* ===== VUE CERTIFICATIONS ===== */}
-          {activeNav === 'certifications' && (
-            <>
-              <div style={styles.pageTitle}>
-                <h2 style={styles.pageTitleText}>Gestion des certifications</h2>
-                <p style={styles.pageTitleSub}>Examinez et validez les demandes des producteurs</p>
-              </div>
-
-              <div style={styles.certStatsRow}>
-                <div style={styles.certStat}>
-                  <Clock size={20} color="#f5b041" />
-                  <div><p style={styles.certStatNum}>{pendingCertifications}</p><p style={styles.certStatLabel}>En attente</p></div>
-                </div>
-                <div style={styles.certStat}>
-                  <CheckCircle size={20} color="#2d6a4f" />
-                  <div><p style={styles.certStatNum}>{approvedCertifications}</p><p style={styles.certStatLabel}>Approuvées</p></div>
-                </div>
-                <div style={styles.certStat}>
-                  <XCircle size={20} color="#e07a5f" />
-                  <div><p style={styles.certStatNum}>{rejectedCertifications}</p><p style={styles.certStatLabel}>Rejetées</p></div>
-                </div>
-                <div style={styles.certStat}>
-                  <Shield size={20} color="#1b4d3e" />
-                  <div><p style={styles.certStatNum}>{vendorVerifications.length}</p><p style={styles.certStatLabel}>Total</p></div>
-                </div>
-              </div>
-
-              <div style={styles.filterRow}>
-                {['all', 'pending', 'approved', 'rejected'].map(f => (
-                  <button key={f} style={{ ...styles.filterBtn, ...(filterStatus === f ? styles.filterBtnActive : {}) }} onClick={() => setFilterStatus(f)}>
-                    {f === 'all' ? 'Toutes' : f === 'pending' ? '⏳ En attente' : f === 'approved' ? '✅ Approuvées' : '❌ Rejetées'}
-                    {f === 'pending' && pendingCertifications > 0 && <span style={styles.filterBadge}>{pendingCertifications}</span>}
-                  </button>
-                ))}
-              </div>
-
-              <div style={styles.certList}>
-                {filteredCerts.length === 0 ? (
-                  <div style={styles.emptyState}><Shield size={40} color="#adb5bd" /><p>Aucune demande dans cette catégorie</p></div>
-                ) : (
-                  filteredCerts.map(cert => {
-                    const st = getStatusStyle(cert.status);
-                    return (
-                      <div key={cert.id} style={styles.certCard}>
-                        <div style={styles.certLeft}>
-                          <div style={styles.certAvatar}>{cert.prenom ? cert.prenom[0] : '?'}</div>
-                          <div style={styles.certInfo}>
-                            <h4 style={styles.certFarm}>{nomCompletProducteur(cert)}</h4>
-                            <p style={styles.certVendeur}>👤 {cert.email}</p>
-                            <p style={styles.certMeta}>📍 {cert.location || 'Non spécifiée'}</p>
-                            <div style={styles.certDocs}>
-                              <span style={styles.certDocBadge}>📄 {cert.documents ? cert.documents.length : 0} documents</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div style={styles.certRight}>
-                          <span style={{ ...styles.certStatus, color: st.color, backgroundColor: st.bg }}>{st.label}</span>
-                          <div style={styles.certActions}>
-                            <button style={styles.certViewBtn} onClick={() => setSelectedCert(cert)}><Eye size={14} /> Voir détails</button>
-                            {cert.status === 'pending' && (
-                              <>
-                                <button style={styles.certRejectBtn} onClick={() => openRejectModal(cert)}><XCircle size={14} /> Rejeter</button>
-                                <button style={styles.certApproveBtn} onClick={() => handleApprove(cert.id)}><CheckCircle size={14} /> Approuver</button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </>
-          )}
-
           {/* ===== VUE UTILISATEURS ===== */}
           {activeNav === 'users' && (
             <>

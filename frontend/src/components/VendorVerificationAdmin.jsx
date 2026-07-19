@@ -57,6 +57,13 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
   };
 
   const pendingCount = pendingVerifications.filter(v => v.status === 'pending').length;
+  const approvedCount = pendingVerifications.filter(v => v.status === 'approved').length;
+  const rejectedCount = pendingVerifications.filter(v => v.status === 'rejected').length;
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const filteredByStatus = filtered.filter(v =>
+    statusFilter === 'all' ? true : v.status === statusFilter
+  );
 
   return (
     <div style={styles.wrapper}>
@@ -69,12 +76,29 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
           <div style={styles.headerTitleRow}>
             <div style={styles.headerBadge}><ShieldCheck size={24} color="#ffffff" /></div>
             <div>
-              <h1 style={styles.title}>Vérification des vendeurs</h1>
+              <h1 style={styles.title}>Certifications</h1>
               <p style={styles.subtitle}>
                 {pendingCount} demande{pendingCount !== 1 ? 's' : ''} en attente de validation
               </p>
             </div>
           </div>
+        </div>
+
+        <div style={styles.filterRow}>
+          {[
+            { id: 'all', label: 'Toutes', count: pendingVerifications.length },
+            { id: 'pending', label: '⏳ En attente', count: pendingCount },
+            { id: 'approved', label: '✅ Approuvées', count: approvedCount },
+            { id: 'rejected', label: '❌ Rejetées', count: rejectedCount },
+          ].map(f => (
+            <button
+              key={f.id}
+              style={{ ...styles.filterBtn, ...(statusFilter === f.id ? styles.filterBtnActive : {}) }}
+              onClick={() => setStatusFilter(f.id)}
+            >
+              {f.label} ({f.count})
+            </button>
+          ))}
         </div>
 
         <div style={styles.grid}>
@@ -93,10 +117,10 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
             </div>
 
             <div style={styles.list}>
-              {filtered.length === 0 && (
+              {filteredByStatus.length === 0 && (
                 <p style={styles.emptyText}>Aucune demande trouvée.</p>
               )}
-              {filtered.map((v) => {
+              {filteredByStatus.map((v) => {
                 const badge = statusBadge(v.status);
                 const isSelected = selected?.id === v.id;
                 return (
@@ -300,6 +324,9 @@ const styles = {
   headerBadge: { width: '48px', height: '48px', backgroundColor: '#2d6a4f', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   title: { fontSize: '22px', fontWeight: '900', color: '#1b4d3e', margin: 0 },
   subtitle: { fontSize: '13.5px', color: '#6c757d', margin: '2px 0 0 0', fontWeight: '600' },
+  filterRow: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' },
+  filterBtn: { padding: '8px 14px', borderRadius: '20px', border: '1px solid #dee2e6', backgroundColor: '#ffffff', color: '#495057', fontSize: '13px', fontWeight: '700', cursor: 'pointer' },
+  filterBtnActive: { backgroundColor: '#1b4d3e', color: '#ffffff', borderColor: '#1b4d3e' },
 
   grid: { display: 'grid', gridTemplateColumns: '340px 1fr', gap: '24px', alignItems: 'start' },
 
