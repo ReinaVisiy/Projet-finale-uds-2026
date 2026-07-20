@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ShoppingBag, Leaf, ShieldCheck, Truck, Star, ArrowRight, UserPlus, PackageSearch } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
+import { useLanguage } from '../context/LanguageContext';
 import { correspondRecherche } from '../utils/produceSearch';
 import { getStatsPubliques as getStatsUtilisateurs } from '../services/api/utilisateurApi';
 import { getStatsPubliques as getStatsCertifications } from '../services/api/certificationApi';
@@ -138,8 +139,14 @@ export default function AgroMarketHome({
   onNavigateToLogin,
   onAddToCart,
   currentUser,
-  lang = 'fr',
 }) {
+  // Avant : `lang` était reçu en props avec un repli 'fr', mais certains
+  // écrans (ex. la route par défaut dans App.jsx) ne transmettaient pas
+  // cette prop -> la page restait bloquée en français quoi qu'on clique
+  // sur le bouton de langue. On lit directement le contexte global, comme
+  // le fait déjà useDict() dans les autres pages, pour ne plus dépendre
+  // de la transmission manuelle de la prop à chaque appel du composant.
+  const { lang } = useLanguage();
   const { produits: allProducts, categories: categoriesBrutes, chargement, erreur } = useProduits();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -174,7 +181,7 @@ export default function AgroMarketHome({
     return () => { annule = true; };
   }, [currentUser]);
 
-  const t = translations[lang];
+  const t = translations[lang] || translations.fr;
 
   const categories = categoriesBrutes.map((c) => {
     const cle = normaliserNomCategorie(c.name);

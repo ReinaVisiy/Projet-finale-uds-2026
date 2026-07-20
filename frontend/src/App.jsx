@@ -750,7 +750,6 @@ export default function App() {
           onNavigateToCatalogue={() => navigate('catalogue')}
           onAddToCart={addToCart}
           currentUser={currentUser}
-          lang={lang}
         />;
       case 'catalogue':
         return <ProductCatalog
