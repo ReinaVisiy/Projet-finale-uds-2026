@@ -179,10 +179,10 @@ export default function EditProduct({
               <div style={styles.previewWrap}>
                 <img src={imagePreview} alt="Aperçu" style={styles.previewImage} />
                 <div style={styles.previewActions}>
-                  <button style={styles.changeBtn} onClick={() => fileInputRef.current.click()}>
+                  <button type="button" style={styles.changeBtn} onClick={() => fileInputRef.current.click()}>
                     <Upload size={16} /> Changer
                   </button>
-                  <button style={styles.removeBtn} onClick={removeImage}>
+                  <button type="button" style={styles.removeBtn} onClick={removeImage}>
                     <X size={16} /> Supprimer
                   </button>
                   <input
