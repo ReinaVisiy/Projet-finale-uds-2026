@@ -45,6 +45,11 @@ export default function AgroMarketHome({
   // aucune prop `lang` à faire transiter depuis App.jsx.
   const { t } = useTranslation();
 
+  const { produits: allProducts, categories: categoriesBrutes, chargement, erreur } = useProduits();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredProducts, setFilteredProducts] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(null);
+
   const categories = categoriesBrutes.map((c) => {
     const cle = normaliserNomCategorie(c.name);
     const style = STYLE_CATEGORIES_PAR_NOM[cle] || STYLE_CATEGORIE_PAR_DEFAUT;
