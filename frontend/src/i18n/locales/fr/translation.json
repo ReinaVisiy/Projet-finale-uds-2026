@@ -430,5 +430,29 @@
     "preview": "Aperçu",
     "change": "Changer",
     "remove": "Supprimer"
+  },
+  "editProduct": {
+    "selectImage": "Veuillez sélectionner une image (JPG, PNG, WEBP)",
+    "fillRequired": "Veuillez remplir tous les champs obligatoires (*) et ajouter une image",
+    "updateFailed": "La mise à jour du produit a échoué.",
+    "title": "Modifier le produit",
+    "productName": "Nom du produit *",
+    "productNamePlaceholder": "Ex: Banane douce de Dschang",
+    "category": "Catégorie *",
+    "loading": "Chargement...",
+    "availableQty": "Quantité disponible *",
+    "qtyPlaceholder": "Ex: 50",
+    "priceLabel": "Prix (FCFA) *",
+    "pricePlaceholder": "Ex: 1500",
+    "description": "Description",
+    "descPlaceholder": "Décrivez votre produit : origine, qualité, mode de culture...",
+    "updating": "⏳ Mise à jour...",
+    "update": "💾 Mettre à jour le produit",
+    "productPhoto": "Photo du produit *",
+    "clickToAdd": "Cliquez pour ajouter une image",
+    "fileHint": "JPG, PNG, WEBP — Max 5 MB",
+    "preview": "Aperçu",
+    "change": "Changer",
+    "remove": "Supprimer"
   }
 }

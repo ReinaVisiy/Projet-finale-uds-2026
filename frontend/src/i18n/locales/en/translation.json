@@ -430,5 +430,29 @@
     "preview": "Preview",
     "change": "Change",
     "remove": "Remove"
+  },
+  "editProduct": {
+    "selectImage": "Please select an image (JPG, PNG, WEBP)",
+    "fillRequired": "Please fill in all required fields (*) and add an image",
+    "updateFailed": "Failed to update the product.",
+    "title": "Edit product",
+    "productName": "Product name *",
+    "productNamePlaceholder": "E.g: Sweet banana from Dschang",
+    "category": "Category *",
+    "loading": "Loading...",
+    "availableQty": "Available quantity *",
+    "qtyPlaceholder": "E.g: 50",
+    "priceLabel": "Price (FCFA) *",
+    "pricePlaceholder": "E.g: 1500",
+    "description": "Description",
+    "descPlaceholder": "Describe your product: origin, quality, growing method...",
+    "updating": "⏳ Updating...",
+    "update": "💾 Update product",
+    "productPhoto": "Product photo *",
+    "clickToAdd": "Click to add an image",
+    "fileHint": "JPG, PNG, WEBP — Max 5 MB",
+    "preview": "Preview",
+    "change": "Change",
+    "remove": "Remove"
   }
 }

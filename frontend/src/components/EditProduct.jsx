@@ -3,65 +3,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { produitApi } from '../services/api';
 import { mapCategorie, mapProduitPourVendeur, construireProduitRequest } from '../services/productMapping';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    selectImage: 'Veuillez sélectionner une image (JPG, PNG, WEBP)',
-    fillRequired: 'Veuillez remplir tous les champs obligatoires (*) et ajouter une image',
-    updateFailed: 'La mise à jour du produit a échoué.',
-    title: 'Modifier le produit',
-    productName: 'Nom du produit *',
-    productNamePlaceholder: 'Ex: Banane douce de Dschang',
-    category: 'Catégorie *',
-    loading: 'Chargement...',
-    availableQty: 'Quantité disponible *',
-    qtyPlaceholder: 'Ex: 50',
-    priceLabel: 'Prix (FCFA) *',
-    pricePlaceholder: 'Ex: 1500',
-    description: 'Description',
-    descPlaceholder: 'Décrivez votre produit : origine, qualité, mode de culture...',
-    updating: '⏳ Mise à jour...',
-    update: '💾 Mettre à jour le produit',
-    productPhoto: 'Photo du produit *',
-    clickToAdd: 'Cliquez pour ajouter une image',
-    fileHint: 'JPG, PNG, WEBP — Max 5 MB',
-    preview: 'Aperçu',
-    change: 'Changer',
-    remove: 'Supprimer',
-  },
-  en: {
-    selectImage: 'Please select an image (JPG, PNG, WEBP)',
-    fillRequired: 'Please fill in all required fields (*) and add an image',
-    updateFailed: 'Failed to update the product.',
-    title: 'Edit product',
-    productName: 'Product name *',
-    productNamePlaceholder: 'E.g: Sweet banana from Dschang',
-    category: 'Category *',
-    loading: 'Loading...',
-    availableQty: 'Available quantity *',
-    qtyPlaceholder: 'E.g: 50',
-    priceLabel: 'Price (FCFA) *',
-    pricePlaceholder: 'E.g: 1500',
-    description: 'Description',
-    descPlaceholder: 'Describe your product: origin, quality, growing method...',
-    updating: '⏳ Updating...',
-    update: '💾 Update product',
-    productPhoto: 'Product photo *',
-    clickToAdd: 'Click to add an image',
-    fileHint: 'JPG, PNG, WEBP — Max 5 MB',
-    preview: 'Preview',
-    change: 'Change',
-    remove: 'Remove',
-  },
-};
 
 export default function EditProduct({ 
   product, 
   onSave, 
   onCancel 
 }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [name, setName] = useState(product?.name || '');
   const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState(product?.categoryId != null ? String(product.categoryId) : '');
@@ -88,7 +38,7 @@ export default function EditProduct({
   const handleImageChange = (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      alert(t.selectImage);
+      alert(t('editProduct.selectImage'));
       return;
     }
     setImageFile(file);
@@ -107,7 +57,7 @@ export default function EditProduct({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim() || !price || !quantity || !imagePreview) {
-      alert(t.fillRequired);
+      alert(t('editProduct.fillRequired'));
       return;
     }
     setIsSubmitting(true);
@@ -123,7 +73,7 @@ export default function EditProduct({
       const produitModifie = await produitApi.modifierProduit(product.id, request);
       if (onSave) onSave(mapProduitPourVendeur(produitModifie));
     } catch (err) {
-      alert(err?.message || t.updateFailed);
+      alert(err?.message || t('editProduct.updateFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -135,7 +85,7 @@ export default function EditProduct({
         <button onClick={onCancel} style={styles.backBtn}>
           <ArrowLeft size={20} />
         </button>
-        <h2 style={styles.title}>{t.title}</h2>
+        <h2 style={styles.title}>{t('editProduct.title')}</h2>
       </div>
 
       <form style={styles.form} onSubmit={handleSubmit}>
@@ -143,10 +93,10 @@ export default function EditProduct({
           {/* Colonne gauche : formulaire */}
           <div style={styles.formCard}>
             <div style={styles.field}>
-              <label style={styles.label}>{t.productName}</label>
+              <label style={styles.label}>{t('editProduct.productName')}</label>
               <input
                 type="text"
-                placeholder={t.productNamePlaceholder}
+                placeholder={t('editProduct.productNamePlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 style={styles.input}
@@ -156,19 +106,19 @@ export default function EditProduct({
 
             <div style={styles.row2}>
               <div style={styles.field}>
-                <label style={styles.label}>{t.category}</label>
+                <label style={styles.label}>{t('editProduct.category')}</label>
                 <select value={category} onChange={(e) => setCategory(e.target.value)} style={styles.select}>
-                  {categories.length === 0 && <option value="">{t.loading}</option>}
+                  {categories.length === 0 && <option value="">{t('editProduct.loading')}</option>}
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
               </div>
               <div style={styles.field}>
-                <label style={styles.label}>{t.availableQty}</label>
+                <label style={styles.label}>{t('editProduct.availableQty')}</label>
                 <input
                   type="number"
-                  placeholder={t.qtyPlaceholder}
+                  placeholder={t('editProduct.qtyPlaceholder')}
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   style={styles.input}
@@ -179,10 +129,10 @@ export default function EditProduct({
             </div>
 
             <div style={styles.field}>
-              <label style={styles.label}>{t.priceLabel}</label>
+              <label style={styles.label}>{t('editProduct.priceLabel')}</label>
               <input
                 type="number"
-                placeholder={t.pricePlaceholder}
+                placeholder={t('editProduct.pricePlaceholder')}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 style={styles.input}
@@ -192,9 +142,9 @@ export default function EditProduct({
             </div>
 
             <div style={styles.field}>
-              <label style={styles.label}>{t.description}</label>
+              <label style={styles.label}>{t('editProduct.description')}</label>
               <textarea
-                placeholder={t.descPlaceholder}
+                placeholder={t('editProduct.descPlaceholder')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 style={styles.textarea}
@@ -207,13 +157,13 @@ export default function EditProduct({
               style={{ ...styles.publishBtn, opacity: isSubmitting ? 0.7 : 1 }}
               disabled={isSubmitting}
             >
-              {isSubmitting ? t.updating : t.update}
+              {isSubmitting ? t('editProduct.updating') : t('editProduct.update')}
             </button>
           </div>
 
           {/* Colonne droite : photo */}
           <div style={styles.imageCard}>
-            <h3 style={styles.imageTitle}>{t.productPhoto}</h3>
+            <h3 style={styles.imageTitle}>{t('editProduct.productPhoto')}</h3>
 
             {!imagePreview ? (
               <div style={styles.dropZone} onClick={() => fileInputRef.current.click()}>
@@ -225,18 +175,18 @@ export default function EditProduct({
                   onChange={handleFileInput}
                 />
                 <Upload size={48} color="#2d6a4f" />
-                <h4 style={styles.dropTitle}>{t.clickToAdd}</h4>
-                <p style={styles.dropSubtitle}>{t.fileHint}</p>
+                <h4 style={styles.dropTitle}>{t('editProduct.clickToAdd')}</h4>
+                <p style={styles.dropSubtitle}>{t('editProduct.fileHint')}</p>
               </div>
             ) : (
               <div style={styles.previewWrap}>
-                <img src={imagePreview} alt={t.preview} style={styles.previewImage} />
+                <img src={imagePreview} alt={t('editProduct.preview')} style={styles.previewImage} />
                 <div style={styles.previewActions}>
                   <button type="button" style={styles.changeBtn} onClick={() => fileInputRef.current.click()}>
-                    <Upload size={16} /> {t.change}
+                    <Upload size={16} /> {t('editProduct.change')}
                   </button>
                   <button type="button" style={styles.removeBtn} onClick={removeImage}>
-                    <X size={16} /> {t.remove}
+                    <X size={16} /> {t('editProduct.remove')}
                   </button>
                   <input
                     ref={fileInputRef}
