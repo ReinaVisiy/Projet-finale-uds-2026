@@ -66,9 +66,17 @@ Chaque service lit sa configuration depuis `application.properties`, avec des va
 | `PRODUIT_SERVICE_URL` | URL de `produit-service` | `http://localhost:8082` |
 | `AVIS_SERVICE_URL` | URL de `avis-service` | `http://localhost:8085` |
 | `CERTIFICATION_SERVICE_URL` | URL de `certification-service` | `http://localhost:8086` |
+| `PAIEMENT_SERVICE_URL` | URL de `paiement-service` | `http://localhost:8087` |
 | `COMMANDE_SERVICE_URL` | URL de `commande-service` | `http://localhost:8088` |
+| `FRONTEND_URL` | URL du frontend déployé (utilisée par `paiement-service` pour les retours Simiz) | `http://localhost:3000` |
+| `SIMIZ_SECRET_KEY` / `SIMIZ_PUBLIC_KEY` | Clés de la passerelle de paiement Simiz (sandbox), utilisées par `paiement-service` | *Vide par défaut, simulation locale de secours* |
+| `INTERNAL_SERVICE_SECRET` | Secret partagé entre `auth-service` et `utilisateur-service` pour leurs appels internes | *(à générer — voir README racine)* |
+| `EUREKA_URI` | URL du serveur Eureka auprès duquel chaque service s'enregistre | `http://localhost:8761/eureka/` |
+| `EUREKA_HOSTNAME` | Nom d'hôte annoncé par `eureka-server` lui-même | `localhost` |
 
 Chaque service ne déclare que les variables correspondant aux services qu'il appelle réellement (voir la section **Communications inter-services**).
+
+Un fichier [`backend/.env.example`](./.env.example) regroupe la liste complète ci-dessus avec des commentaires : copiez-le en `.env` (ou reportez ces variables dans votre outil de lancement / plateforme de déploiement) pour éviter de tout ressaisir à la main.
 
 ## 🚀 Lancer le projet en local
 
@@ -118,6 +126,28 @@ cd notification-service && mvn spring-boot:run
 ```
 
 Ou plus simplement, `./start-all-services.ps1` depuis PowerShell, qui respecte déjà cet ordre.
+
+### 4. Vérifier que tout fonctionne
+
+- La console Eureka (`http://localhost:8761`) doit lister les 10 services métier enregistrés après leur démarrage (`api-gateway` s'y enregistre aussi, ce qui fait 11 entrées au total).
+- `http://localhost:8765/api/utilisateurs` (via `api-gateway`) doit répondre sans erreur de connexion (401/403 si non authentifié, mais pas de timeout).
+- En cas d'échec au démarrage d'un service, vérifier en premier que `JWT_SECRET` (et `INTERNAL_SERVICE_SECRET` pour `auth-service`/`utilisateur-service`) sont bien exportés — voir le README racine.
+
+## 🧪 Tests
+
+Chaque service dispose d'un test de contexte Spring Boot minimal (vérifie que le contexte de l'application démarre sans erreur) ; certains services (`certification-service`, `utilisateur-service`, `message-service`, `auth-service`, `produit-service`, `avis-service`) contiennent une classe `*ApplicationTests`. Il n'y a pas encore de suite de tests unitaires/d'intégration complète sur la logique métier — c'est une amélioration possible à venir.
+
+Lancer les tests d'un service précis :
+```bash
+cd <nom-du-service> && mvn test
+```
+
+Lancer les tests de tous les services depuis la racine `backend/` :
+```bash
+mvn clean test
+```
+
+**Important** : ces tests chargent le contexte Spring complet, donc `JWT_SECRET` (et `INTERNAL_SERVICE_SECRET` si applicable) doivent être exportés dans l'environnement avant de lancer `mvn test`, sinon le contexte ne démarre pas et le test échoue pour une raison qui n'a rien à voir avec le code testé.
 
 ## 📍 Points d'entrée principaux (préfixes)
 
