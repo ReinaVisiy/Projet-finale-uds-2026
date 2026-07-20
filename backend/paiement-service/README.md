@@ -23,22 +23,20 @@ Les configurations sensibles et les URL d'intégration inter-services doivent ê
 | Variable | Description | Valeur par défaut |
 | :--- | :--- | :--- |
 | `PORT` | Port d'écoute du microservice | `8090` |
-| `DB_HOST` | Hôte de la base de données PostgreSQL | `localhost` |
-| `DB_PORT` | Port de la base de données PostgreSQL | `5432` |
-| `DB_USER` | Nom d'utilisateur de la base de données | `postgres` |
-| `DB_PASSWORD` | Mot de passe de la base de données | `postgres` |
-| `JWT_SECRET` | Clé secrète partagée d'authentification JWT d'AgryCam | `3cfa76ef14937c1c0ea519f8fc04024a12c9ca9a149bc278000c2424b1747906` |
-| `SIMIZ_SECRET_KEY` | Clé secrète d'API Simiz Sandbox (**obligatoire**) | *Aucune (À configurer)* |
-| `SIMIZ_PUBLIC_KEY` | Clé publique d'API Simiz Sandbox | *Aucune (À configurer)* |
-| `APP_URL` | URL publique de ce service (pour les webhooks) | `http://localhost:8090` |
-| `UTILISATEUR_SERVICE_URL` | URL d'intégration de `utilisateur-service` | `http://localhost:8081` |
+| `DATABASE_URL` | URL JDBC complète de la base PostgreSQL (harmonisé avec les autres microservices AgryCam) | `jdbc:postgresql://localhost:5432/paiement_simiz_db` |
+| `DATABASE_USERNAME` | Nom d'utilisateur de la base de données | `postgres` |
+| `DATABASE_PASSWORD` | Mot de passe de la base de données | `2026` |
+| `JWT_SECRET` | Clé secrète partagée d'authentification JWT d'AgryCam — **doit être identique dans tous les microservices**, sinon ce service rejette silencieusement les tokens valides émis par `auth-service` | `AgryCamSecuriseCleJWT2026UniversiteDschang` |
+| `SIMIZ_SECRET_KEY` | Clé secrète d'API Simiz Sandbox — optionnelle en local (le service bascule sur une simulation si absente ou si l'appel échoue), **obligatoire** pour de vrais paiements | *Vide par défaut* |
+| `SIMIZ_PUBLIC_KEY` | Clé publique d'API Simiz Sandbox | *Vide par défaut* |
+| `FRONTEND_URL` | URL du frontend AgryCam (pas de ce service) — sert à construire les URLs de retour Simiz (`successUrl`/`cancelUrl`) vers lesquelles le client est redirigé après paiement | `http://localhost:3000` |
 
 ---
 
 ## 🚀 Lancement & Déploiement
 
 ### 1. Prérequis
-- Java 17+ installé
+- Java 21 installé
 - PostgreSQL installé avec une base de données nommée `paiement_simiz_db`
 - Maven configuré
 
@@ -56,7 +54,7 @@ Le service démarre sur le port `8090`.
 Le service détectera automatiquement la variable d'environnement `PORT` injectée par la plateforme d'hébergement.
 1. Créez une instance de base de données PostgreSQL managée.
 2. Déployez le projet à l'aide du fichier `pom.xml`.
-3. Renseignez les variables d'environnement listées dans la section précédente (notamment `APP_URL` avec l'adresse publique fournie par l'hébergeur pour permettre la construction correcte des URLs de retour Simiz).
+3. Renseignez les variables d'environnement listées dans la section précédente (notamment `FRONTEND_URL` avec l'adresse publique de l'application frontend déployée, pour permettre la construction correcte des URLs de retour Simiz).
 
 ---
 

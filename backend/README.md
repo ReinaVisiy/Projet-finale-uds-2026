@@ -37,7 +37,7 @@ Les appels **entre microservices** (ex. `avis-service` → `utilisateur-service`
 - `avis-service` → `utilisateur-service`
 - `commande-service` → `produit-service`, `utilisateur-service` (validation du client et des produits, prix authentique)
 - `signalement-service` → `produit-service` ou `utilisateur-service` selon le type de signalement
-- `paiement-service` → `commande-service`, `utilisateur-service` (via des `FeignClient`, les autres services utilisent `RestTemplate`)
+- `paiement-service` : n'appelle aucun autre microservice AgryCam pour l'instant (uniquement l'API externe Simiz via `RestTemplate`) ; à l'inverse, il expose `GET /api/paiements/statut/{typeReference}/{referenceId}` pour que `commande-service` et `certification-service` puissent vérifier si une commande/certification a été payée — voir la section suivante
 - `notification-service` ne reçoit pour l'instant d'appels que du frontend (aucun autre microservice ne le déclenche encore automatiquement)
 
 Ces URLs sont définies par des variables d'environnement, avec une valeur par défaut pointant vers `localhost` pour le développement local (voir la section **Variables d'environnement**).

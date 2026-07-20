@@ -48,8 +48,8 @@ public class PaiementService {
     @Value("${simiz.public-key}")
     private String simizPublicKey;
 
-    @Value("${APP_URL:http://localhost:8090}")
-    private String appUrl;
+    @Value("${frontend.url:http://localhost:3000}")
+    private String frontendUrl;
 
     /**
      * Initie un paiement cote client.
@@ -86,8 +86,8 @@ public class PaiementService {
         String description = String.format("Paiement AgryCam - %s #%d", dto.getTypeReference(), dto.getReferenceId());
         
         // URLs de retour
-        String successUrl = String.format("%s/pay/success?transactionId=%d", appUrl, transaction.getId());
-        String cancelUrl = String.format("%s/pay/cancel?transactionId=%d", appUrl, transaction.getId());
+        String successUrl = String.format("%s/pay/success?transactionId=%d", frontendUrl, transaction.getId());
+        String cancelUrl = String.format("%s/pay/cancel?transactionId=%d", frontendUrl, transaction.getId());
 
         Map<String, String> metadata = new HashMap<>();
         metadata.put("transactionId", transaction.getId().toString());
