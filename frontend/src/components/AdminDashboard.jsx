@@ -1,15 +1,65 @@
 import React, { useState } from 'react';
 import { Shield, ShieldCheck, CheckCircle, XCircle, Clock, Eye, FileText } from 'lucide-react';
+import { useDict } from '../context/LanguageContext';
 
-const navItems = [
-  { id: 'home', label: 'Accueil', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
-  { id: 'products', label: 'Produits', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> },
-  { id: 'orders', label: 'Commandes', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
-  { id: 'certifications', label: 'Certifications', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
-  { id: 'signalements', label: 'Signalements', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> },
-  { id: 'users', label: 'Utilisateurs', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
-  { id: 'sales', label: 'Ventes', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> },
-];
+const translations = {
+  fr: {
+    home: 'Accueil', products: 'Produits', orders: 'Commandes', certifications: 'Certifications',
+    signalements: 'Signalements', users: 'Utilisateurs', sales: 'Ventes', reduce: 'Réduire',
+    greeting: 'Bonjour, Admin 👋', dashboardHeader: 'Tableau de bord — AgroMarket',
+    dashboard: 'Tableau de bord', overview: "Vue d'ensemble de votre activité",
+    pendingCertReq: 'demande(s) de certification', pendingCertRest: 'en attente de votre validation',
+    view: 'Voir →', newVendors: 'nouveau(x) vendeur(s)', pendingVerifRest: "en attente de vérification d'identité",
+    usersLabel: 'Utilisateurs', vendorsLabel: 'Vendeurs', ordersLabel: 'Commandes',
+    revenueTag: 'Revenus', totalRevenue: 'Revenu total', signalementsLabel: 'Signalements',
+    certificationsLabel: 'Certifications', pendingShort: 'en attente',
+    ordersByMonth: 'Commandes par mois', currentYear: 'Année en cours', orderWord: 'commande',
+    recentOrders: 'Dernières commandes', recentSuffix: 'récentes', seeAll: 'Tout voir →',
+    noOrders: 'Aucune commande', recentSignalements: 'Signalements récents',
+    signalementsWord: 'signalements', noSignalement: 'Aucun signalement',
+    target: 'Cible', reason: 'Motif', author: 'Auteur', status: 'Statut',
+    userManagement: 'Gestion des utilisateurs', userManagementSub: 'Comptes clients et vendeurs inscrits',
+    noUsers: 'Aucun utilisateur inscrit', vendorTag: '🌾 Vendeur', clientTag: '🛒 Client',
+    verification: 'Vérification', approvedShort: '✅ approuvée', rejectedShort: '❌ rejetée', pendingShortIcon: '⏳ en attente',
+    suspendedUntil: "🚫 Suspendu jusqu'au", active: '✅ Actif', liftSuspension: 'Lever la suspension', suspend: 'Suspendre',
+    salesTitle: 'Ventes', saleWord: 'vente(s)', totalRevenueOf: 'de revenu total',
+    noSalesYet: 'Aucune vente pour le moment', order: 'Commande', client: 'Client', date: 'Date', amount: 'Montant',
+  },
+  en: {
+    home: 'Home', products: 'Products', orders: 'Orders', certifications: 'Certifications',
+    signalements: 'Reports', users: 'Users', sales: 'Sales', reduce: 'Collapse',
+    greeting: 'Hello, Admin 👋', dashboardHeader: 'Dashboard — AgroMarket',
+    dashboard: 'Dashboard', overview: 'Overview of your activity',
+    pendingCertReq: 'certification request(s)', pendingCertRest: 'awaiting your approval',
+    view: 'View →', newVendors: 'new vendor(s)', pendingVerifRest: 'awaiting identity verification',
+    usersLabel: 'Users', vendorsLabel: 'Vendors', ordersLabel: 'Orders',
+    revenueTag: 'Revenue', totalRevenue: 'Total revenue', signalementsLabel: 'Reports',
+    certificationsLabel: 'Certifications', pendingShort: 'pending',
+    ordersByMonth: 'Orders by month', currentYear: 'Current year', orderWord: 'order',
+    recentOrders: 'Recent orders', recentSuffix: 'recent', seeAll: 'See all →',
+    noOrders: 'No orders', recentSignalements: 'Recent reports',
+    signalementsWord: 'reports', noSignalement: 'No reports',
+    target: 'Target', reason: 'Reason', author: 'Author', status: 'Status',
+    userManagement: 'User management', userManagementSub: 'Registered client and vendor accounts',
+    noUsers: 'No registered users', vendorTag: '🌾 Vendor', clientTag: '🛒 Client',
+    verification: 'Verification', approvedShort: '✅ approved', rejectedShort: '❌ rejected', pendingShortIcon: '⏳ pending',
+    suspendedUntil: '🚫 Suspended until', active: '✅ Active', liftSuspension: 'Lift suspension', suspend: 'Suspend',
+    salesTitle: 'Sales', saleWord: 'sale(s)', totalRevenueOf: 'in total revenue',
+    noSalesYet: 'No sales yet', order: 'Order', client: 'Client', date: 'Date', amount: 'Amount',
+  },
+};
+
+function getNavItems(t) {
+  return [
+    { id: 'home', label: t.home, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
+    { id: 'products', label: t.products, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> },
+    { id: 'orders', label: t.orders, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
+    { id: 'certifications', label: t.certifications, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+    { id: 'signalements', label: t.signalements, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> },
+    { id: 'users', label: t.users, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+    { id: 'sales', label: t.sales, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> },
+  ];
+}
 
 export default function AdminDashboard({
   onNavigate,
@@ -28,6 +78,8 @@ export default function AdminDashboard({
   notifications = [],
   currentUser = null,
 }) {
+  const t = useDict(translations);
+  const navItems = getNavItems(t);
   const [activeNav, setActiveNav] = useState('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // Anciennement : const [notifCount, setNotifCount] = useState(3) — un
@@ -143,7 +195,7 @@ export default function AdminDashboard({
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a3c2b8" strokeWidth="2.5">
             {sidebarCollapsed ? <polyline points="9 18 15 12 9 6"/> : <polyline points="15 18 9 12 15 6"/>}
           </svg>
-          {!sidebarCollapsed && <span style={styles.collapseBtnText}>Réduire</span>}
+          {!sidebarCollapsed && <span style={styles.collapseBtnText}>{t.reduce}</span>}
         </button>
       </aside>
 
@@ -151,8 +203,8 @@ export default function AdminDashboard({
       <div style={styles.main}>
         <header style={styles.topbar}>
           <div>
-            <p style={styles.greetingText}>Bonjour, Admin 👋</p>
-            <p style={styles.dateText}>Tableau de bord — AgroMarket</p>
+            <p style={styles.greetingText}>{t.greeting}</p>
+            <p style={styles.dateText}>{t.dashboardHeader}</p>
           </div>
           <div style={styles.topbarRight}>
             <button style={styles.topbarIconBtn} onClick={() => onNavigate && onNavigate('notifications')}>
@@ -172,8 +224,8 @@ export default function AdminDashboard({
           {activeNav === 'home' && (
             <>
               <div style={styles.pageTitle}>
-                <h2 style={styles.pageTitleText}>Tableau de bord</h2>
-                <p style={styles.pageTitleSub}>Vue d'ensemble de votre activité</p>
+                <h2 style={styles.pageTitleText}>{t.dashboard}</h2>
+                <p style={styles.pageTitleSub}>{t.overview}</p>
               </div>
 
               {/* Alertes */}
@@ -181,9 +233,9 @@ export default function AdminDashboard({
                 <div style={styles.certAlert} onClick={() => setActiveNav('certifications')}>
                   <Shield size={20} color="#f5b041" />
                   <span style={styles.certAlertText}>
-                    <strong>{pendingCertifications} demande(s) de certification</strong> en attente de votre validation
+                    <strong>{pendingCertifications} {t.pendingCertReq}</strong> {t.pendingCertRest}
                   </span>
-                  <span style={styles.certAlertBtn}>Voir →</span>
+                  <span style={styles.certAlertBtn}>{t.view}</span>
                 </div>
               )}
 
@@ -194,9 +246,9 @@ export default function AdminDashboard({
                 >
                   <ShieldCheck size={20} color="#2d6a4f" />
                   <span style={{ ...styles.certAlertText, color: '#1b4d3e' }}>
-                    <strong>{pendingVerificationCount} nouveau(x) vendeur(s)</strong> en attente de vérification d'identité
+                    <strong>{pendingVerificationCount} {t.newVendors}</strong> {t.pendingVerifRest}
                   </span>
-                  <span style={{ ...styles.certAlertBtn, color: '#2d6a4f' }}>Voir →</span>
+                  <span style={{ ...styles.certAlertBtn, color: '#2d6a4f' }}>{t.view}</span>
                 </div>
               )}
 
@@ -207,7 +259,7 @@ export default function AdminDashboard({
                     <div style={{ ...styles.kpiIcon, backgroundColor: '#e9f5ee' }}>👥</div>
                     <span style={{ ...styles.kpiChange, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>+{totalUsers}</span>
                   </div>
-                  <p style={styles.kpiLabel}>Utilisateurs</p>
+                  <p style={styles.kpiLabel}>{t.usersLabel}</p>
                   <p style={styles.kpiValue}>{totalUsers}</p>
                 </div>
                 <div style={styles.kpiCard}>
@@ -215,7 +267,7 @@ export default function AdminDashboard({
                     <div style={{ ...styles.kpiIcon, backgroundColor: '#fdf1ed' }}>🌾</div>
                     <span style={{ ...styles.kpiChange, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{totalVendeurs}</span>
                   </div>
-                  <p style={styles.kpiLabel}>Vendeurs</p>
+                  <p style={styles.kpiLabel}>{t.vendorsLabel}</p>
                   <p style={styles.kpiValue}>{totalVendeurs}</p>
                 </div>
                 <div style={styles.kpiCard}>
@@ -223,15 +275,15 @@ export default function AdminDashboard({
                     <div style={{ ...styles.kpiIcon, backgroundColor: '#e9f5ee' }}>📦</div>
                     <span style={{ ...styles.kpiChange, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{totalOrders}</span>
                   </div>
-                  <p style={styles.kpiLabel}>Commandes</p>
+                  <p style={styles.kpiLabel}>{t.ordersLabel}</p>
                   <p style={styles.kpiValue}>{totalOrders}</p>
                 </div>
                 <div style={styles.kpiCard}>
                   <div style={styles.kpiTop}>
                     <div style={{ ...styles.kpiIcon, backgroundColor: '#fff3e0' }}>💰</div>
-                    <span style={{ ...styles.kpiChange, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>Revenus</span>
+                    <span style={{ ...styles.kpiChange, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{t.revenueTag}</span>
                   </div>
-                  <p style={styles.kpiLabel}>Revenu total</p>
+                  <p style={styles.kpiLabel}>{t.totalRevenue}</p>
                   <p style={styles.kpiValue}>{totalRevenue.toLocaleString()} FCFA</p>
                 </div>
                 <div style={styles.kpiCard}>
@@ -239,7 +291,7 @@ export default function AdminDashboard({
                     <div style={{ ...styles.kpiIcon, backgroundColor: '#fdf1ed' }}>⚠️</div>
                     <span style={{ ...styles.kpiChange, color: pendingSignalements > 0 ? '#dc3545' : '#2d6a4f', backgroundColor: pendingSignalements > 0 ? '#fde8ea' : '#d8f3dc' }}>{pendingSignalements}</span>
                   </div>
-                  <p style={styles.kpiLabel}>Signalements</p>
+                  <p style={styles.kpiLabel}>{t.signalementsLabel}</p>
                   <p style={styles.kpiValue}>{totalSignalements}</p>
                 </div>
                 <div style={styles.kpiCard}>
@@ -247,8 +299,8 @@ export default function AdminDashboard({
                     <div style={{ ...styles.kpiIcon, backgroundColor: '#e9f5ee' }}>🏅</div>
                     <span style={{ ...styles.kpiChange, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{approvedCertifications}</span>
                   </div>
-                  <p style={styles.kpiLabel}>Certifications</p>
-                  <p style={styles.kpiValue}>{pendingCertifications} en attente</p>
+                  <p style={styles.kpiLabel}>{t.certificationsLabel}</p>
+                  <p style={styles.kpiValue}>{pendingCertifications} {t.pendingShort}</p>
                 </div>
               </div>
 
@@ -257,8 +309,8 @@ export default function AdminDashboard({
                 <div style={styles.chartCard}>
                   <div style={styles.cardHeader}>
                     <div>
-                      <h3 style={styles.cardTitle}>Commandes par mois</h3>
-                      <p style={styles.cardSub}>Année en cours</p>
+                      <h3 style={styles.cardTitle}>{t.ordersByMonth}</h3>
+                      <p style={styles.cardSub}>{t.currentYear}</p>
                     </div>
                   </div>
                   <div style={styles.chartArea}>
@@ -267,7 +319,7 @@ export default function AdminDashboard({
                       const isHov = hoveredBar === i;
                       return (
                         <div key={i} style={styles.barGroup} onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)}>
-                          {isHov && <div style={styles.tooltip}>{val} commande{val > 1 ? 's' : ''}</div>}
+                          {isHov && <div style={styles.tooltip}>{val} {t.orderWord}{val > 1 ? 's' : ''}</div>}
                           <div style={{ ...styles.bar, height: `${h}%`, background: isHov ? 'linear-gradient(180deg, #1b4d3e 0%, #2d6a4f 100%)' : 'linear-gradient(180deg, #40916c 0%, #2d6a4f 100%)', opacity: isHov ? 1 : 0.75 }} />
                           <span style={styles.barLabel}>{months[i].slice(0,3)}</span>
                         </div>
@@ -278,12 +330,12 @@ export default function AdminDashboard({
 
                 <div style={styles.ordersCard}>
                   <div style={styles.cardHeader}>
-                    <div><h3 style={styles.cardTitle}>Dernières commandes</h3><p style={styles.cardSub}>{lastOrders.length} récentes</p></div>
-                    <button style={styles.viewAllBtn} onClick={() => onNavigate && onNavigate('order-management-admin')}>Tout voir →</button>
+                    <div><h3 style={styles.cardTitle}>{t.recentOrders}</h3><p style={styles.cardSub}>{lastOrders.length} {t.recentSuffix}</p></div>
+                    <button style={styles.viewAllBtn} onClick={() => onNavigate && onNavigate('order-management-admin')}>{t.seeAll}</button>
                   </div>
                   <div style={styles.ordersList}>
                     {lastOrders.length === 0 ? (
-                      <p style={{ color: '#adb5bd', textAlign: 'center', padding: '20px 0' }}>Aucune commande</p>
+                      <p style={{ color: '#adb5bd', textAlign: 'center', padding: '20px 0' }}>{t.noOrders}</p>
                     ) : (
                       lastOrders.map((o) => (
                         <div key={o.id} style={styles.orderItem}>
@@ -305,15 +357,15 @@ export default function AdminDashboard({
               {/* Signalements récents */}
               <div style={styles.salesTableCard}>
                 <div style={styles.cardHeader}>
-                  <div><h3 style={styles.cardTitle}>Signalements récents</h3><p style={styles.cardSub}>{lastSignalements.length} signalements</p></div>
-                  <button style={styles.viewAllBtn} onClick={() => onNavigateToModeration && onNavigateToModeration()}>Tout voir →</button>
+                  <div><h3 style={styles.cardTitle}>{t.recentSignalements}</h3><p style={styles.cardSub}>{lastSignalements.length} {t.signalementsWord}</p></div>
+                  <button style={styles.viewAllBtn} onClick={() => onNavigateToModeration && onNavigateToModeration()}>{t.seeAll}</button>
                 </div>
                 {lastSignalements.length === 0 ? (
-                  <p style={{ color: '#adb5bd', padding: '20px', textAlign: 'center' }}>Aucun signalement</p>
+                  <p style={{ color: '#adb5bd', padding: '20px', textAlign: 'center' }}>{t.noSignalement}</p>
                 ) : (
                   <table style={styles.table}>
                     <thead>
-                      <tr><th style={styles.th}>Cible</th><th style={styles.th}>Motif</th><th style={styles.th}>Auteur</th><th style={styles.th}>Statut</th></tr>
+                      <tr><th style={styles.th}>{t.target}</th><th style={styles.th}>{t.reason}</th><th style={styles.th}>{t.author}</th><th style={styles.th}>{t.status}</th></tr>
                     </thead>
                     <tbody>
                       {lastSignalements.map((s) => (
@@ -338,11 +390,11 @@ export default function AdminDashboard({
           {activeNav === 'users' && (
             <>
               <div style={styles.pageTitle}>
-                <h2 style={styles.pageTitleText}>Gestion des utilisateurs</h2>
-                <p style={styles.pageTitleSub}>Comptes clients et vendeurs inscrits</p>
+                <h2 style={styles.pageTitleText}>{t.userManagement}</h2>
+                <p style={styles.pageTitleSub}>{t.userManagementSub}</p>
               </div>
               {registeredUsers.length === 0 ? (
-                <div style={styles.emptyState}><ShieldCheck size={40} color="#adb5bd" /><p>Aucun utilisateur inscrit</p></div>
+                <div style={styles.emptyState}><ShieldCheck size={40} color="#adb5bd" /><p>{t.noUsers}</p></div>
               ) : (
                 <div style={styles.certList}>
                   {registeredUsers.map((u) => (
@@ -353,9 +405,9 @@ export default function AdminDashboard({
                           <h4 style={styles.certFarm}>{u.prenom} {u.nom}</h4>
                           <p style={styles.certVendeur}>✉️ {u.email} · 📞 {u.telephone || 'N/A'}</p>
                           <p style={styles.certMeta}>
-                            {u.role === 'vendeur' ? '🌾 Vendeur' : '🛒 Client'}
+                            {u.role === 'vendeur' ? t.vendorTag : t.clientTag}
                             {u.role === 'vendeur' && u.verificationStatus && (
-                              <> · Vérification : {u.verificationStatus === 'approved' ? '✅ approuvée' : u.verificationStatus === 'rejected' ? '❌ rejetée' : '⏳ en attente'}</>
+                              <> · {t.verification} : {u.verificationStatus === 'approved' ? t.approvedShort : u.verificationStatus === 'rejected' ? t.rejectedShort : t.pendingShortIcon}</>
                             )}
                           </p>
                         </div>
@@ -367,12 +419,12 @@ export default function AdminDashboard({
                           backgroundColor: u.suspendu ? '#fdecea' : '#e9f5ee',
                         }}>
                           {u.suspendu
-                            ? `🚫 Suspendu jusqu'au ${new Date(u.suspenduJusquau).toLocaleDateString('fr-FR')}`
-                            : '✅ Actif'}
+                            ? `${t.suspendedUntil} ${new Date(u.suspenduJusquau).toLocaleDateString('fr-FR')}`
+                            : t.active}
                         </span>
                         <div style={styles.certActions}>
                           <button style={u.suspendu ? styles.certApproveBtn : styles.certRejectBtn} onClick={() => onToggleUserBlocked && onToggleUserBlocked(u.id)}>
-                            {u.suspendu ? 'Lever la suspension' : 'Suspendre'}
+                            {u.suspendu ? t.liftSuspension : t.suspend}
                           </button>
                         </div>
                       </div>
@@ -387,21 +439,21 @@ export default function AdminDashboard({
           {activeNav === 'sales' && (
             <>
               <div style={styles.pageTitle}>
-                <h2 style={styles.pageTitleText}>Ventes</h2>
-                <p style={styles.pageTitleSub}>{totalOrders} vente(s) · {totalRevenue.toLocaleString('fr-FR')} FCFA de revenu total</p>
+                <h2 style={styles.pageTitleText}>{t.salesTitle}</h2>
+                <p style={styles.pageTitleSub}>{totalOrders} {t.saleWord} · {totalRevenue.toLocaleString('fr-FR')} FCFA {t.totalRevenueOf}</p>
               </div>
               <div style={styles.salesTableCard}>
                 {adminOrders.length === 0 ? (
-                  <div style={styles.emptyState}><ShieldCheck size={40} color="#adb5bd" /><p>Aucune vente pour le moment</p></div>
+                  <div style={styles.emptyState}><ShieldCheck size={40} color="#adb5bd" /><p>{t.noSalesYet}</p></div>
                 ) : (
                   <table style={styles.table}>
                     <thead>
                       <tr>
-                        <th style={styles.th}>Commande</th>
-                        <th style={styles.th}>Client</th>
-                        <th style={styles.th}>Date</th>
-                        <th style={styles.th}>Montant</th>
-                        <th style={styles.th}>Statut</th>
+                        <th style={styles.th}>{t.order}</th>
+                        <th style={styles.th}>{t.client}</th>
+                        <th style={styles.th}>{t.date}</th>
+                        <th style={styles.th}>{t.amount}</th>
+                        <th style={styles.th}>{t.status}</th>
                       </tr>
                     </thead>
                     <tbody>
