@@ -389,6 +389,112 @@ export default function SellerDashboard({
     />
   );
 
+  const renderWithdrawal = () => (
+    <>
+      <div style={styles.pageHeader}>
+        <h2 style={styles.pageTitle}>{t('sellerDashboard.withdrawals')}</h2>
+        <p style={styles.pageSubtitle}>{t('sellerDashboard.withdrawalsSub')}</p>
+      </div>
+
+      {/* Rappel visuel sequestre vs disponible, coherent avec le dashboard. */}
+      <div style={styles.kpiGrid}>
+        <div style={styles.kpiCard}>
+          <div style={{ ...styles.kpiIcon, backgroundColor: '#fff3e0' }}><Lock size={20} color="#f5b041" /></div>
+          <div>
+            <p style={styles.kpiLabel}>{t('sellerDashboard.escrowBalance')}</p>
+            <p style={styles.kpiValue}>{Number(solde?.soldeSequestre || 0).toLocaleString()} FCFA</p>
+          </div>
+        </div>
+        <div style={styles.kpiCard}>
+          <div style={{ ...styles.kpiIcon, backgroundColor: '#e9f5ee' }}><Wallet size={20} color="#2d6a4f" /></div>
+          <div>
+            <p style={styles.kpiLabel}>{t('sellerDashboard.withdrawableBalance')}</p>
+            <p style={styles.kpiValue}>{Number(solde?.soldeDisponible || 0).toLocaleString()} FCFA</p>
+          </div>
+        </div>
+      </div>
+
+      <div style={styles.withdrawFormCard}>
+        <h3 style={styles.chartTitle}>{t('sellerDashboard.withdrawFormTitle')}</h3>
+        <p style={styles.certFormSub}>{t('sellerDashboard.withdrawFormSub')}</p>
+
+        <div style={styles.withdrawFormRow}>
+          <div style={styles.withdrawInputWrap}>
+            <label style={styles.certLabel}>{t('sellerDashboard.withdrawAmountLabel')}</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              placeholder={t('sellerDashboard.withdrawAmountPlaceholder')}
+              value={montantRetrait}
+              onChange={(e) => setMontantRetrait(e.target.value)}
+              style={styles.withdrawInput}
+              disabled={retraitEnCours}
+            />
+          </div>
+          <button
+            style={{ ...styles.submitBtn, opacity: retraitEnCours ? 0.7 : 1 }}
+            onClick={handleDemanderRetrait}
+            disabled={retraitEnCours}
+          >
+            <Send size={16} />
+            {retraitEnCours ? t('sellerDashboard.withdrawInProgress') : t('sellerDashboard.withdrawSubmit')}
+          </button>
+        </div>
+
+        {retraitError && (
+          <div style={styles.withdrawAlertError}>
+            <AlertCircle size={16} color="#e07a5f" />
+            <span>{retraitError}</span>
+          </div>
+        )}
+        {retraitSuccess && (
+          <div style={styles.withdrawAlertSuccess}>
+            <CheckCircle size={16} color="#2d6a4f" />
+            <span>{retraitSuccess}</span>
+          </div>
+        )}
+      </div>
+
+      <div style={styles.tableCard}>
+        <h3 style={styles.chartTitle}>{t('sellerDashboard.withdrawHistoryTitle')}</h3>
+        {mesRetraits.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#adb5bd' }}>
+            <Wallet size={48} color="#adb5bd" />
+            <p>{t('sellerDashboard.withdrawHistoryEmpty')}</p>
+          </div>
+        ) : (
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>{t('sellerDashboard.withdrawHistoryDate')}</th>
+                <th style={styles.th}>{t('sellerDashboard.withdrawHistoryAmount')}</th>
+                <th style={styles.th}>{t('sellerDashboard.withdrawHistoryReference')}</th>
+                <th style={styles.th}>{t('sellerDashboard.status')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mesRetraits.map(r => (
+                <tr key={r.id}>
+                  <td style={styles.td}>{r.dateDemande ? new Date(r.dateDemande).toLocaleDateString() : '—'}</td>
+                  <td style={styles.td}>{Number(r.montant || 0).toLocaleString()} FCFA</td>
+                  <td style={styles.td}>{r.referencePaiement || '—'}</td>
+                  <td style={styles.td}>
+                    <span style={{
+                      ...styles.statusBadge,
+                      backgroundColor: r.statut === 'COMPLETE' ? '#e9f5ee' : '#fff3e0',
+                      color: r.statut === 'COMPLETE' ? '#2d6a4f' : '#f5b041',
+                    }}>{r.statut}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
+  );
+
   const renderNotifications = () => (
     <>
       <div style={styles.pageHeader}>
@@ -441,6 +547,7 @@ export default function SellerDashboard({
       case 'products': return renderProducts();
       case 'stock': return renderStockAlerts();
       case 'orders': return renderOrders();
+      case 'withdrawal': return renderWithdrawal();
       case 'notifications': return renderNotifications();
       case 'profile': return renderProfile();
       default: return renderDashboard();
@@ -568,6 +675,13 @@ const styles = {
   certUpload: { display: 'flex', alignItems: 'center', gap: '10px' },
   uploadLabel: { padding: '10px 16px', backgroundColor: '#f8f9fa', border: '1px dashed #dee2e6', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', color: '#495057', display: 'flex', alignItems: 'center', gap: '8px' },
   submitBtn: { padding: '12px 24px', backgroundColor: '#2d6a4f', color: '#ffffff', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' },
+
+  withdrawFormCard: { backgroundColor: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #e9ecef', marginBottom: '24px' },
+  withdrawFormRow: { display: 'flex', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap', marginTop: '12px' },
+  withdrawInputWrap: { flex: 1, minWidth: '220px' },
+  withdrawInput: { width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #dee2e6', fontSize: '15px', fontWeight: '600', color: '#212529', boxSizing: 'border-box' },
+  withdrawAlertError: { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '14px', padding: '10px 14px', backgroundColor: '#fdf1ed', border: '1px solid #f5d4c8', borderRadius: '10px', color: '#c1502e', fontSize: '13px', fontWeight: '600' },
+  withdrawAlertSuccess: { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '14px', padding: '10px 14px', backgroundColor: '#e9f5ee', border: '1px solid #b7e4c7', borderRadius: '10px', color: '#2d6a4f', fontSize: '13px', fontWeight: '600' },
 
   profileCard: { display: 'flex', alignItems: 'center', gap: '24px', backgroundColor: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #e9ecef' },
   profilePhoto: { flexShrink: 0 },
