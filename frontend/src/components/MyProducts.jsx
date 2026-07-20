@@ -1,39 +1,98 @@
 
 import React, { useState, useMemo } from 'react';
+import { useDict } from '../context/LanguageContext';
+
+const translations = {
+  fr: {
+    unnamedProduct: 'Produit sans nom',
+    generalCategory: 'Général',
+    confirmDelete: (name) => `Êtes-vous sûr de vouloir supprimer le produit "${name}" ?`,
+    deletedToast: (name) => `Produit "${name}" supprimé avec succès !`,
+    duplicatedToast: (name) => `Produit "${name}" dupliqué !`,
+    myProducts: 'Mes produits',
+    addProduct: 'Ajouter un produit',
+    filter: 'Filtrer :',
+    all: 'Tous',
+    active: 'Actifs',
+    inactive: 'Inactifs',
+    image: 'Image',
+    product: 'Produit',
+    category: 'Catégorie',
+    stock: 'Stock',
+    sales: 'Ventes',
+    price: 'Prix',
+    status: 'Status',
+    actions: 'Actions',
+    edit: 'Éditer',
+    duplicate: 'Dupliquer',
+    delete: 'Supprimer',
+    noProducts: 'Aucun produit répertorié',
+    noProductsDesc: "Vous n'avez pas de produit correspondant à la catégorie de filtre sélectionnée.",
+    createFirst: 'Créer mon premier produit',
+  },
+  en: {
+    unnamedProduct: 'Unnamed product',
+    generalCategory: 'General',
+    confirmDelete: (name) => `Are you sure you want to delete the product "${name}"?`,
+    deletedToast: (name) => `Product "${name}" deleted successfully!`,
+    duplicatedToast: (name) => `Product "${name}" duplicated!`,
+    myProducts: 'My products',
+    addProduct: 'Add a product',
+    filter: 'Filter:',
+    all: 'All',
+    active: 'Active',
+    inactive: 'Inactive',
+    image: 'Image',
+    product: 'Product',
+    category: 'Category',
+    stock: 'Stock',
+    sales: 'Sales',
+    price: 'Price',
+    status: 'Status',
+    actions: 'Actions',
+    edit: 'Edit',
+    duplicate: 'Duplicate',
+    delete: 'Delete',
+    noProducts: 'No products found',
+    noProductsDesc: "You don't have a product matching the selected filter category.",
+    createFirst: 'Create my first product',
+  },
+};
 
 const PLACEHOLDER_IMG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 100 100" style="background:%23e2e8f0;"><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="24">🌱</text></svg>';
 
-// Normalise un produit vendeur (les champs peuvent varier selon AddProduct.jsx)
-// afin que l'affichage ne casse jamais, même avec des données minimales.
-const normalize = (p) => ({
-  id: p.id,
-  name: p.name || 'Produit sans nom',
-  category: p.category || 'Général',
-  stock: p.stock ?? 0,
-  unit: p.unit || 'kg',
-  sales: p.sales ?? 0,
-  price: p.price ?? 0,
-  status: p.status || 'Actif',
-  imageUrl: p.imageUrl || p.image || PLACEHOLDER_IMG,
-});
-
 export default function MyProducts({ products = [], onNavigateToAddProduct, onEditProduct, onDeleteProduct, onDuplicateProduct }) {
-  const normalized = useMemo(() => products.map(normalize), [products]);
+  const t = useDict(translations);
+  // Normalise un produit vendeur (les champs peuvent varier selon AddProduct.jsx)
+  // afin que l'affichage ne casse jamais, même avec des données minimales.
+  const normalize = (p) => ({
+    id: p.id,
+    name: p.name || t.unnamedProduct,
+    category: p.category || t.generalCategory,
+    stock: p.stock ?? 0,
+    unit: p.unit || 'kg',
+    sales: p.sales ?? 0,
+    price: p.price ?? 0,
+    status: p.status || 'Actif',
+    imageUrl: p.imageUrl || p.image || PLACEHOLDER_IMG,
+  });
+
+  const normalized = useMemo(() => products.map(normalize), [products, t]);
   const [filterTab, setFilterTab] = useState('Tous');
   const [notification, setNotification] = useState('');
 
   // Handle product deletion
   const handleDelete = (id, name) => {
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le produit "${name}" ?`)) {
+    if (window.confirm(t.confirmDelete(name))) {
       onDeleteProduct && onDeleteProduct(id);
-      showToast(`Produit "${name}" supprimé avec succès !`);
+      showToast(t.deletedToast(name));
     }
   };
 
   // Handle product duplication
   const handleDuplicate = (product) => {
     onDuplicateProduct && onDuplicateProduct(product);
-    showToast(`Produit "${product.name}" dupliqué !`);
+    showToast(t.duplicatedToast(product.name));
   };
 
   // Toast notifier helper
@@ -69,34 +128,34 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
 
       {/* Header */}
       <div style={styles.header}>
-        <h2 style={styles.title}>Mes produits</h2>
+        <h2 style={styles.title}>{t.myProducts}</h2>
         <button onClick={onNavigateToAddProduct} style={styles.addBtn}>
           <span style={styles.addIcon}>+</span>
-          <span>Ajouter un produit</span>
+          <span>{t.addProduct}</span>
         </button>
       </div>
 
       {/* Filters Bar */}
       <div style={styles.filtersBar}>
-        <span style={styles.filterLabel}>Filtrer :</span>
+        <span style={styles.filterLabel}>{t.filter}</span>
         <div style={styles.tabsContainer}>
           <button 
             onClick={() => setFilterTab('Tous')}
             style={{...styles.tabBtn, ...(filterTab === 'Tous' ? styles.tabBtnActive : {})}}
           >
-            Tous ({counts.tous})
+            {t.all} ({counts.tous})
           </button>
           <button 
             onClick={() => setFilterTab('Actifs')}
             style={{...styles.tabBtn, ...(filterTab === 'Actifs' ? styles.tabBtnActive : {})}}
           >
-            Actifs ({counts.actifs})
+            {t.active} ({counts.actifs})
           </button>
           <button 
             onClick={() => setFilterTab('Inactifs')}
             style={{...styles.tabBtn, ...(filterTab === 'Inactifs' ? styles.tabBtnActive : {})}}
           >
-            Inactifs ({counts.inactifs})
+            {t.inactive} ({counts.inactifs})
           </button>
         </div>
       </div>
@@ -108,14 +167,14 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={styles.th}>Image</th>
-                  <th style={styles.th}>Produit</th>
-                  <th style={styles.th}>Catégorie</th>
-                  <th style={styles.th}>Stock</th>
-                  <th style={styles.th}>Ventes</th>
-                  <th style={styles.th}>Prix</th>
-                  <th style={styles.th}>Status</th>
-                  <th style={styles.th}>Actions</th>
+                  <th style={styles.th}>{t.image}</th>
+                  <th style={styles.th}>{t.product}</th>
+                  <th style={styles.th}>{t.category}</th>
+                  <th style={styles.th}>{t.stock}</th>
+                  <th style={styles.th}>{t.sales}</th>
+                  <th style={styles.th}>{t.price}</th>
+                  <th style={styles.th}>{t.status}</th>
+                  <th style={styles.th}>{t.actions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -162,21 +221,21 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
                         onClick={() => onEditProduct(prod)} 
                         style={styles.actionBtn}
                       >
-                        Éditer
+                        {t.edit}
                       </button>
                       <span style={styles.actionDivider}>|</span>
                       <button 
                         onClick={() => handleDuplicate(prod)} 
                         style={styles.actionBtn}
                       >
-                        Dupliquer
+                        {t.duplicate}
                       </button>
                       <span style={styles.actionDivider}>|</span>
                       <button 
                         onClick={() => handleDelete(prod.id, prod.name)} 
                         style={{...styles.actionBtn, ...styles.deleteBtn}}
                       >
-                        Supprimer
+                        {t.delete}
                       </button>
                     </td>
                   </tr>
@@ -187,12 +246,12 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
         ) : (
           <div style={styles.emptyState}>
             <span style={styles.emptyIcon}>🌾</span>
-            <h4>Aucun produit répertorié</h4>
+            <h4>{t.noProducts}</h4>
             <p style={styles.emptyText}>
-              Vous n'avez pas de produit correspondant à la catégorie de filtre sélectionnée.
+              {t.noProductsDesc}
             </p>
             <button onClick={onNavigateToAddProduct} style={styles.createBtn}>
-              Créer mon premier produit
+              {t.createFirst}
             </button>
           </div>
         )}
