@@ -528,5 +528,37 @@
     "noProducts": "No products found",
     "noProductsDesc": "You don't have a product matching the selected filter category.",
     "createFirst": "Create my first product"
+  },
+  "orderDetailAdmin": {
+    "back": "Back",
+    "orderTitle": "Order detail #2026-001",
+    "stepLabels": {
+      "confirmee": "Confirmed",
+      "en_preparation": "Preparing",
+      "expediee": "Shipped",
+      "livree": "Delivered"
+    },
+    "currentStatus": "Current status: ",
+    "orderedProducts": "🛒 Ordered products",
+    "productName": "Fresh banana",
+    "productMeta": "10 kg × 2,500 FCFA",
+    "clientInfo": "👤 Client information",
+    "deliveryAddress": "📍 Delivery address",
+    "addressText": "123 Peace Street, Dschang",
+    "payment": "💳 Payment",
+    "paymentMethod": "Mobile Money",
+    "orderDate": "📅 Order date",
+    "orderDateText": "May 15, 2026 - 14:30",
+    "markDelivered": "Mark as delivered",
+    "deliveryValidated": "Delivery confirmed",
+    "contactClient": "Contact client",
+    "summary": "Summary",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "trackingNumber": "Tracking number",
+    "carrier": "Carrier",
+    "carrierValue": "DHL Express",
+    "deliveredToast": "🎉 Order #2026-001 was successfully marked as DELIVERED!",
+    "contactToast": "✉️ Opening the contact messaging for Flavier Dschang (+237 6XX XXX XXX)..."
   }
 }

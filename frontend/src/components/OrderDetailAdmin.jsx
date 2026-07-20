@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
 // Avant : aucune traduction ici, y compris pour le statut de commande qui
 // servait à la fois de donnée d'état ET de texte affiché ('Livrée', ...).
@@ -8,65 +8,9 @@ import { useDict } from '../context/LanguageContext';
 // correcte quelle que soit la langue affichée.
 const STEP_KEYS = ['confirmee', 'en_preparation', 'expediee', 'livree'];
 
-const translations = {
-  fr: {
-    back: 'Retour',
-    orderTitle: 'Détail commande #2026-001',
-    stepLabels: { confirmee: 'Confirmée', en_preparation: 'En préparation', expediee: 'Expédiée', livree: 'Livrée' },
-    currentStatus: 'Statut actuel : ',
-    orderedProducts: '🛒 Produits commandés',
-    productName: 'Banane Fraîche',
-    productMeta: '10 kg × 2,500 FCFA',
-    clientInfo: '👤 Informations client',
-    deliveryAddress: '📍 Adresse livraison',
-    addressText: '123 rue de la Paix, Dschang',
-    payment: '💳 Paiement',
-    paymentMethod: 'Mobile Money',
-    orderDate: '📅 Date commande',
-    orderDateText: '15 mai 2026 - 14:30',
-    markDelivered: 'Marquer livrée',
-    deliveryValidated: 'Livraison validée',
-    contactClient: 'Contacter client',
-    summary: 'Résumé',
-    subtotal: 'Sous-total',
-    total: 'Total',
-    trackingNumber: 'Numéro suivi',
-    carrier: 'Transporteur',
-    carrierValue: 'DHL Express',
-    deliveredToast: '🎉 La commande #2026-001 a été marquée comme LIVRÉE avec succès !',
-    contactToast: '✉️ Ouverture de la messagerie de contact pour Flavier Dschang (+237 6XX XXX XXX)...',
-  },
-  en: {
-    back: 'Back',
-    orderTitle: 'Order detail #2026-001',
-    stepLabels: { confirmee: 'Confirmed', en_preparation: 'Preparing', expediee: 'Shipped', livree: 'Delivered' },
-    currentStatus: 'Current status: ',
-    orderedProducts: '🛒 Ordered products',
-    productName: 'Fresh banana',
-    productMeta: '10 kg × 2,500 FCFA',
-    clientInfo: '👤 Client information',
-    deliveryAddress: '📍 Delivery address',
-    addressText: '123 Peace Street, Dschang',
-    payment: '💳 Payment',
-    paymentMethod: 'Mobile Money',
-    orderDate: '📅 Order date',
-    orderDateText: 'May 15, 2026 - 14:30',
-    markDelivered: 'Mark as delivered',
-    deliveryValidated: 'Delivery confirmed',
-    contactClient: 'Contact client',
-    summary: 'Summary',
-    subtotal: 'Subtotal',
-    total: 'Total',
-    trackingNumber: 'Tracking number',
-    carrier: 'Carrier',
-    carrierValue: 'DHL Express',
-    deliveredToast: '🎉 Order #2026-001 was successfully marked as DELIVERED!',
-    contactToast: '✉️ Opening the contact messaging for Flavier Dschang (+237 6XX XXX XXX)...',
-  },
-};
 
 export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [statusKey, setStatusKey] = useState('en_preparation');
   const [notification, setNotification] = useState('');
   const [isDelivered, setIsDelivered] = useState(false);
@@ -78,7 +22,7 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
   const handleMarkAsDelivered = () => {
     setStatusKey('livree');
     setIsDelivered(true);
-    setNotification(t.deliveredToast);
+    setNotification(t('orderDetailAdmin.deliveredToast'));
     if (onMarkAsDeliveredState) {
       onMarkAsDeliveredState('001', 'livree');
     }
@@ -86,7 +30,7 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
   };
 
   const handleContactClient = () => {
-    setNotification(t.contactToast);
+    setNotification(t('orderDetailAdmin.contactToast'));
     setTimeout(() => setNotification(''), 4000);
   };
 
@@ -103,19 +47,19 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
 
       {/* Header */}
       <div style={styles.header}>
-        <h2 style={styles.title}>{t.orderTitle}</h2>
+        <h2 style={styles.title}>{t('orderDetailAdmin.orderTitle')}</h2>
         <button onClick={onBack} style={styles.backBtn}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px' }}>
             <line x1="19" y1="12" x2="5" y2="12" />
             <polyline points="12 19 5 12 12 5" />
           </svg>
-          {t.back}
+          {t('orderDetailAdmin.back')}
         </button>
       </div>
 
       {/* Progress Timeline Tracker */}
       <div style={styles.trackerCard}>
-        <span style={styles.statusLabel}>{t.currentStatus}<strong style={{ color: statusKey === 'livree' ? '#2d6a4f' : '#e07a5f' }}>{t.stepLabels[statusKey]}</strong></span>
+        <span style={styles.statusLabel}>{t('orderDetailAdmin.currentStatus')}<strong style={{ color: statusKey === 'livree' ? '#2d6a4f' : '#e07a5f' }}>{t('orderDetailAdmin.stepLabels', { returnObjects: true })[statusKey]}</strong></span>
         <div style={styles.timelineWrapper}>
           {STEP_KEYS.map((step, idx) => {
             const isCompleted = idx <= currentStepIdx;
@@ -151,7 +95,7 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
                     fontWeight: isCompleted ? '700' : '500',
                     color: isCompleted ? '#212529' : '#6c757d'
                   }}>
-                    {t.stepLabels[step]}
+                    {t('orderDetailAdmin.stepLabels', { returnObjects: true })[step]}
                   </span>
                 </div>
               </React.Fragment>
@@ -167,12 +111,12 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
         <div style={styles.leftCard}>
           {/* Section 1: Produits commandés */}
           <div style={styles.section}>
-            <h3 style={styles.sectionTitle}>{t.orderedProducts}</h3>
+            <h3 style={styles.sectionTitle}>{t('orderDetailAdmin.orderedProducts')}</h3>
             <div style={styles.productRow}>
               <div style={styles.productAvatar}>🍌</div>
               <div style={styles.productInfo}>
-                <h4 style={styles.productName}>{t.productName}</h4>
-                <p style={styles.productMeta}>{t.productMeta}</p>
+                <h4 style={styles.productName}>{t('orderDetailAdmin.productName')}</h4>
+                <p style={styles.productMeta}>{t('orderDetailAdmin.productMeta')}</p>
               </div>
               <div style={styles.productPrice}>25,000 FCFA</div>
             </div>
@@ -182,7 +126,7 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
 
           {/* Section 2: Informations client */}
           <div style={styles.section}>
-            <h3 style={styles.sectionTitle}>{t.clientInfo}</h3>
+            <h3 style={styles.sectionTitle}>{t('orderDetailAdmin.clientInfo')}</h3>
             <div style={styles.clientDetail}>
               <p style={styles.detailName}>Flavier Dschang</p>
               <p style={styles.detailContact}>flavier@gmail.com  |  +237 6XX XXX XXX</p>
@@ -193,17 +137,17 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
 
           {/* Section 3: Adresse de livraison */}
           <div style={styles.section}>
-            <h3 style={styles.sectionTitle}>{t.deliveryAddress}</h3>
-            <p style={styles.detailText}>{t.addressText}</p>
+            <h3 style={styles.sectionTitle}>{t('orderDetailAdmin.deliveryAddress')}</h3>
+            <p style={styles.detailText}>{t('orderDetailAdmin.addressText')}</p>
           </div>
 
           <div style={styles.divider}></div>
 
           {/* Section 4: Paiement */}
           <div style={styles.section}>
-            <h3 style={styles.sectionTitle}>{t.payment}</h3>
+            <h3 style={styles.sectionTitle}>{t('orderDetailAdmin.payment')}</h3>
             <div style={styles.paymentBadge}>
-              <span style={styles.paymentMethod}>{t.paymentMethod}</span>
+              <span style={styles.paymentMethod}>{t('orderDetailAdmin.paymentMethod')}</span>
               <span style={styles.paymentAmount}>25,000 FCFA</span>
             </div>
           </div>
@@ -212,8 +156,8 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
 
           {/* Section 5: Date commande */}
           <div style={styles.section}>
-            <h3 style={styles.sectionTitle}>{t.orderDate}</h3>
-            <p style={styles.detailText}>{t.orderDateText}</p>
+            <h3 style={styles.sectionTitle}>{t('orderDetailAdmin.orderDate')}</h3>
+            <p style={styles.detailText}>{t('orderDetailAdmin.orderDateText')}</p>
           </div>
 
           {/* Action Buttons */}
@@ -230,7 +174,7 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
-              {statusKey === 'livree' ? t.deliveryValidated : t.markDelivered}
+              {statusKey === 'livree' ? t('orderDetailAdmin.deliveryValidated') : t('orderDetailAdmin.markDelivered')}
             </button>
             
             <button onClick={handleContactClient} style={styles.btnSecondary}>
@@ -238,37 +182,37 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                 <polyline points="22,6 12,13 2,6" />
               </svg>
-              {t.contactClient}
+              {t('orderDetailAdmin.contactClient')}
             </button>
           </div>
         </div>
 
         {/* Right Side: Résumé Card */}
         <div style={styles.rightCard}>
-          <h3 style={styles.summaryTitle}>{t.summary}</h3>
+          <h3 style={styles.summaryTitle}>{t('orderDetailAdmin.summary')}</h3>
           
           <div style={styles.summaryRow}>
-            <span style={styles.summaryLabel}>{t.subtotal}</span>
+            <span style={styles.summaryLabel}>{t('orderDetailAdmin.subtotal')}</span>
             <span style={styles.summaryValue}>25,000 FCFA</span>
           </div>
 
           <div style={styles.summaryDivider}></div>
 
           <div style={{ ...styles.summaryRow, marginBottom: '24px' }}>
-            <span style={styles.totalLabel}>{t.total}</span>
+            <span style={styles.totalLabel}>{t('orderDetailAdmin.total')}</span>
             <span style={styles.totalValue}>25,000 FCFA</span>
           </div>
 
           {/* Logistics metadata */}
           <div style={styles.logisticsBlock}>
             <div style={styles.logisticsItem}>
-              <span style={styles.logisticsLabel}>{t.trackingNumber}</span>
+              <span style={styles.logisticsLabel}>{t('orderDetailAdmin.trackingNumber')}</span>
               <span style={styles.trackingLink}>AGM-2026-001-Z345</span>
             </div>
 
             <div style={styles.logisticsItem}>
-              <span style={styles.logisticsLabel}>{t.carrier}</span>
-              <span style={styles.carrierVal}>{t.carrierValue}</span>
+              <span style={styles.logisticsLabel}>{t('orderDetailAdmin.carrier')}</span>
+              <span style={styles.carrierVal}>{t('orderDetailAdmin.carrierValue')}</span>
             </div>
           </div>
         </div>

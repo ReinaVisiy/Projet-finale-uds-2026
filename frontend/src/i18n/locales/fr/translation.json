@@ -528,5 +528,37 @@
     "noProducts": "Aucun produit répertorié",
     "noProductsDesc": "Vous n'avez pas de produit correspondant à la catégorie de filtre sélectionnée.",
     "createFirst": "Créer mon premier produit"
+  },
+  "orderDetailAdmin": {
+    "back": "Retour",
+    "orderTitle": "Détail commande #2026-001",
+    "stepLabels": {
+      "confirmee": "Confirmée",
+      "en_preparation": "En préparation",
+      "expediee": "Expédiée",
+      "livree": "Livrée"
+    },
+    "currentStatus": "Statut actuel : ",
+    "orderedProducts": "🛒 Produits commandés",
+    "productName": "Banane Fraîche",
+    "productMeta": "10 kg × 2,500 FCFA",
+    "clientInfo": "👤 Informations client",
+    "deliveryAddress": "📍 Adresse livraison",
+    "addressText": "123 rue de la Paix, Dschang",
+    "payment": "💳 Paiement",
+    "paymentMethod": "Mobile Money",
+    "orderDate": "📅 Date commande",
+    "orderDateText": "15 mai 2026 - 14:30",
+    "markDelivered": "Marquer livrée",
+    "deliveryValidated": "Livraison validée",
+    "contactClient": "Contacter client",
+    "summary": "Résumé",
+    "subtotal": "Sous-total",
+    "total": "Total",
+    "trackingNumber": "Numéro suivi",
+    "carrier": "Transporteur",
+    "carrierValue": "DHL Express",
+    "deliveredToast": "🎉 La commande #2026-001 a été marquée comme LIVRÉE avec succès !",
+    "contactToast": "✉️ Ouverture de la messagerie de contact pour Flavier Dschang (+237 6XX XXX XXX)..."
   }
 }
