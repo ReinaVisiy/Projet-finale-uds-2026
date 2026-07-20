@@ -454,5 +454,55 @@
     "preview": "Preview",
     "change": "Change",
     "remove": "Remove"
+  },
+  "faq": {
+    "back": "Back",
+    "title": "Frequently Asked Questions",
+    "subtitle": "We're here to help you find the answers you need.",
+    "searchPlaceholder": "Search a question (e.g. Delivery, Payment...)",
+    "noResultTitle": "No results found",
+    "noResultText": "Try using different keywords or browse another category.",
+    "supportTitle": "Didn't find your answer?",
+    "supportText": "Our support team is available by chat or email to answer any additional questions.",
+    "supportBtn": "Contact support",
+    "categories": {
+      "general": "General",
+      "achat": "Buying",
+      "vente": "Selling",
+      "livraison": "Delivery",
+      "paiement": "Payment"
+    },
+    "questions": [
+      {
+        "id": 1,
+        "category": "general",
+        "q": "How do I create an account?",
+        "a": "Click \"Sign up\" at the top right and follow the steps. You can choose between a standard Buyer profile or a Seller/Producer profile if you want to offer your products on our platform."
+      },
+      {
+        "id": 2,
+        "category": "paiement",
+        "q": "What payment methods are accepted?",
+        "a": "We accept payments via Mobile Money (Orange Money, MTN Mobile Money), bank cards (Visa, Mastercard), and cash on delivery in certain eligible areas."
+      },
+      {
+        "id": 3,
+        "category": "livraison",
+        "q": "How long does delivery take?",
+        "a": "Express delivery takes less than 24h in major cities. For more remote areas, expect between 48h and 72h depending on local carrier availability."
+      },
+      {
+        "id": 4,
+        "category": "achat",
+        "q": "Can I cancel my order?",
+        "a": "You can cancel your order free of charge as long as it is in \"Pending\" status. Once preparation has started or the package has shipped, cancellation is no longer possible directly from your account."
+      },
+      {
+        "id": 5,
+        "category": "vente",
+        "q": "How do I become a partner producer?",
+        "a": "To become a seller, go to \"Become a partner\" from the main menu. Once your agricultural certification documents are submitted, our team will validate your profile within 48h."
+      }
+    ]
   }
 }

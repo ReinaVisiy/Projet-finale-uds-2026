@@ -454,5 +454,55 @@
     "preview": "Aperçu",
     "change": "Changer",
     "remove": "Supprimer"
+  },
+  "faq": {
+    "back": "Retour",
+    "title": "Questions Fréquemment Posées",
+    "subtitle": "Nous sommes là pour vous aider à trouver les réponses dont vous avez besoin.",
+    "searchPlaceholder": "Rechercher une question (ex: Livraison, Paiement...)",
+    "noResultTitle": "Aucun résultat trouvé",
+    "noResultText": "Essayez d'utiliser des mots-clés différents ou explorez une autre catégorie.",
+    "supportTitle": "Pas trouvé votre réponse ?",
+    "supportText": "Notre équipe support est disponible par chat ou par email pour répondre à toutes vos questions supplémentaires.",
+    "supportBtn": "Contacter le support",
+    "categories": {
+      "general": "Général",
+      "achat": "Achat",
+      "vente": "Vente",
+      "livraison": "Livraison",
+      "paiement": "Paiement"
+    },
+    "questions": [
+      {
+        "id": 1,
+        "category": "general",
+        "q": "Comment créer un compte ?",
+        "a": "Cliquez sur \"S'inscrire\" en haut à droite et suivez les étapes. Vous pourrez choisir entre un profil Acheteur classique ou un profil Vendeur/Producteur si vous souhaitez proposer vos produits sur notre plateforme."
+      },
+      {
+        "id": 2,
+        "category": "paiement",
+        "q": "Quels sont les modes de paiement acceptés ?",
+        "a": "Nous acceptons les paiements via Mobile Money (Orange Money, MTN Mobile Money), les cartes bancaires (Visa, Mastercard) ainsi que le paiement en espèces à la livraison pour certaines zones éligibles."
+      },
+      {
+        "id": 3,
+        "category": "livraison",
+        "q": "Combien de temps prend la livraison ?",
+        "a": "La livraison express s'effectue en moins de 24h dans les grandes métropoles. Pour les zones plus reculées, comptez entre 48h et 72h selon la disponibilité des transporteurs locaux."
+      },
+      {
+        "id": 4,
+        "category": "achat",
+        "q": "Puis-je annuler ma commande ?",
+        "a": "Vous pouvez annuler votre commande sans frais tant qu'elle est au statut \"En attente\". Une fois la préparation commencée ou le colis expédié, l'annulation n'est plus possible directement depuis votre espace."
+      },
+      {
+        "id": 5,
+        "category": "vente",
+        "q": "Comment devenir producteur partenaire ?",
+        "a": "Pour devenir vendeur, allez dans \"Devenir partenaire\" depuis le menu principal. Une fois vos documents de certification agricole soumis, notre équipe validera votre profil sous 48h."
+      }
+    ]
   }
 }

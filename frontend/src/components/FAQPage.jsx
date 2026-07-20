@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, MessageCircle, HelpCircle, ArrowLeft } from 'lucide-react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
 // Avant : cette page n'avait aucun dictionnaire de traduction, tout le
 // texte (titres, catégories, questions/réponses) était figé en français.
@@ -8,55 +8,15 @@ import { useDict } from '../context/LanguageContext';
 // useDict() comme dans les autres pages, et on identifie les catégories
 // par une clé stable ('general', 'achat', ...) plutôt que par leur libellé
 // affiché, pour que le filtrage reste correct dans les deux langues.
-const translations = {
-  fr: {
-    back: 'Retour',
-    title: 'Questions Fréquemment Posées',
-    subtitle: 'Nous sommes là pour vous aider à trouver les réponses dont vous avez besoin.',
-    searchPlaceholder: 'Rechercher une question (ex: Livraison, Paiement...)',
-    noResultTitle: 'Aucun résultat trouvé',
-    noResultText: "Essayez d'utiliser des mots-clés différents ou explorez une autre catégorie.",
-    supportTitle: 'Pas trouvé votre réponse ?',
-    supportText: 'Notre équipe support est disponible par chat ou par email pour répondre à toutes vos questions supplémentaires.',
-    supportBtn: 'Contacter le support',
-    categories: { general: 'Général', achat: 'Achat', vente: 'Vente', livraison: 'Livraison', paiement: 'Paiement' },
-    questions: [
-      { id: 1, category: 'general', q: 'Comment créer un compte ?', a: 'Cliquez sur "S\'inscrire" en haut à droite et suivez les étapes. Vous pourrez choisir entre un profil Acheteur classique ou un profil Vendeur/Producteur si vous souhaitez proposer vos produits sur notre plateforme.' },
-      { id: 2, category: 'paiement', q: 'Quels sont les modes de paiement acceptés ?', a: 'Nous acceptons les paiements via Mobile Money (Orange Money, MTN Mobile Money), les cartes bancaires (Visa, Mastercard) ainsi que le paiement en espèces à la livraison pour certaines zones éligibles.' },
-      { id: 3, category: 'livraison', q: 'Combien de temps prend la livraison ?', a: 'La livraison express s\'effectue en moins de 24h dans les grandes métropoles. Pour les zones plus reculées, comptez entre 48h et 72h selon la disponibilité des transporteurs locaux.' },
-      { id: 4, category: 'achat', q: 'Puis-je annuler ma commande ?', a: 'Vous pouvez annuler votre commande sans frais tant qu\'elle est au statut "En attente". Une fois la préparation commencée ou le colis expédié, l\'annulation n\'est plus possible directement depuis votre espace.' },
-      { id: 5, category: 'vente', q: 'Comment devenir producteur partenaire ?', a: 'Pour devenir vendeur, allez dans "Devenir partenaire" depuis le menu principal. Une fois vos documents de certification agricole soumis, notre équipe validera votre profil sous 48h.' },
-    ],
-  },
-  en: {
-    back: 'Back',
-    title: 'Frequently Asked Questions',
-    subtitle: "We're here to help you find the answers you need.",
-    searchPlaceholder: 'Search a question (e.g. Delivery, Payment...)',
-    noResultTitle: 'No results found',
-    noResultText: 'Try using different keywords or browse another category.',
-    supportTitle: "Didn't find your answer?",
-    supportText: 'Our support team is available by chat or email to answer any additional questions.',
-    supportBtn: 'Contact support',
-    categories: { general: 'General', achat: 'Buying', vente: 'Selling', livraison: 'Delivery', paiement: 'Payment' },
-    questions: [
-      { id: 1, category: 'general', q: 'How do I create an account?', a: 'Click "Sign up" at the top right and follow the steps. You can choose between a standard Buyer profile or a Seller/Producer profile if you want to offer your products on our platform.' },
-      { id: 2, category: 'paiement', q: 'What payment methods are accepted?', a: 'We accept payments via Mobile Money (Orange Money, MTN Mobile Money), bank cards (Visa, Mastercard), and cash on delivery in certain eligible areas.' },
-      { id: 3, category: 'livraison', q: 'How long does delivery take?', a: 'Express delivery takes less than 24h in major cities. For more remote areas, expect between 48h and 72h depending on local carrier availability.' },
-      { id: 4, category: 'achat', q: 'Can I cancel my order?', a: 'You can cancel your order free of charge as long as it is in "Pending" status. Once preparation has started or the package has shipped, cancellation is no longer possible directly from your account.' },
-      { id: 5, category: 'vente', q: 'How do I become a partner producer?', a: 'To become a seller, go to "Become a partner" from the main menu. Once your agricultural certification documents are submitted, our team will validate your profile within 48h.' },
-    ],
-  },
-};
 
 export default function FAQPage({ onBack }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const categoryKeys = ['general', 'achat', 'vente', 'livraison', 'paiement'];
   const [activeCategory, setActiveCategory] = useState('general');
   const [searchQuery, setSearchQuery] = useState('');
   const [openQuestion, setOpenQuestion] = useState(1);
 
-  const filteredQuestions = t.questions.filter(q =>
+  const filteredQuestions = t('faq.questions', { returnObjects: true }).filter(q =>
     (activeCategory === 'general' || q.category === activeCategory || activeCategory === '') &&
     q.q.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -68,7 +28,7 @@ export default function FAQPage({ onBack }) {
         {onBack && (
           <button style={styles.backBtn} onClick={onBack}>
             <ArrowLeft size={20} />
-            {t.back}
+            {t('faq.back')}
           </button>
         )}
         
@@ -76,14 +36,14 @@ export default function FAQPage({ onBack }) {
           <div style={styles.iconWrap}>
             <HelpCircle size={40} color="#fff" />
           </div>
-          <h1 style={styles.heroTitle}>{t.title}</h1>
-          <p style={styles.heroSubtitle}>{t.subtitle}</p>
+          <h1 style={styles.heroTitle}>{t('faq.title')}</h1>
+          <p style={styles.heroSubtitle}>{t('faq.subtitle')}</p>
           
           <div style={styles.searchWrap}>
             <Search size={20} color="#6c757d" style={styles.searchIcon} />
             <input 
               type="text" 
-              placeholder={t.searchPlaceholder}
+              placeholder={t('faq.searchPlaceholder')}
               style={styles.searchInput}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -104,7 +64,7 @@ export default function FAQPage({ onBack }) {
               }}
               onClick={() => setActiveCategory(cat)}
             >
-              {t.categories[cat]}
+              {t('faq.categories', { returnObjects: true })[cat]}
             </button>
           ))}
         </div>
@@ -114,8 +74,8 @@ export default function FAQPage({ onBack }) {
           {filteredQuestions.length === 0 ? (
             <div style={styles.emptyState}>
               <Search size={40} color="#adb5bd" style={{marginBottom: '16px'}} />
-              <h3 style={styles.emptyTitle}>{t.noResultTitle}</h3>
-              <p style={styles.emptyText}>{t.noResultText}</p>
+              <h3 style={styles.emptyTitle}>{t('faq.noResultTitle')}</h3>
+              <p style={styles.emptyText}>{t('faq.noResultText')}</p>
             </div>
           ) : (
             filteredQuestions.map((item) => {
@@ -163,11 +123,11 @@ export default function FAQPage({ onBack }) {
             <MessageCircle size={28} color="#2d6a4f" />
           </div>
           <div style={styles.supportContent}>
-            <h3 style={styles.supportTitle}>{t.supportTitle}</h3>
-            <p style={styles.supportText}>{t.supportText}</p>
+            <h3 style={styles.supportTitle}>{t('faq.supportTitle')}</h3>
+            <p style={styles.supportText}>{t('faq.supportText')}</p>
           </div>
           <button style={styles.supportBtn}>
-            {t.supportBtn}
+            {t('faq.supportBtn')}
           </button>
         </div>
       </div>
