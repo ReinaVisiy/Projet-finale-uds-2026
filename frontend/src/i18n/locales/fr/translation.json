@@ -326,12 +326,11 @@
     "quantity": "Quantité",
     "unitPrice": "Prix unit.",
     "total": "Total",
-    "changeStatus": "Changer le statut :",
-    "statusPending": "En attente",
-    "statusPreparing": "En préparation",
-    "statusShipping": "En livraison",
-    "statusDelivered": "Livrée",
-    "statusCancelled": "Annulée"
+    "acceptOrder": "Accepter la commande",
+    "startPreparing": "Démarrer la préparation",
+    "markShipped": "Marquer comme expédiée",
+    "awaitingClientConfirmation": "En attente de confirmation de réception par le client (ou validation automatique après 72h).",
+    "orderClosed": "Cette commande est clôturée."
   },
   "home": {
     "navHome": "Accueil",

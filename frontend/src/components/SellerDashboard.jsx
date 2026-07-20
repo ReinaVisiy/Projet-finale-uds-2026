@@ -322,7 +322,6 @@ export default function SellerDashboard({
   const renderOrders = () => (
     <VendeurOrders
       orders={adminOrders}
-      vendeurProducts={vendeurProducts}
       onUpdateOrderStatus={onUpdateOrderStatus}
     />
   );

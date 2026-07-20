@@ -26,6 +26,10 @@ export const getCommandeById = (id) => httpGet(BASE, `/api/commandes/${id}`);
 export const getCommandesByClientId = (clientId) =>
   httpGet(BASE, `/api/commandes/client/${clientId}`);
 
+/** Get all orders for a given vendor (rôle vendeur ou admin). */
+export const getCommandesByProducteurId = (producteurId) =>
+  httpGet(BASE, `/api/commandes/vendeur/${producteurId}`);
+
 /**
  * Update an order's status.
  * statut is a StatutCommande enum value, e.g. 'EN_ATTENTE' | 'CONFIRMEE' | 'EXPEDIEE' | 'LIVREE' | 'ANNULEE'

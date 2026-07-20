@@ -4,20 +4,14 @@ import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, Eye, ChevronDow
 import { useTranslation } from 'react-i18next';
 
 
-export default function VendeurOrders({ orders, vendeurProducts, onUpdateOrderStatus }) {
+export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
   const { t } = useTranslation();
   const [expandedOrder, setExpandedOrder] = useState(null);
 
-  // Filtrer les commandes contenant au moins un produit du vendeur
-  const vendeurOrderIds = orders
-    .filter(order =>
-      order.items?.some(item =>
-        vendeurProducts.some(p => p.name === item.nomProduit || p.name === item.name)
-      )
-    )
-    .map(order => order.id);
-
-  const vendeurOrders = orders.filter(order => vendeurOrderIds.includes(order.id));
+  // orders est déjà scopé au vendeur connecté (App.jsx appelle
+  // /api/commandes/vendeur/{id}) : une commande n'ayant qu'un seul
+  // vendeur, plus besoin de rapprocher par nom de produit ici.
+  const vendeurOrders = orders;
 
   const getStatusIcon = (status) => {
     if (status === 'Livrée') return <CheckCircle size={18} color="#2d6a4f" />;
@@ -71,11 +65,8 @@ export default function VendeurOrders({ orders, vendeurProducts, onUpdateOrderSt
       ) : (
         <div style={styles.list}>
           {vendeurOrders.map(order => {
-            // Calculer le montant total des produits du vendeur dans cette commande
-            const vendeurItems = order.items?.filter(item =>
-              vendeurProducts.some(p => p.name === item.nomProduit || p.name === item.name)
-            );
-            const totalAmount = vendeurItems?.reduce((sum, item) => sum + (item.subtotal || 0), 0) || order.amount;
+            const vendeurItems = order.items || [];
+            const totalAmount = order.amount;
 
             return (
               <div key={order.id} style={styles.orderCard}>
@@ -145,18 +136,27 @@ export default function VendeurOrders({ orders, vendeurProducts, onUpdateOrderSt
                     </div>
 
                     <div style={styles.actionsSection}>
-                      <label style={styles.statusLabel}>{t('vendeurOrders.changeStatus')}</label>
-                      <select
-                        value={order.status}
-                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                        style={styles.statusSelect}
-                      >
-                        <option value="En attente">{t('vendeurOrders.statusPending')}</option>
-                        <option value="En préparation">{t('vendeurOrders.statusPreparing')}</option>
-                        <option value="En livraison">{t('vendeurOrders.statusShipping')}</option>
-                        <option value="Livrée">{t('vendeurOrders.statusDelivered')}</option>
-                        <option value="Annulée">{t('vendeurOrders.statusCancelled')}</option>
-                      </select>
+                      {order.status === 'En attente' && (
+                        <button style={styles.primaryActionBtn} onClick={() => handleStatusChange(order.id, 'Validée')}>
+                          <CheckCircle size={16} /> {t('vendeurOrders.acceptOrder')}
+                        </button>
+                      )}
+                      {order.status === 'Validée' && (
+                        <button style={styles.primaryActionBtn} onClick={() => handleStatusChange(order.id, 'En préparation')}>
+                          <Package size={16} /> {t('vendeurOrders.startPreparing')}
+                        </button>
+                      )}
+                      {order.status === 'En préparation' && (
+                        <button style={styles.primaryActionBtn} onClick={() => handleStatusChange(order.id, 'En livraison')}>
+                          <Truck size={16} /> {t('vendeurOrders.markShipped')}
+                        </button>
+                      )}
+                      {order.status === 'En livraison' && (
+                        <p style={styles.waitingNote}>{t('vendeurOrders.awaitingClientConfirmation')}</p>
+                      )}
+                      {(order.status === 'Livrée' || order.status === 'Annulée') && (
+                        <p style={styles.waitingNote}>{t('vendeurOrders.orderClosed')}</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -319,18 +319,23 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
   },
-  statusLabel: {
+  primaryActionBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 18px',
+    backgroundColor: '#2d6a4f',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '10px',
     fontSize: '14px',
     fontWeight: '700',
-    color: '#495057',
-  },
-  statusSelect: {
-    padding: '8px 14px',
-    borderRadius: '10px',
-    border: '1.5px solid #dee2e6',
-    fontSize: '14px',
-    backgroundColor: '#f8f9fa',
     cursor: 'pointer',
-    outline: 'none',
+  },
+  waitingNote: {
+    fontSize: '13px',
+    color: '#6c757d',
+    fontStyle: 'italic',
+    margin: 0,
   },
 };

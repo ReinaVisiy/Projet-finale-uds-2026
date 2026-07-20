@@ -326,12 +326,11 @@
     "quantity": "Quantity",
     "unitPrice": "Unit price",
     "total": "Total",
-    "changeStatus": "Change status:",
-    "statusPending": "Pending",
-    "statusPreparing": "Preparing",
-    "statusShipping": "Shipping",
-    "statusDelivered": "Delivered",
-    "statusCancelled": "Cancelled"
+    "acceptOrder": "Accept order",
+    "startPreparing": "Start preparing",
+    "markShipped": "Mark as shipped",
+    "awaitingClientConfirmation": "Awaiting the client's delivery confirmation (or automatic validation after 72h).",
+    "orderClosed": "This order is closed."
   },
   "home": {
     "navHome": "Home",

@@ -187,6 +187,11 @@ export default function App() {
   // OrderManagementAdmin, SellerDashboard, VendeurOrders).
   const [mesCommandes, setMesCommandes] = useState([]);
   const [toutesLesCommandes, setToutesLesCommandes] = useState([]);
+  // Commandes du vendeur connecté uniquement (endpoint /api/commandes/vendeur/{id}) —
+  // à ne pas confondre avec toutesLesCommandes, réservé aux écrans admin :
+  // getAllCommandes() renvoie les commandes de TOUS les vendeurs, ce que
+  // SellerDashboard/VendeurOrders ne doivent pas recevoir.
+  const [mesCommandesVendeur, setMesCommandesVendeur] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isClientMode, setIsClientMode] = useState(false);
 
@@ -396,11 +401,44 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, currentUser?.role]);
 
+  // Commandes du vendeur connecté uniquement, via l'endpoint scopé
+  // /api/commandes/vendeur/{id} (plutôt que de filtrer côté client dans
+  // la liste admin-wide, qui n'aurait de toute façon pas dû être envoyée
+  // à un simple vendeur).
+  const chargerCommandesVendeur = async () => {
+    if (!currentUser?.id) return;
+    try {
+      const dtos = await commandeApi.getCommandesByProducteurId(currentUser.id);
+      const noms = await resoudreNomsProduits(dtos || []);
+      const idsClientsUniques = [...new Set((dtos || []).map((c) => c.clientId))];
+      const clients = new Map();
+      await Promise.all(idsClientsUniques.map(async (id) => {
+        try {
+          const utilisateur = await utilisateurApi.getUtilisateurById(id);
+          clients.set(id, utilisateur);
+        } catch {
+          // client supprimé entretemps : on gardera le repli "Client #id"
+        }
+      }));
+      setMesCommandesVendeur((dtos || []).map((dto) => {
+        const client = clients.get(dto.clientId);
+        return mapCommandePourAffichage(dto, client?.nom, client?.email, noms);
+      }));
+    } catch (err) {
+      console.error('Impossible de charger vos commandes reçues :', err);
+    }
+  };
+
   useEffect(() => {
-    if (currentUser?.role === 'vendeur' || currentUser?.role === 'admin') {
+    if (currentUser?.role === 'admin') {
       chargerToutesLesCommandes();
     } else {
       setToutesLesCommandes([]);
+    }
+    if (currentUser?.role === 'vendeur') {
+      chargerCommandesVendeur();
+    } else {
+      setMesCommandesVendeur([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, currentUser?.role]);
@@ -987,20 +1025,20 @@ export default function App() {
           onLogout={handleLogout}
           currentUser={currentUser}
           vendeurProducts={vendeurProducts}
-          adminOrders={toutesLesCommandes}
+          adminOrders={mesCommandesVendeur}
           onUpdateOrderStatus={async (orderId, newStatus) => {
             try {
               const statutBackend = STATUT_FRANCAIS_TO_BACKEND[newStatus] || newStatus;
               await commandeApi.updateStatutCommande(orderId, statutBackend);
               notifierAdmins('info', `Statut de la commande #${orderId} mis à jour : ${newStatus}`, '/admin/order-management-admin');
-              await chargerToutesLesCommandes();
+              await chargerCommandesVendeur();
             } catch (err) {
               alert(err?.message || "La mise à jour du statut de la commande a échoué.");
             }
           }}
         />;
       case 'sales-history':
-        return <SalesHistory onBack={() => navigate('seller-dashboard')} adminOrders={toutesLesCommandes} vendeurProducts={vendeurProducts} />;
+        return <SalesHistory onBack={() => navigate('seller-dashboard')} adminOrders={mesCommandesVendeur} vendeurProducts={vendeurProducts} />;
       case 'stock-alerts':
         return <StockAlerts onBack={() => navigate('seller-dashboard')} vendeurProducts={vendeurProducts} />;
       case 'certification':
@@ -1092,14 +1130,13 @@ export default function App() {
         />;
       case 'vendeur-orders':
         return <VendeurOrders
-          orders={toutesLesCommandes}
-          vendeurProducts={vendeurProducts}
+          orders={mesCommandesVendeur}
           onUpdateOrderStatus={async (orderId, newStatus) => {
             try {
               const statutBackend = STATUT_FRANCAIS_TO_BACKEND[newStatus] || newStatus;
               await commandeApi.updateStatutCommande(orderId, statutBackend);
               notifierAdmins('info', `Statut de la commande #${orderId} mis à jour : ${newStatus}`, '/admin/order-management-admin');
-              await chargerToutesLesCommandes();
+              await chargerCommandesVendeur();
             } catch (err) {
               alert(err?.message || "La mise à jour du statut de la commande a échoué.");
             }

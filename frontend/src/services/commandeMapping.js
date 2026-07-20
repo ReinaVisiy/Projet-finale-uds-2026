@@ -16,10 +16,12 @@ export const STATUT_BACKEND_TO_FRANCAIS = {
   ANNULEE: 'Annulée',
 };
 
-// VendeurOrders propose ces 5 statuts dans son menu déroulant (VALIDEE
-// reste un état transitoire automatique, non choisi manuellement).
+// VendeurOrders déclenche ces transitions via des boutons d'action
+// dédiés (un seul statut suivant possible à la fois, cf.
+// CommandeService#validerTransition côté backend).
 export const STATUT_FRANCAIS_TO_BACKEND = {
   'En attente': 'EN_ATTENTE',
+  'Validée': 'VALIDEE',
   'En préparation': 'EN_PREPARATION',
   'En livraison': 'EXPEDIEE',
   'Livrée': 'LIVREE',
@@ -48,6 +50,7 @@ export function mapCommandePourAffichage(dto, clientNom, clientEmail, nomsProdui
   return {
     id: dto.id,
     id_client: dto.clientId,
+    producteurId: dto.producteurId,
     client: clientNom || `Client #${dto.clientId}`,
     clientEmail: clientEmail || '',
     amount: dto.montantTotal,
