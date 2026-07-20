@@ -1,8 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star, Share2, Shield, Truck, Package, Plus, Minus, ShoppingCart, MessageCircle, Flag, ChevronRight } from 'lucide-react';
 import { getAvisParProduit, getAvisStats, publierAvis } from '../services/api/avisApi';
+import { useDict } from '../context/LanguageContext';
+
+const translations = {
+  fr: {
+    back: 'Retour', products: 'Produits', share: 'Partager', copyLink: 'Copier le lien',
+    linkCopied: 'Lien copié !', report: 'Signaler', organic: '100% Bio',
+    reviewsCount: (n) => `(${n} avis)`, verifiedProducer: 'Producteur vérifié',
+    viewProfile: 'Voir le profil et les avis', contact: 'Contacter',
+    price: 'Prix', stock: 'Stock', available: (n) => `${n} kg dispo`, delivery: 'Livraison',
+    deliveryEstimate: '2-3 jours', quantity: 'Quantité (kg)',
+    addToCart: (total) => `Ajouter au panier • ${total} FCFA`, addedToCart: (q) => `Ajouté : ${q} kg`,
+    description: 'Description', defaultDesc1: 'Produit frais de qualité supérieure.', defaultDesc2: 'Livraison rapide garantie.',
+    securePackaging: 'Emballage sécurisé', qualityGuaranteed: 'Qualité garantie',
+    customerReviews: 'Avis clients', reviewsWord: 'avis',
+    loginToReview: 'Connectez-vous pour laisser un avis.', chooseRating: 'Choisissez une note (1 à 5 étoiles).',
+    reviewFailed: "La publication de l'avis a échoué.", leaveReview: 'Laisser un avis',
+    commentPlaceholder: 'Votre commentaire (optionnel)...', sending: 'Envoi...', publish: 'Publier mon avis',
+    alreadyReviewed: 'Vous avez déjà laissé un avis sur ce produit.',
+    loginToReviewProduct: 'Connectez-vous pour laisser un avis sur ce produit.',
+    loadingReviews: 'Chargement des avis...', noReviews: 'Aucun avis pour ce produit pour le moment.',
+    client: 'Client',
+  },
+  en: {
+    back: 'Back', products: 'Products', share: 'Share', copyLink: 'Copy link',
+    linkCopied: 'Link copied!', report: 'Report', organic: '100% Organic',
+    reviewsCount: (n) => `(${n} reviews)`, verifiedProducer: 'Verified producer',
+    viewProfile: 'View profile and reviews', contact: 'Contact',
+    price: 'Price', stock: 'Stock', available: (n) => `${n} kg available`, delivery: 'Delivery',
+    deliveryEstimate: '2-3 days', quantity: 'Quantity (kg)',
+    addToCart: (total) => `Add to cart • ${total} FCFA`, addedToCart: (q) => `Added: ${q} kg`,
+    description: 'Description', defaultDesc1: 'Fresh, top-quality product.', defaultDesc2: 'Fast delivery guaranteed.',
+    securePackaging: 'Secure packaging', qualityGuaranteed: 'Quality guaranteed',
+    customerReviews: 'Customer reviews', reviewsWord: 'reviews',
+    loginToReview: 'Log in to leave a review.', chooseRating: 'Choose a rating (1 to 5 stars).',
+    reviewFailed: 'Failed to publish your review.', leaveReview: 'Leave a review',
+    commentPlaceholder: 'Your comment (optional)...', sending: 'Sending...', publish: 'Publish my review',
+    alreadyReviewed: 'You have already reviewed this product.',
+    loginToReviewProduct: 'Log in to leave a review on this product.',
+    loadingReviews: 'Loading reviews...', noReviews: 'No reviews for this product yet.',
+    client: 'Customer',
+  },
+};
 
 export default function ProductDetail({ onBack, onAddToCart, onContactVendor, onNavigateToProducerProfile, onSignaler, currentUser, product: propProduct }) {
+  const t = useDict(translations);
 
   const defaultProduct = {
     name: 'Banane Fraîche Premium',
@@ -61,8 +104,8 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
 
   const handlePublierAvis = async (e) => {
     e.preventDefault();
-    if (!currentUser) { alert('Connectez-vous pour laisser un avis.'); return; }
-    if (!noteChoisie) { alert('Choisissez une note (1 à 5 étoiles).'); return; }
+    if (!currentUser) { alert(t.loginToReview); return; }
+    if (!noteChoisie) { alert(t.chooseRating); return; }
     setEnvoiEnCours(true);
     try {
       await publierAvis({ produitId: product.id, note: noteChoisie, commentaire });
@@ -70,7 +113,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
       setCommentaire('');
       await chargerAvis();
     } catch (err) {
-      alert(err?.message || "La publication de l'avis a échoué.");
+      alert(err?.message || t.reviewFailed);
     } finally {
       setEnvoiEnCours(false);
     }
@@ -88,7 +131,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
     };
     if (plateforme === 'copier') {
       navigator.clipboard?.writeText(url);
-      alert('Lien copié !');
+      alert(t.linkCopied);
     } else {
       window.open(liens[plateforme], '_blank', 'noopener,noreferrer');
     }
@@ -122,10 +165,10 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
       <div style={styles.topBar}>
         <div style={styles.topBarInner}>
           <button style={styles.backBtn} onClick={onBack}>
-            <ArrowLeft size={18} /> Retour
+            <ArrowLeft size={18} /> {t.back}
           </button>
           <div style={styles.breadcrumbs}>
-            <span style={styles.crumbInactive}>Produits</span>
+            <span style={styles.crumbInactive}>{t.products}</span>
             <span style={styles.crumbSeparator}>/</span>
             <span style={styles.crumbInactive}>{product.category}</span>
             <span style={styles.crumbSeparator}>/</span>
@@ -133,18 +176,18 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
           </div>
           <div style={styles.topActions}>
             <div style={{ position: 'relative' }}>
-              <button style={styles.actionBtn} onClick={handlePartager}><Share2 size={18} /> Partager</button>
+              <button style={styles.actionBtn} onClick={handlePartager}><Share2 size={18} /> {t.share}</button>
               {showShareMenu && (
                 <div style={styles.shareMenu} onMouseLeave={() => setShowShareMenu(false)}>
                   <button style={styles.shareMenuItem} onClick={() => partagerSur('whatsapp')}>WhatsApp</button>
                   <button style={styles.shareMenuItem} onClick={() => partagerSur('facebook')}>Facebook</button>
                   <button style={styles.shareMenuItem} onClick={() => partagerSur('twitter')}>X (Twitter)</button>
-                  <button style={styles.shareMenuItem} onClick={() => partagerSur('copier')}>Copier le lien</button>
+                  <button style={styles.shareMenuItem} onClick={() => partagerSur('copier')}>{t.copyLink}</button>
                 </div>
               )}
             </div>
             <button style={styles.signalBtn} onClick={() => onSignaler && onSignaler(product)}>
-              <Flag size={16} /> Signaler
+              <Flag size={16} /> {t.report}
             </button>
           </div>
         </div>
@@ -166,7 +209,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
             >
               <img src={product.image} alt={product.name} style={styles.productImg} />
               <div style={styles.badgeWrap}>
-                <span style={styles.organicBadge}>100% Bio</span>
+                <span style={styles.organicBadge}>{t.organic}</span>
               </div>
               <div style={styles.catBadgeWrap}>
                 <span style={styles.catBadge}>{product.category}</span>
@@ -191,7 +234,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
                     <Star key={i} size={16} fill={i <= Math.round(avisStats.noteMoyenne) ? "#f5b041" : "none"} color="#f5b041" />
                   ))}
                 </div>
-                <span style={styles.reviewCount}>({avisStats.nombreAvis} avis)</span>
+                <span style={styles.reviewCount}>{t.reviewsCount(avisStats.nombreAvis)}</span>
               </div>
             </div>
 
@@ -206,14 +249,14 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
                   <h3 style={styles.farmName}>{product.farm}</h3>
                   <div style={styles.verifiedWrap}>
                     <Shield size={12} color="#2d6a4f" />
-                    <span style={styles.verifiedText}>Producteur vérifié</span>
+                    <span style={styles.verifiedText}>{t.verifiedProducer}</span>
                   </div>
                   {onNavigateToProducerProfile && (
                     <button
                       style={styles.viewProfileLink}
                       onClick={(e) => { e.stopPropagation(); onNavigateToProducerProfile(producteur); }}
                     >
-                      Voir le profil et les avis <ChevronRight size={13} />
+                      {t.viewProfile} <ChevronRight size={13} />
                     </button>
                   )}
                 </div>
@@ -224,49 +267,49 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
                 onClick={() => onContactVendor && onContactVendor({ id: product.producteurId, name: product.farm, product: product.name })}
               >
                 <MessageCircle size={16} />
-                Contacter
+                {t.contact}
               </button>
             </div>
 
             <div style={styles.infoStrip}>
               <div style={styles.infoBox}>
-                <span style={styles.infoLabel}>Prix</span>
+                <span style={styles.infoLabel}>{t.price}</span>
                 <span style={styles.priceValue}>{product.price.toLocaleString()} FCFA</span>
               </div>
               <div style={styles.infoDivider} />
               <div style={styles.infoBox}>
-                <span style={styles.infoLabel}>Stock</span>
-                <span style={styles.stockValue}>{product.stock || 30} kg dispo</span>
+                <span style={styles.infoLabel}>{t.stock}</span>
+                <span style={styles.stockValue}>{t.available(product.stock || 30)}</span>
               </div>
               <div style={styles.infoDivider} />
               <div style={styles.infoBox}>
-                <span style={styles.infoLabel}>Livraison</span>
+                <span style={styles.infoLabel}>{t.delivery}</span>
                 <div style={styles.deliveryWrap}>
                   <Truck size={16} color="#6c757d" />
-                  <span style={styles.deliveryValue}>2-3 jours</span>
+                  <span style={styles.deliveryValue}>{t.deliveryEstimate}</span>
                 </div>
               </div>
             </div>
 
             <div style={styles.actionArea}>
               <div style={styles.qtySection}>
-                <span style={styles.qtyLabel}>Quantité (kg)</span>
+                <span style={styles.qtyLabel}>{t.quantity}</span>
                 <div style={styles.qtySelector}>
                   <button style={styles.qtyBtn} onClick={handleDecrease}><Minus size={18} /></button>
                   <input style={styles.qtyInput} value={quantity} readOnly />
                   <button style={styles.qtyBtn} onClick={handleIncrease}><Plus size={18} /></button>
                 </div>
               </div>
-              <button style={styles.addToCartBtn} onClick={() => onAddToCart ? onAddToCart(quantity) : alert(`Ajouté: ${quantity} kg`)}>
+              <button style={styles.addToCartBtn} onClick={() => onAddToCart ? onAddToCart(quantity) : alert(t.addedToCart(quantity))}>
                 <ShoppingCart size={20} />
-                Ajouter au panier • {(product.price * quantity).toLocaleString()} FCFA
+                {t.addToCart((product.price * quantity).toLocaleString())}
               </button>
             </div>
 
             <div style={styles.descriptionArea}>
-              <h3 style={styles.descTitle}>Description</h3>
+              <h3 style={styles.descTitle}>{t.description}</h3>
               <div style={styles.descContent}>
-                {(product.description || ['Produit frais de qualité supérieure.', 'Livraison rapide garantie.']).map((line, idx) => (
+                {(product.description || [t.defaultDesc1, t.defaultDesc2]).map((line, idx) => (
                   <p key={idx} style={styles.descLine}>
                     {idx > 0 && <span style={styles.bullet}>•</span>}
                     {line}
@@ -274,8 +317,8 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
                 ))}
               </div>
               <div style={styles.guaranteeRow}>
-                <div style={styles.guaranteeItem}><Package size={18} color="#2d6a4f" /><span>Emballage sécurisé</span></div>
-                <div style={styles.guaranteeItem}><Shield size={18} color="#2d6a4f" /><span>Qualité garantie</span></div>
+                <div style={styles.guaranteeItem}><Package size={18} color="#2d6a4f" /><span>{t.securePackaging}</span></div>
+                <div style={styles.guaranteeItem}><Shield size={18} color="#2d6a4f" /><span>{t.qualityGuaranteed}</span></div>
               </div>
             </div>
           </div>
@@ -283,7 +326,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
 
         {/* AVIS */}
         <div style={styles.reviewsArea}>
-          <h3 style={styles.descTitle}>Avis clients</h3>
+          <h3 style={styles.descTitle}>{t.customerReviews}</h3>
 
           <div style={styles.reviewsSummaryRow}>
             <div style={styles.reviewsSummaryScore}>
@@ -293,7 +336,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
                   <Star key={i} size={16} fill={i <= Math.round(avisStats.noteMoyenne) ? "#f5b041" : "none"} color="#f5b041" />
                 ))}
               </div>
-              <span style={styles.reviewCount}>{avisStats.nombreAvis} avis</span>
+              <span style={styles.reviewCount}>{avisStats.nombreAvis} {t.reviewsWord}</span>
             </div>
             <div style={styles.reviewsBars}>
               {[5,4,3,2,1].map(n => {
@@ -313,10 +356,10 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
           {/* Laisser un avis */}
           {currentUser ? (
             dejaNote ? (
-              <p style={styles.dejaNoteMsg}>Vous avez déjà laissé un avis sur ce produit.</p>
+              <p style={styles.dejaNoteMsg}>{t.alreadyReviewed}</p>
             ) : (
               <form style={styles.reviewForm} onSubmit={handlePublierAvis}>
-                <span style={styles.qtyLabel}>Laisser un avis</span>
+                <span style={styles.qtyLabel}>{t.leaveReview}</span>
                 <div style={styles.stars}>
                   {[1,2,3,4,5].map(i => (
                     <Star
@@ -332,30 +375,30 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
                 <textarea
                   style={styles.reviewTextarea}
                   rows="3"
-                  placeholder="Votre commentaire (optionnel)..."
+                  placeholder={t.commentPlaceholder}
                   value={commentaire}
                   onChange={(e) => setCommentaire(e.target.value)}
                 />
                 <button type="submit" style={styles.addToCartBtn} disabled={envoiEnCours}>
-                  {envoiEnCours ? 'Envoi...' : 'Publier mon avis'}
+                  {envoiEnCours ? t.sending : t.publish}
                 </button>
               </form>
             )
           ) : (
-            <p style={styles.dejaNoteMsg}>Connectez-vous pour laisser un avis sur ce produit.</p>
+            <p style={styles.dejaNoteMsg}>{t.loginToReviewProduct}</p>
           )}
 
           {/* Liste des avis */}
           <div style={styles.reviewsList}>
             {avisLoading ? (
-              <p style={{ color: '#6c757d' }}>Chargement des avis...</p>
+              <p style={{ color: '#6c757d' }}>{t.loadingReviews}</p>
             ) : avisList.length === 0 ? (
-              <p style={{ color: '#adb5bd' }}>Aucun avis pour ce produit pour le moment.</p>
+              <p style={{ color: '#adb5bd' }}>{t.noReviews}</p>
             ) : (
               avisList.map(a => (
                 <div key={a.id} style={styles.reviewCard}>
                   <div style={styles.reviewCardHeader}>
-                    <span style={styles.reviewAuthor}>{a.clientNom || 'Client'}</span>
+                    <span style={styles.reviewAuthor}>{a.clientNom || t.client}</span>
                     <div style={styles.stars}>
                       {[1,2,3,4,5].map(i => <Star key={i} size={13} fill={i <= a.note ? "#f5b041" : "none"} color="#f5b041" />)}
                     </div>
