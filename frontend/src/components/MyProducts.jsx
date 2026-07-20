@@ -35,7 +35,7 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
   // Handle product duplication
   const handleDuplicate = (product) => {
     onDuplicateProduct && onDuplicateProduct(product);
-    showToast(t('myProducts.duplicatedToast')(product.name));
+    showToast(t('myProducts.duplicatedToast', { name: product.name }));
   };
 
   // Toast notifier helper
@@ -72,11 +72,11 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
       <ConfirmDialog
         open={!!confirmDelete}
         title={t('myProducts.myProducts')}
-        message={confirmDelete ? t('myProducts.confirmDelete')(confirmDelete.name) : ''}
+        message={confirmDelete ? t('myProducts.confirmDelete', { name: confirmDelete.name }) : ''}
         onCancel={() => setConfirmDelete(null)}
         onConfirm={() => {
           onDeleteProduct && onDeleteProduct(confirmDelete.id);
-          showToast(t('myProducts.deletedToast')(confirmDelete.name));
+          showToast(t('myProducts.deletedToast', { name: confirmDelete.name }));
           setConfirmDelete(null);
         }}
       />

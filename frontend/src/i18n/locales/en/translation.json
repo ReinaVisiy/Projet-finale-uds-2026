@@ -527,7 +527,10 @@
     "delete": "Delete",
     "noProducts": "No products found",
     "noProductsDesc": "You don't have a product matching the selected filter category.",
-    "createFirst": "Create my first product"
+    "createFirst": "Create my first product",
+    "duplicatedToast": "Product \"{{name}}\" duplicated!",
+    "confirmDelete": "Are you sure you want to delete the product \"{{name}}\"?",
+    "deletedToast": "Product \"{{name}}\" deleted successfully!"
   },
   "orderDetailAdmin": {
     "back": "Back",
@@ -572,7 +575,9 @@
     "seeAll": "See all products",
     "inStock": "In stock",
     "lowStock": "Low stock",
-    "addToCart": "Add to cart"
+    "addToCart": "Add to cart",
+    "loadError": "Unable to load the catalogue: {{error}}",
+    "subtitle": "{{count}} products available"
   },
   "productDetail": {
     "back": "Back",
@@ -608,7 +613,11 @@
     "loginToReviewProduct": "Log in to leave a review on this product.",
     "loadingReviews": "Loading reviews...",
     "noReviews": "No reviews for this product yet.",
-    "client": "Customer"
+    "client": "Customer",
+    "reviewsCount": "({{count}} reviews)",
+    "available": "{{count}} kg available",
+    "addedToCart": "Added: {{count}} kg",
+    "addToCart": "Add to cart • {{total}} FCFA"
   },
   "salesHistory": {
     "pageTitle": "Sales history",
@@ -681,7 +690,10 @@
     "paid": "✅ Paid",
     "paymentConfirmed": "✅ Payment confirmed! Redirecting...",
     "securePayment": "🔒 Secure payment",
-    "trackedDelivery": "🚚 Tracked delivery"
+    "trackedDelivery": "🚚 Tracked delivery",
+    "pay": "Pay {{total}} FCFA",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} items"
   },
   "messagePage": {
     "online": "● Online",

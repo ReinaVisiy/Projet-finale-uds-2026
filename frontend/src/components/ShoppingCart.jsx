@@ -96,7 +96,7 @@ export default function ShoppingCart({
           <ArrowLeft size={20} /> {t('shoppingCart.continueShopping')}
         </button>
         <h1 style={styles.title}>{t('shoppingCart.myCart')}</h1>
-        <p style={styles.subtitle}>{t('shoppingCart.itemCount')(cartItems.length)}</p>
+        <p style={styles.subtitle}>{t('shoppingCart.itemCount', { count: cartItems.length })}</p>
       </div>
 
       <div style={styles.grid}>
@@ -231,7 +231,7 @@ export default function ShoppingCart({
               onClick={handlePaymentSubmit}
               disabled={isProcessing || paymentSuccess}
             >
-              {isProcessing ? t('shoppingCart.processing') : paymentSuccess ? t('shoppingCart.paid') : t('shoppingCart.pay')(total.toLocaleString())}
+              {isProcessing ? t('shoppingCart.processing') : paymentSuccess ? t('shoppingCart.paid') : t('shoppingCart.pay', { total: total.toLocaleString() })}
               {!isProcessing && !paymentSuccess && <CreditCard size={16} />}
             </button>
           </div>

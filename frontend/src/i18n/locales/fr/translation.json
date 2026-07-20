@@ -527,7 +527,10 @@
     "delete": "Supprimer",
     "noProducts": "Aucun produit répertorié",
     "noProductsDesc": "Vous n'avez pas de produit correspondant à la catégorie de filtre sélectionnée.",
-    "createFirst": "Créer mon premier produit"
+    "createFirst": "Créer mon premier produit",
+    "duplicatedToast": "Produit \"{{name}}\" dupliqué !",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer le produit \"{{name}}\" ?",
+    "deletedToast": "Produit \"{{name}}\" supprimé avec succès !"
   },
   "orderDetailAdmin": {
     "back": "Retour",
@@ -572,7 +575,9 @@
     "seeAll": "Voir tous les produits",
     "inStock": "En stock",
     "lowStock": "Stock faible",
-    "addToCart": "Ajouter au panier"
+    "addToCart": "Ajouter au panier",
+    "loadError": "Impossible de charger le catalogue : {{error}}",
+    "subtitle": "{{count}} produits disponibles"
   },
   "productDetail": {
     "back": "Retour",
@@ -608,7 +613,11 @@
     "loginToReviewProduct": "Connectez-vous pour laisser un avis sur ce produit.",
     "loadingReviews": "Chargement des avis...",
     "noReviews": "Aucun avis pour ce produit pour le moment.",
-    "client": "Client"
+    "client": "Client",
+    "reviewsCount": "({{count}} avis)",
+    "available": "{{count}} kg dispo",
+    "addedToCart": "Ajouté : {{count}} kg",
+    "addToCart": "Ajouter au panier • {{total}} FCFA"
   },
   "salesHistory": {
     "pageTitle": "Historique des ventes",
@@ -681,7 +690,10 @@
     "paid": "✅ Payé",
     "paymentConfirmed": "✅ Paiement validé ! Redirection...",
     "securePayment": "🔒 Paiement sécurisé",
-    "trackedDelivery": "🚚 Livraison suivie"
+    "trackedDelivery": "🚚 Livraison suivie",
+    "pay": "Payer {{total}} FCFA",
+    "itemCount_one": "{{count}} article",
+    "itemCount_other": "{{count}} articles"
   },
   "messagePage": {
     "online": "● En ligne",

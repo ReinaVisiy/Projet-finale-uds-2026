@@ -78,7 +78,7 @@ export default function ProductCatalog({
     return (
       <div style={styles.container}>
         <div style={styles.emptyState}>
-          <p style={styles.emptyText}>{t('productCatalog.loadError')(erreur)}</p>
+          <p style={styles.emptyText}>{t('productCatalog.loadError', { error: erreur })}</p>
           <button style={styles.emptyBtn} onClick={onBack}>{t('productCatalog.back')}</button>
         </div>
       </div>
@@ -92,7 +92,7 @@ export default function ProductCatalog({
           <ArrowLeft size={20} /> {t('productCatalog.back')}
         </button>
         <h1 style={styles.title}>{t('productCatalog.title')}</h1>
-        <p style={styles.subtitle}>{t('productCatalog.subtitle')(produits.length)}</p>
+        <p style={styles.subtitle}>{t('productCatalog.subtitle', { count: produits.length })}</p>
       </div>
 
       <div style={styles.searchWrapper}>

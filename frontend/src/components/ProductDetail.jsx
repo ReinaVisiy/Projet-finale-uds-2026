@@ -194,7 +194,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
                     <Star key={i} size={16} fill={i <= Math.round(avisStats.noteMoyenne) ? "#f5b041" : "none"} color="#f5b041" />
                   ))}
                 </div>
-                <span style={styles.reviewCount}>{t('productDetail.reviewsCount')(avisStats.nombreAvis)}</span>
+                <span style={styles.reviewCount}>{t('productDetail.reviewsCount', { count: avisStats.nombreAvis })}</span>
               </div>
             </div>
 
@@ -239,7 +239,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
               <div style={styles.infoDivider} />
               <div style={styles.infoBox}>
                 <span style={styles.infoLabel}>{t('productDetail.stock')}</span>
-                <span style={styles.stockValue}>{t('productDetail.available')(product.stock || 30)}</span>
+                <span style={styles.stockValue}>{t('productDetail.available', { count: product.stock || 30 })}</span>
               </div>
               <div style={styles.infoDivider} />
               <div style={styles.infoBox}>
@@ -260,9 +260,9 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
                   <button style={styles.qtyBtn} onClick={handleIncrease}><Plus size={18} /></button>
                 </div>
               </div>
-              <button style={styles.addToCartBtn} onClick={() => onAddToCart ? onAddToCart(quantity) : alert(t('productDetail.addedToCart')(quantity))}>
+              <button style={styles.addToCartBtn} onClick={() => onAddToCart ? onAddToCart(quantity) : alert(t('productDetail.addedToCart', { count: quantity }))}>
                 <ShoppingCart size={20} />
-                {t('productDetail.addToCart')((product.price * quantity).toLocaleString())}
+                {t('productDetail.addToCart', { total: (product.price * quantity).toLocaleString() })}
               </button>
             </div>
 
