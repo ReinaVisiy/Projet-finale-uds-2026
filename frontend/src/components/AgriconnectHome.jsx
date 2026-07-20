@@ -50,6 +50,35 @@ export default function AgroMarketHome({
   const [filteredProducts, setFilteredProducts] = useState(null);
   const [activeCategory, setActiveCategory] = useState(null);
 
+  // Chiffres réels affichés dans la section stats (visiteurs non connectés
+  // uniquement) : totalUtilisateurs et producteursVerifies/commandesLivrées
+  // viennent chacun d'un microservice différent, on les fusionne ici.
+  // null tant que non chargé -> affiché comme "…" (cf. plus bas).
+  const [statsReelles, setStatsReelles] = useState({
+    totalUtilisateurs: null,
+    producteursVerifies: null,
+    commandesLivrees: null,
+  });
+
+  useEffect(() => {
+    let annule = false;
+
+    Promise.allSettled([
+      getStatsUtilisateurs(),
+      getStatsCertifications(),
+      getStatsCommandes(),
+    ]).then(([utilisateurs, certifications, commandes]) => {
+      if (annule) return;
+      setStatsReelles({
+        totalUtilisateurs: utilisateurs.status === 'fulfilled' ? utilisateurs.value?.totalUtilisateurs : null,
+        producteursVerifies: certifications.status === 'fulfilled' ? certifications.value?.producteursVerifies : null,
+        commandesLivrees: commandes.status === 'fulfilled' ? commandes.value?.commandesLivrees : null,
+      });
+    });
+
+    return () => { annule = true; };
+  }, []);
+
   const categories = categoriesBrutes.map((c) => {
     const cle = normaliserNomCategorie(c.name);
     const style = STYLE_CATEGORIES_PAR_NOM[cle] || STYLE_CATEGORIE_PAR_DEFAUT;
