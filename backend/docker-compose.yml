@@ -1,0 +1,238 @@
+# docker-compose.yml — orchestration complete du backend AGRYCAM
+#
+# Lance PostgreSQL (avec toutes les bases necessaires), le serveur Eureka,
+# l'API Gateway, puis les 10 microservices metier.
+#
+# Utilisation :
+#   1) Copier .env.example en .env a la racine de backend/ et remplir les
+#      valeurs (JWT_SECRET, INTERNAL_SERVICE_SECRET, mots de passe Simiz...)
+#   2) docker compose up --build
+#
+# Toutes les valeurs sensibles viennent de .env (jamais commitees).
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: agrycam-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-2026}
+    volumes:
+      - agrycam-pgdata:/var/lib/postgresql/data
+      - ./docker/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: agrycam-eureka-server
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: agrycam-api-gateway
+    restart: unless-stopped
+    depends_on:
+      - eureka-server
+    environment:
+      EUREKA_URI: http://eureka-server:8761/eureka/
+    ports:
+      - "8765:8765"
+
+  auth-service:
+    build: ./auth-service
+    container_name: agrycam-auth-service
+    restart: unless-stopped
+    depends_on:
+      - eureka-server
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
+      EUREKA_URI: http://eureka-server:8761/eureka/
+    ports:
+      - "8080:8080"
+
+  utilisateur-service:
+    build: ./utilisateur-service
+    container_name: agrycam-utilisateur-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/utilisateur_db
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+    ports:
+      - "8081:8081"
+
+  produit-service:
+    build: ./produit-service
+    container_name: agrycam-produit-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/produit_db
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
+      JWT_SECRET: ${JWT_SECRET}
+      AVIS_SERVICE_URL: http://avis-service:8085
+      CERTIFICATION_SERVICE_URL: http://certification-service:8086
+      UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
+      EUREKA_URI: http://eureka-server:8761/eureka/
+    ports:
+      - "8082:8082"
+
+  message-service:
+    build: ./message-service
+    container_name: agrycam-message-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/message_db
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
+      JWT_SECRET: ${JWT_SECRET}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+    ports:
+      - "8083:8083"
+
+  signalement-service:
+    build: ./signalement-service
+    container_name: agrycam-signalement-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/signalement_db
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
+      JWT_SECRET: ${JWT_SECRET}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+    ports:
+      - "8084:8084"
+
+  avis-service:
+    build: ./avis-service
+    container_name: agrycam-avis-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/avis_db
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
+      JWT_SECRET: ${JWT_SECRET}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+    ports:
+      - "8085:8085"
+
+  certification-service:
+    build: ./certification-service
+    container_name: agrycam-certification-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/certification_db
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
+      JWT_SECRET: ${JWT_SECRET}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+    ports:
+      - "8086:8086"
+
+  paiement-service:
+    build: ./paiement-service
+    container_name: agrycam-paiement-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/paiement_db
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      SIMIZ_SECRET_KEY: ${SIMIZ_SECRET_KEY}
+      SIMIZ_PUBLIC_KEY: ${SIMIZ_PUBLIC_KEY}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+    ports:
+      - "8087:8087"
+
+  commande-service:
+    build: ./commande-service
+    container_name: agrycam-commande-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/commande_db
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
+      JWT_SECRET: ${JWT_SECRET}
+      PRODUIT_SERVICE_URL: http://produit-service:8082
+      UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
+      EUREKA_URI: http://eureka-server:8761/eureka/
+    ports:
+      - "8088:8088"
+
+  notification-service:
+    build: ./notification-service
+    container_name: agrycam-notification-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/notification_db
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
+      JWT_SECRET: ${JWT_SECRET}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+    ports:
+      - "8089:8089"
+
+volumes:
+  agrycam-pgdata:

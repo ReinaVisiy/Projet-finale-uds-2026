@@ -133,6 +133,47 @@ Ou plus simplement, `./start-all-services.ps1` depuis PowerShell, qui respecte d
 - `http://localhost:8765/api/utilisateurs` (via `api-gateway`) doit répondre sans erreur de connexion (401/403 si non authentifié, mais pas de timeout).
 - En cas d'échec au démarrage d'un service, vérifier en premier que `JWT_SECRET` (et `INTERNAL_SERVICE_SECRET` pour `auth-service`/`utilisateur-service`) sont bien exportés — voir le README racine.
 
+## 🐳 Lancer le projet avec Docker
+
+Chaque microservice possède son propre `Dockerfile` (build multi-stage :
+compilation avec Maven, puis image d'exécution allégée avec le JRE seul).
+Un `docker-compose.yml` à la racine de `backend/` orchestre PostgreSQL,
+`eureka-server`, `api-gateway` et les 10 services métier.
+
+### 1. Préparer les variables d'environnement
+
+```bash
+cp .env.example .env
+```
+
+Puis remplir `.env` (`JWT_SECRET`, `INTERNAL_SERVICE_SECRET`, et les clés
+Simiz si besoin — voir la section "Variables d'environnement" ci-dessus).
+Ce fichier ne doit jamais être commité.
+
+### 2. Lancer toute la stack
+
+```bash
+docker compose up --build
+```
+
+PostgreSQL crée automatiquement les 9 bases de données nécessaires au
+premier démarrage (voir `docker/init-db.sh`, l'équivalent Docker de
+`create-databases.ps1`). Les services attendent que `postgres` et
+`eureka-server` soient prêts avant de démarrer.
+
+### 3. Reconstruire un seul service après une modification
+
+```bash
+docker compose up --build produit-service
+```
+
+### 4. Arrêter et nettoyer
+
+```bash
+docker compose down          # arrête les conteneurs, garde les données
+docker compose down -v       # arrête et supprime aussi le volume Postgres
+```
+
 ## 🧪 Tests
 
 Chaque service dispose d'un test de contexte Spring Boot minimal (vérifie que le contexte de l'application démarre sans erreur) ; certains services (`certification-service`, `utilisateur-service`, `message-service`, `auth-service`, `produit-service`, `avis-service`) contiennent une classe `*ApplicationTests`. Il n'y a pas encore de suite de tests unitaires/d'intégration complète sur la logique métier — c'est une amélioration possible à venir.
