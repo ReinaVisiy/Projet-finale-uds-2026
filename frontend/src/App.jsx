@@ -35,7 +35,7 @@ import NotificationsCenter from './components/NotificationsCenter';
 import OrderDetailAdmin from './components/OrderDetailAdmin';
 import ChangePassword from './components/ChangePassword';
 import PaymentReturn from './components/PaymentReturn';
-import { authApi, utilisateurApi, produitApi, signalementApi, commandeApi, paiementApi, certificationApi, notificationApi, getSession } from './services/api';
+import { authApi, utilisateurApi, produitApi, signalementApi, commandeApi, paiementApi, certificationApi, notificationApi, litigeApi, getSession } from './services/api';
 import { ROLE_FRONTEND_TO_BACKEND, joinNomComplet, splitNomComplet, mapProfileToFrontendUser } from './services/userMapping';
 import { mapCertificationPourAdmin } from './services/certificationMapping';
 import { mapProduitPourVendeur, construireProduitRequest } from './services/productMapping';
@@ -192,6 +192,10 @@ export default function App() {
   // getAllCommandes() renvoie les commandes de TOUS les vendeurs, ce que
   // SellerDashboard/VendeurOrders ne doivent pas recevoir.
   const [mesCommandesVendeur, setMesCommandesVendeur] = useState([]);
+  // Vue admin uniquement : transactions de paiement (revenu plateforme,
+  // section 4 du cahier des charges) et litiges (module Litige, section 3).
+  const [toutesLesTransactions, setToutesLesTransactions] = useState([]);
+  const [tousLesLitiges, setTousLesLitiges] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isClientMode, setIsClientMode] = useState(false);
 
@@ -442,6 +446,79 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, currentUser?.role]);
+
+  // Revenu plateforme (5% de commission + frais de 10% retenus a
+  // l'annulation) : liste brute des transactions, agregee cote
+  // AdminDashboard plutot qu'ici (les deux totaux y sont affiches
+  // separement dans le detail de la carte KPI).
+  const chargerToutesLesTransactions = async () => {
+    try {
+      const transactions = await paiementApi.getToutesTransactionsAdmin();
+      setToutesLesTransactions(transactions || []);
+    } catch (err) {
+      console.error('Impossible de charger les transactions :', err);
+    }
+  };
+
+  // Litiges (module Litige, etape 8) : commande-service ne connait que
+  // clientId, donc on resout le nom du client comme pour les autres
+  // listes admin. Le flag fondsDejaRetires est deja calcule cote
+  // backend (LitigeResponse) et pilote le bouton de remboursement.
+  const chargerTousLesLitiges = async () => {
+    try {
+      const dtos = await litigeApi.getTousLesLitiges();
+      const idsClientsUniques = [...new Set((dtos || []).map((l) => l.clientId))];
+      const clients = new Map();
+      await Promise.all(idsClientsUniques.map(async (id) => {
+        try {
+          const utilisateur = await utilisateurApi.getUtilisateurById(id);
+          clients.set(id, utilisateur);
+        } catch {
+          // client supprimé entretemps : on gardera le repli "Client #id"
+        }
+      }));
+      setTousLesLitiges((dtos || []).map((dto) => ({
+        ...dto,
+        clientNom: clients.get(dto.clientId)?.nom || `Client #${dto.clientId}`,
+      })));
+    } catch (err) {
+      console.error('Impossible de charger les litiges :', err);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.role === 'admin') {
+      chargerToutesLesTransactions();
+      chargerTousLesLitiges();
+    } else {
+      setToutesLesTransactions([]);
+      setTousLesLitiges([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id, currentUser?.role]);
+
+  // Rembourse en un clic un litige "Produit non livré" (refuse par le
+  // backend, avec message explicite, si les fonds ont deja ete
+  // liberes vers le solde disponible du vendeur).
+  const handleRembourserLitige = async (litigeId) => {
+    try {
+      await litigeApi.rembourserLitige(litigeId);
+      await chargerTousLesLitiges();
+    } catch (err) {
+      alert(err?.message || "Le remboursement du litige a échoué.");
+    }
+  };
+
+  // Resolution manuelle (types autres que "Produit non livré", ou
+  // rejet d'un litige non fonde) : aucun mouvement financier automatique.
+  const handleResoudreLitige = async (litigeId, statut) => {
+    try {
+      await litigeApi.resoudreLitige(litigeId, statut);
+      await chargerTousLesLitiges();
+    } catch (err) {
+      alert(err?.message || "La résolution du litige a échoué.");
+    }
+  };
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -1062,12 +1139,16 @@ export default function App() {
           vendeurProducts={vendeurProducts}
           currentUser={currentUser}
           notifications={notifications}
+          transactions={toutesLesTransactions}
+          litiges={tousLesLitiges}
           onNavigate={navigate}
           onNavigateToVendorVerification={() => navigate('vendor-verification')}
           onNavigateToModeration={() => { chargerSignalements(); navigate('moderation-panel'); }}
           onLogout={handleLogout}
           onApproveCertification={handleApproveVerification}
           onRejectCertification={handleRejectVerification}
+          onRembourserLitige={handleRembourserLitige}
+          onResoudreLitige={handleResoudreLitige}
         />;
       case 'order-management-admin':
         return <OrderManagementAdmin

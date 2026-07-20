@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, ShieldCheck, CheckCircle, XCircle, Clock, Eye, FileText } from 'lucide-react';
+import { Shield, ShieldCheck, CheckCircle, XCircle, Clock, Eye, FileText, AlertOctagon, Lock, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 
@@ -10,6 +10,7 @@ function getNavItems(t) {
     { id: 'orders', label: t('adminDashboard.orders'), icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
     { id: 'certifications', label: t('adminDashboard.certifications'), icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
     { id: 'signalements', label: t('adminDashboard.signalements'), icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> },
+    { id: 'disputes', label: t('adminDashboard.disputes'), icon: <AlertOctagon size={18} /> },
     { id: 'users', label: t('adminDashboard.users'), icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
     { id: 'sales', label: t('adminDashboard.sales'), icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> },
   ];
@@ -31,6 +32,13 @@ export default function AdminDashboard({
   // données (notification-service) plutôt qu'un compteur figé.
   notifications = [],
   currentUser = null,
+  // Transactions (paiement-service) et litiges (module Litige,
+  // commande-service) : revenu plateforme + gestion des disputes
+  // (section 3/4 du cahier des charges).
+  transactions = [],
+  litiges = [],
+  onRembourserLitige,
+  onResoudreLitige,
 }) {
   const { t } = useTranslation();
   const navItems = getNavItems(t);
@@ -45,6 +53,8 @@ export default function AdminDashboard({
     : 0;
   const [toast, setToast] = useState('');
   const [hoveredBar, setHoveredBar] = useState(null);
+  const [disputeFilter, setDisputeFilter] = useState('tous'); // 'tous' | 'non_livre' | 'autres'
+  const [litigeActionEnCours, setLitigeActionEnCours] = useState(null); // litigeId en cours de traitement
 
   // ===== STATISTIQUES =====
   const totalUsers = registeredUsers.length;
@@ -57,6 +67,57 @@ export default function AdminDashboard({
   const pendingCertifications = vendorVerifications.filter(v => v.status === 'pending').length;
   const approvedCertifications = vendorVerifications.filter(v => v.status === 'approved').length;
   const rejectedCertifications = vendorVerifications.filter(v => v.status === 'rejected').length;
+
+  // ===== REVENU PLATEFORME (section 4) =====
+  // Commission de 5% : prelevee des qu'une transaction est payee (et
+  // conservee meme si la commande est ensuite annulee/remboursee, cf.
+  // paiement-service). Frais d'annulation de 10% : retenus uniquement
+  // sur les commandes annulees avant expedition.
+  const commissionTotale = transactions
+    .filter(tr => tr.statut === 'PAYE' || tr.statut === 'REMBOURSEE')
+    .reduce((sum, tr) => sum + Number(tr.commission || 0), 0);
+  const fraisAnnulationTotal = transactions
+    .reduce((sum, tr) => sum + Number(tr.fraisAnnulation || 0), 0);
+  const revenuPlateforme = commissionTotale + fraisAnnulationTotal;
+
+  // ===== LITIGES (section 3) =====
+  const litigesNonLivre = litiges.filter(l => l.type === 'PRODUIT_NON_LIVRE');
+  const litigesAutres = litiges.filter(l => l.type !== 'PRODUIT_NON_LIVRE');
+  const litigesOuverts = litiges.filter(l => l.statut === 'OUVERT');
+  const litigesAffiches = litiges.filter(l => {
+    if (disputeFilter === 'non_livre') return l.type === 'PRODUIT_NON_LIVRE';
+    if (disputeFilter === 'autres') return l.type !== 'PRODUIT_NON_LIVRE';
+    return true;
+  });
+
+  const libelleTypeLitige = (type) => {
+    const cles = {
+      PRODUIT_NON_LIVRE: 'disputeTypeNotDelivered',
+      PRODUIT_ENDOMMAGE: 'disputeTypeDamaged',
+      QUALITE_INSUFFISANTE: 'disputeTypeQuality',
+      QUANTITE_INCORRECTE: 'disputeTypeQuantity',
+      AUTRE: 'disputeTypeOther',
+    };
+    return t(`adminDashboard.${cles[type] || 'disputeTypeOther'}`);
+  };
+
+  const handleRembourser = async (litigeId) => {
+    setLitigeActionEnCours(litigeId);
+    try {
+      await onRembourserLitige && await onRembourserLitige(litigeId);
+    } finally {
+      setLitigeActionEnCours(null);
+    }
+  };
+
+  const handleResoudre = async (litigeId, statut) => {
+    setLitigeActionEnCours(litigeId);
+    try {
+      await onResoudreLitige && await onResoudreLitige(litigeId, statut);
+    } finally {
+      setLitigeActionEnCours(null);
+    }
+  };
 
   // ===== DERNIÈRES COMMANDES =====
   const lastOrders = adminOrders.slice(-3).reverse();
@@ -101,8 +162,8 @@ export default function AdminDashboard({
       onNavigateToVendorVerification && onNavigateToVendorVerification();
     } else if (item.id === 'signalements') {
       onNavigateToModeration && onNavigateToModeration();
-    } else if (item.id === 'users' || item.id === 'sales') {
-      // reste sur le dashboard : affiche l'onglet Utilisateurs/Ventes ci-dessous
+    } else if (item.id === 'users' || item.id === 'sales' || item.id === 'disputes') {
+      // reste sur le dashboard : affiche l'onglet Utilisateurs/Ventes/Litiges ci-dessous
     } else if (item.id !== 'home') {
       showToast(`Navigation → ${item.label}`);
     }
@@ -140,6 +201,9 @@ export default function AdminDashboard({
                 )}
                 {!sidebarCollapsed && item.id === 'orders' && totalOrders > 0 && (
                   <span style={styles.navBadge}>{totalOrders}</span>
+                )}
+                {!sidebarCollapsed && item.id === 'disputes' && litigesOuverts.length > 0 && (
+                  <span style={styles.navBadge}>{litigesOuverts.length}</span>
                 )}
               </button>
             );
@@ -242,6 +306,16 @@ export default function AdminDashboard({
                 </div>
                 <div style={styles.kpiCard}>
                   <div style={styles.kpiTop}>
+                    <div style={{ ...styles.kpiIcon, backgroundColor: '#e0f0ff' }}>🏦</div>
+                  </div>
+                  <p style={styles.kpiLabel}>{t('adminDashboard.platformRevenue')}</p>
+                  <p style={styles.kpiValue}>{revenuPlateforme.toLocaleString()} FCFA</p>
+                  <p style={styles.kpiBreakdown}>
+                    {t('adminDashboard.platformRevenueCommission')} {commissionTotale.toLocaleString()} FCFA · {t('adminDashboard.platformRevenueFees')} {fraisAnnulationTotal.toLocaleString()} FCFA
+                  </p>
+                </div>
+                <div style={styles.kpiCard}>
+                  <div style={styles.kpiTop}>
                     <div style={{ ...styles.kpiIcon, backgroundColor: '#fdf1ed' }}>⚠️</div>
                     <span style={{ ...styles.kpiChange, color: pendingSignalements > 0 ? '#dc3545' : '#2d6a4f', backgroundColor: pendingSignalements > 0 ? '#fde8ea' : '#d8f3dc' }}>{pendingSignalements}</span>
                   </div>
@@ -336,6 +410,96 @@ export default function AdminDashboard({
                   </table>
                 )}
               </div>
+            </>
+          )}
+
+          {/* ===== VUE LITIGES (disputes) ===== */}
+          {activeNav === 'disputes' && (
+            <>
+              <div style={styles.pageTitle}>
+                <h2 style={styles.pageTitleText}>{t('adminDashboard.disputes')}</h2>
+                <p style={styles.pageTitleSub}>{litiges.length} {t('adminDashboard.disputesSub')}</p>
+              </div>
+
+              <div style={styles.filterRow}>
+                <button
+                  style={{ ...styles.filterBtn, ...(disputeFilter === 'tous' ? styles.filterBtnActive : {}) }}
+                  onClick={() => setDisputeFilter('tous')}
+                >
+                  {t('adminDashboard.disputeFilterAll')}
+                  <span style={styles.filterBadge}>{litiges.length}</span>
+                </button>
+                <button
+                  style={{ ...styles.filterBtn, ...(disputeFilter === 'non_livre' ? styles.filterBtnActive : {}) }}
+                  onClick={() => setDisputeFilter('non_livre')}
+                >
+                  {t('adminDashboard.disputeTypeNotDelivered')}
+                  <span style={styles.filterBadge}>{litigesNonLivre.length}</span>
+                </button>
+                <button
+                  style={{ ...styles.filterBtn, ...(disputeFilter === 'autres' ? styles.filterBtnActive : {}) }}
+                  onClick={() => setDisputeFilter('autres')}
+                >
+                  {t('adminDashboard.disputeFilterOthers')}
+                  <span style={styles.filterBadge}>{litigesAutres.length}</span>
+                </button>
+              </div>
+
+              {litigesAffiches.length === 0 ? (
+                <div style={styles.emptyState}><AlertOctagon size={40} color="#adb5bd" /><p>{t('adminDashboard.noDisputes')}</p></div>
+              ) : (
+                <div style={styles.certList}>
+                  {[...litigesAffiches].reverse().map((l) => {
+                    const enCours = litigeActionEnCours === l.id;
+                    const estNonLivre = l.type === 'PRODUIT_NON_LIVRE';
+                    const estOuvert = l.statut === 'OUVERT';
+                    return (
+                      <div key={l.id} style={styles.certCard}>
+                        <div style={styles.certLeft}>
+                          <div style={{ ...styles.certAvatar, backgroundColor: estNonLivre ? '#fdf1ed' : '#fff3e0', color: estNonLivre ? '#e07a5f' : '#f5b041' }}>
+                            <AlertOctagon size={20} />
+                          </div>
+                          <div style={styles.certInfo}>
+                            <h4 style={styles.certFarm}>{t('adminDashboard.order')} #{l.commandeId} · {libelleTypeLitige(l.type)}</h4>
+                            <p style={styles.certVendeur}>{l.clientNom} · {l.dateCreation ? new Date(l.dateCreation).toLocaleDateString('fr-FR') : ''}</p>
+                            {l.description && <p style={styles.certMeta}>{l.description}</p>}
+                            {estNonLivre && l.fondsDejaRetires && (
+                              <p style={{ ...styles.certMeta, color: '#c1502e', fontWeight: '700' }}>{t('adminDashboard.fundsAlreadyWithdrawn')}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div style={styles.certRight}>
+                          <span style={{
+                            ...styles.certStatus,
+                            color: l.statut === 'RESOLU' ? '#2d6a4f' : l.statut === 'REJETE' ? '#adb5bd' : '#f5b041',
+                            backgroundColor: l.statut === 'RESOLU' ? '#e9f5ee' : l.statut === 'REJETE' ? '#f1f3f5' : '#fffbea',
+                          }}>{l.statut}</span>
+                          {estOuvert && (
+                            <div style={styles.certActions}>
+                              {estNonLivre ? (
+                                <button
+                                  style={{ ...styles.certApproveBtn, opacity: (enCours || l.fondsDejaRetires === true) ? 0.5 : 1, cursor: (enCours || l.fondsDejaRetires === true) ? 'not-allowed' : 'pointer' }}
+                                  disabled={enCours || l.fondsDejaRetires === true}
+                                  onClick={() => handleRembourser(l.id)}
+                                  title={l.fondsDejaRetires ? t('adminDashboard.fundsAlreadyWithdrawn') : ''}
+                                >
+                                  <RotateCcw size={14} /> {t('adminDashboard.refundOrder')}
+                                </button>
+                              ) : null}
+                              <button style={styles.certApproveBtn} disabled={enCours} onClick={() => handleResoudre(l.id, 'RESOLU')}>
+                                <CheckCircle size={14} /> {t('adminDashboard.resolveDispute')}
+                              </button>
+                              <button style={styles.certRejectBtn} disabled={enCours} onClick={() => handleResoudre(l.id, 'REJETE')}>
+                                <XCircle size={14} /> {t('adminDashboard.rejectDispute')}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
 
@@ -478,6 +642,7 @@ const styles = {
   kpiChange: { fontSize: '10px', fontWeight: '700', padding: '3px 7px', borderRadius: '20px' },
   kpiLabel: { fontSize: '11px', color: '#868e96', fontWeight: '600', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' },
   kpiValue: { fontSize: '20px', fontWeight: '800', color: '#212529', marginBottom: '0' },
+  kpiBreakdown: { fontSize: '10px', color: '#adb5bd', fontWeight: '600', marginTop: '4px' },
   midGrid: { display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '16px', marginBottom: '16px' },
   chartCard: { backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #e9ecef', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' },
   cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' },

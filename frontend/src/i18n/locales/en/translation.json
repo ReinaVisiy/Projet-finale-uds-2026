@@ -135,7 +135,24 @@
     "order": "Order",
     "client": "Client",
     "date": "Date",
-    "amount": "Amount"
+    "amount": "Amount",
+    "disputes": "Disputes",
+    "disputesSub": "dispute(s) in total",
+    "disputeFilterAll": "All",
+    "disputeFilterOthers": "Others",
+    "disputeTypeNotDelivered": "Item not delivered",
+    "disputeTypeDamaged": "Damaged item",
+    "disputeTypeQuality": "Quality issue",
+    "disputeTypeQuantity": "Incorrect quantity",
+    "disputeTypeOther": "Other",
+    "noDisputes": "No disputes yet.",
+    "fundsAlreadyWithdrawn": "Funds already withdrawn",
+    "refundOrder": "Refund order",
+    "resolveDispute": "Resolve",
+    "rejectDispute": "Reject",
+    "platformRevenue": "Platform revenue",
+    "platformRevenueCommission": "Commission (5%):",
+    "platformRevenueFees": "Cancellation fees (10%):"
   },
   "signalement": {
     "motifs": [

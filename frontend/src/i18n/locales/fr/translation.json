@@ -135,7 +135,24 @@
     "order": "Commande",
     "client": "Client",
     "date": "Date",
-    "amount": "Montant"
+    "amount": "Montant",
+    "disputes": "Litiges",
+    "disputesSub": "litige(s) au total",
+    "disputeFilterAll": "Tous",
+    "disputeFilterOthers": "Autres",
+    "disputeTypeNotDelivered": "Produit non livré",
+    "disputeTypeDamaged": "Produit endommagé",
+    "disputeTypeQuality": "Qualité insuffisante",
+    "disputeTypeQuantity": "Quantité incorrecte",
+    "disputeTypeOther": "Autre",
+    "noDisputes": "Aucun litige pour le moment.",
+    "fundsAlreadyWithdrawn": "Fonds déjà retirés",
+    "refundOrder": "Rembourser la commande",
+    "resolveDispute": "Résoudre",
+    "rejectDispute": "Rejeter",
+    "platformRevenue": "Revenu plateforme",
+    "platformRevenueCommission": "Commission (5%) :",
+    "platformRevenueFees": "Frais d'annulation (10%) :"
   },
   "signalement": {
     "motifs": [
