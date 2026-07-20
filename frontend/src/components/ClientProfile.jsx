@@ -3,26 +3,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Star, MessageCircle, Flag, User } from 'lucide-react';
 import { avisApi, produitApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    loadFailed: 'Impossible de charger les avis.', noUserSelected: 'Aucun utilisateur sélectionné.',
-    back: 'Retour', client: 'Client', contact: 'Contacter', reportUser: 'Signaler cet utilisateur',
-    reportReason: 'Motif du signalement', reportPlaceholder: "Ex: comportement suspect, avis abusif, tentative d'arnaque...",
-    cancel: 'Annuler', sendReport: 'Envoyer le signalement', reviewsLeft: 'Avis laissés',
-    loadingReviews: 'Chargement des avis...', noReviews: "Cet utilisateur n'a pas encore laissé d'avis.",
-    unavailableProduct: 'Produit indisponible',
-  },
-  en: {
-    loadFailed: 'Unable to load reviews.', noUserSelected: 'No user selected.',
-    back: 'Back', client: 'Client', contact: 'Contact', reportUser: 'Report this user',
-    reportReason: 'Reason for report', reportPlaceholder: 'E.g. suspicious behavior, abusive review, scam attempt...',
-    cancel: 'Cancel', sendReport: 'Send report', reviewsLeft: 'Reviews left',
-    loadingReviews: 'Loading reviews...', noReviews: "This user hasn't left any reviews yet.",
-    unavailableProduct: 'Product unavailable',
-  },
-};
 
 // Profil public d'un client : ses infos, puis la liste de tous les avis
 // qu'il a laissés sur des produits (carte avis + lien vers le produit).
@@ -33,7 +15,7 @@ export default function ClientProfile({
   onNavigateToProduct,
   onSignalerUtilisateur, // (motif) => void
 }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [showReportBox, setShowReportBox] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [avis, setAvis] = useState([]);
@@ -58,7 +40,7 @@ export default function ClientProfile({
       );
       setAvis(enrichis);
     } catch (e) {
-      setChargeErreur(e?.message || t.loadFailed);
+      setChargeErreur(e?.message || t('clientProfile.loadFailed'));
     } finally {
       setChargement(false);
     }
@@ -85,8 +67,8 @@ export default function ClientProfile({
     return (
       <div style={styles.wrapper}>
         <div style={styles.emptyState}>
-          <p>{t.noUserSelected}</p>
-          <button style={styles.backBtn} onClick={onBack}><ArrowLeft size={16} /> {t.back}</button>
+          <p>{t('clientProfile.noUserSelected')}</p>
+          <button style={styles.backBtn} onClick={onBack}><ArrowLeft size={16} /> {t('clientProfile.back')}</button>
         </div>
       </div>
     );
@@ -96,7 +78,7 @@ export default function ClientProfile({
     <div style={styles.wrapper}>
       <div style={styles.container}>
         <button style={styles.backBtn} onClick={onBack}>
-          <ArrowLeft size={18} /> {t.back}
+          <ArrowLeft size={18} /> {t('clientProfile.back')}
         </button>
 
         {/* En-tête client */}
@@ -111,12 +93,12 @@ export default function ClientProfile({
             </div>
             <div>
               <h1 style={styles.name}>{client.prenom ? `${client.prenom} ${client.nom}` : client.nom}</h1>
-              <span style={styles.roleTag}>{t.client}</span>
+              <span style={styles.roleTag}>{t('clientProfile.client')}</span>
             </div>
           </div>
           {onContactVendor && (
             <button style={styles.contactBtn} onClick={() => onContactVendor({ id: client.id, name: client.nom })}>
-              <MessageCircle size={16} /> {t.contact}
+              <MessageCircle size={16} /> {t('clientProfile.contact')}
             </button>
           )}
         </div>
@@ -125,21 +107,21 @@ export default function ClientProfile({
         <div style={styles.reportRow}>
           {!showReportBox ? (
             <button style={styles.reportLink} onClick={() => setShowReportBox(true)}>
-              <Flag size={13} /> {t.reportUser}
+              <Flag size={13} /> {t('clientProfile.reportUser')}
             </button>
           ) : (
             <div style={styles.reportBox}>
-              <label style={styles.label}>{t.reportReason}</label>
+              <label style={styles.label}>{t('clientProfile.reportReason')}</label>
               <textarea
                 style={styles.textarea}
                 rows="3"
-                placeholder={t.reportPlaceholder}
+                placeholder={t('clientProfile.reportPlaceholder')}
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
               />
               <div style={styles.formActions}>
-                <button style={styles.cancelBtn} onClick={() => { setShowReportBox(false); setReportReason(''); }}>{t.cancel}</button>
-                <button style={styles.reportSubmitBtn} onClick={handleSubmitReport}>{t.sendReport}</button>
+                <button style={styles.cancelBtn} onClick={() => { setShowReportBox(false); setReportReason(''); }}>{t('clientProfile.cancel')}</button>
+                <button style={styles.reportSubmitBtn} onClick={handleSubmitReport}>{t('clientProfile.sendReport')}</button>
               </div>
             </div>
           )}
@@ -149,11 +131,11 @@ export default function ClientProfile({
 
         {/* Liste des avis laissés */}
         <div style={styles.listSection}>
-          <h3 style={styles.sectionTitle}>{t.reviewsLeft} ({avis.length})</h3>
+          <h3 style={styles.sectionTitle}>{t('clientProfile.reviewsLeft')} ({avis.length})</h3>
           {chargement ? (
-            <p style={styles.hint}>{t.loadingReviews}</p>
+            <p style={styles.hint}>{t('clientProfile.loadingReviews')}</p>
           ) : avis.length === 0 ? (
-            <p style={styles.emptyText}>{t.noReviews}</p>
+            <p style={styles.emptyText}>{t('clientProfile.noReviews')}</p>
           ) : (
             <div style={styles.avisList}>
               {avis.map((a) => (
@@ -166,7 +148,7 @@ export default function ClientProfile({
                         onClick={() => a.produit && onNavigateToProduct && onNavigateToProduct(a.produit)}
                         disabled={!a.produit}
                       >
-                        {a.produit?.name || t.unavailableProduct}
+                        {a.produit?.name || t('clientProfile.unavailableProduct')}
                       </button>
                       <span style={styles.avisDate}>{new Date(a.date).toLocaleDateString('fr-FR')}</span>
                     </div>

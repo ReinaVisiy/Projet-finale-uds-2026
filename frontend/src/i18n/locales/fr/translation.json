@@ -218,5 +218,28 @@
     "notProvided": "Non renseigné",
     "editProfile": "Modifier le profil",
     "changePassword": "Modifier le mot de passe"
+  },
+  "clientProfile": {
+    "loadFailed": "Impossible de charger les avis.",
+    "noUserSelected": "Aucun utilisateur sélectionné.",
+    "back": "Retour",
+    "client": "Client",
+    "contact": "Contacter",
+    "reportUser": "Signaler cet utilisateur",
+    "reportReason": "Motif du signalement",
+    "reportPlaceholder": "Ex: comportement suspect, avis abusif, tentative d'arnaque...",
+    "cancel": "Annuler",
+    "sendReport": "Envoyer le signalement",
+    "reviewsLeft": "Avis laissés",
+    "loadingReviews": "Chargement des avis...",
+    "noReviews": "Cet utilisateur n'a pas encore laissé d'avis.",
+    "unavailableProduct": "Produit indisponible"
+  },
+  "messagesInbox": {
+    "user": "Utilisateur",
+    "loadFailed": "Impossible de charger vos messages.",
+    "myMessages": "Mes messages",
+    "loadingConvs": "Chargement de vos conversations...",
+    "noConvs": "Aucune conversation pour le moment."
   }
 }

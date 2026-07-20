@@ -218,5 +218,28 @@
     "notProvided": "Not provided",
     "editProfile": "Edit profile",
     "changePassword": "Change password"
+  },
+  "clientProfile": {
+    "loadFailed": "Unable to load reviews.",
+    "noUserSelected": "No user selected.",
+    "back": "Back",
+    "client": "Client",
+    "contact": "Contact",
+    "reportUser": "Report this user",
+    "reportReason": "Reason for report",
+    "reportPlaceholder": "E.g. suspicious behavior, abusive review, scam attempt...",
+    "cancel": "Cancel",
+    "sendReport": "Send report",
+    "reviewsLeft": "Reviews left",
+    "loadingReviews": "Loading reviews...",
+    "noReviews": "This user hasn't left any reviews yet.",
+    "unavailableProduct": "Product unavailable"
+  },
+  "messagesInbox": {
+    "user": "User",
+    "loadFailed": "Unable to load your messages.",
+    "myMessages": "My messages",
+    "loadingConvs": "Loading your conversations...",
+    "noConvs": "No conversations yet."
   }
 }

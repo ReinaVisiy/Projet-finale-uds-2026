@@ -1,18 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { messageApi } from '../services/api';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    user: 'Utilisateur', loadFailed: 'Impossible de charger vos messages.', myMessages: 'Mes messages',
-    loadingConvs: 'Chargement de vos conversations...', noConvs: 'Aucune conversation pour le moment.',
-  },
-  en: {
-    user: 'User', loadFailed: 'Unable to load your messages.', myMessages: 'My messages',
-    loadingConvs: 'Loading your conversations...', noConvs: 'No conversations yet.',
-  },
-};
 
 /**
  * Regroupe les messages plats renvoyés par /api/messages/mes-messages en
@@ -32,7 +22,7 @@ function regrouperParConversation(messages, currentUserId, t) {
     if (!parInterlocuteur.has(autreId)) {
       parInterlocuteur.set(autreId, {
         id: autreId,
-        name: autreNom || t.user,
+        name: autreNom || t('messagesInbox.user'),
         dernierMessage: m.contenu,
         dernierDate: m.dateEnvoi,
         nonLus: 0,
@@ -46,7 +36,7 @@ function regrouperParConversation(messages, currentUserId, t) {
 }
 
 export default function MessagesInbox({ currentUser, onOpenConversation, onBack }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
@@ -58,7 +48,7 @@ export default function MessagesInbox({ currentUser, onOpenConversation, onBack 
       const data = await messageApi.getMesMessages();
       setConversations(regrouperParConversation(data || [], currentUser?.id, t));
     } catch (e) {
-      setErreur(e?.message || t.loadFailed);
+      setErreur(e?.message || t('messagesInbox.loadFailed'));
     } finally {
       setChargement(false);
     }
@@ -72,16 +62,16 @@ export default function MessagesInbox({ currentUser, onOpenConversation, onBack 
         <button style={styles.backBtn} onClick={onBack}>
           <ArrowLeft size={20} />
         </button>
-        <h2 style={styles.title}>{t.myMessages}</h2>
+        <h2 style={styles.title}>{t('messagesInbox.myMessages')}</h2>
       </div>
 
-      {chargement && <p style={styles.hint}>{t.loadingConvs}</p>}
+      {chargement && <p style={styles.hint}>{t('messagesInbox.loadingConvs')}</p>}
       {erreur && <div style={styles.errorBanner}>{erreur}</div>}
 
       {!chargement && !erreur && conversations.length === 0 && (
         <div style={styles.empty}>
           <MessageCircle size={40} color="#adb5bd" />
-          <p style={styles.hint}>{t.noConvs}</p>
+          <p style={styles.hint}>{t('messagesInbox.noConvs')}</p>
         </div>
       )}
 
