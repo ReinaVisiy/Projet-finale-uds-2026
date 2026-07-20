@@ -212,6 +212,8 @@ public class CommandeService {
             // ou par le job d'auto-confirmation apres 72h).
             if (nouveauStatut == StatutCommande.LIVREE) {
                 paiementServiceClient.notifierLivraison(sauvegardee.getId());
+            } else if (nouveauStatut == StatutCommande.ANNULEE) {
+                paiementServiceClient.notifierAnnulation(sauvegardee.getId());
             }
 
             return sauvegardee;

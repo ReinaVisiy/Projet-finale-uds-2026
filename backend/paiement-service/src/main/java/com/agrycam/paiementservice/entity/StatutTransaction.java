@@ -7,5 +7,6 @@ public enum StatutTransaction {
     EN_ATTENTE,
     PAYE,
     ECHOUE,
-    EXPIRE
+    EXPIRE,
+    REMBOURSEE // commande annulee avant expedition : 90% rembourse au client, 10% retenu par la plateforme
 }

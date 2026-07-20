@@ -71,6 +71,15 @@ public class Transaction {
     @Builder.Default
     private boolean fondsLiberes = false;
 
+    // Renseignes uniquement si la commande est annulee avant expedition :
+    // 90% de montant est rembourse au client, 10% retenu par la plateforme
+    // (frais d'annulation), en plus de la commission de 5% deja prelevee.
+    @Column(name = "montant_rembourse_client", precision = 12, scale = 2)
+    private BigDecimal montantRembourseClient;
+
+    @Column(name = "frais_annulation", precision = 12, scale = 2)
+    private BigDecimal fraisAnnulation;
+
     @PrePersist
     protected void onCreate() {
         this.dateCreation = LocalDateTime.now();

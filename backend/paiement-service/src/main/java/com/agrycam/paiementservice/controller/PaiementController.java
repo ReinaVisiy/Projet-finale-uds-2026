@@ -94,6 +94,19 @@ public class PaiementController {
     }
 
     /**
+     * PUT /api/paiements/commandes/{commandeId}/rembourser-annulation (rôle admin / service interne)
+     * Appele par commande-service lorsqu'une commande est annulee avant
+     * expedition : traite le remboursement 90% client / 10% frais plateforme
+     * et debite le sequestre du vendeur. Idempotent.
+     */
+    @PutMapping("/commandes/{commandeId}/rembourser-annulation")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> rembourserAnnulation(@PathVariable Long commandeId) {
+        paiementService.traiterRemboursementAnnulation(commandeId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * POST /api/paiements/webhook/simiz (Public / Non protege par JWT)
      * Receptionne les notifications asynchrones de paiement de Simiz.
      */

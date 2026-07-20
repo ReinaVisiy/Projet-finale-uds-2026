@@ -52,4 +52,26 @@ public class PaiementServiceClient {
                     commandeId, e.getMessage());
         }
     }
+
+    /**
+     * Notifie paiement-service qu'une commande vient d'etre annulee (avant
+     * expedition), pour qu'il declenche le remboursement 90% client / 10%
+     * frais plateforme et debite le sequestre du vendeur. Best-effort, au
+     * meme titre que notifierLivraison.
+     */
+    public void notifierAnnulation(Long commandeId) {
+        try {
+            String url = paiementServiceUrl + "/api/paiements/commandes/" + commandeId + "/rembourser-annulation";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(jwtUtil.genererTokenServiceInterne());
+            HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+
+            log.info("Notification de paiement-service : remboursement d'annulation pour la commande #{}", commandeId);
+            restTemplate.exchange(url, HttpMethod.PUT, httpEntity, Void.class);
+        } catch (Exception e) {
+            log.error("Echec de la notification de remboursement d'annulation pour la commande #{} : {}",
+                    commandeId, e.getMessage());
+        }
+    }
 }

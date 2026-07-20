@@ -296,6 +296,58 @@ public class PaiementService {
     }
 
     /**
+     * Traite le remboursement lie a l'annulation d'une commande (uniquement
+     * autorisee par commande-service avant expedition) : 90% du montant
+     * total est rembourse au client, 10% retenu par la plateforme comme
+     * frais d'annulation. Le sequestre du vendeur (qui n'a jamais eu droit
+     * a ces fonds puisque la vente n'a pas ete honoree) est integralement
+     * debite.
+     * Simulateur : aucun virement reel n'est effectue vers le client (pas
+     * de portefeuille client dans ce systeme) ; les montants sont
+     * uniquement enregistres sur la transaction a des fins d'audit/admin.
+     * Idempotent comme libererFondsSequestre.
+     */
+    @Transactional
+    public synchronized void traiterRemboursementAnnulation(Long commandeId) {
+        Transaction transaction = transactionRepository
+                .findByTypeReferenceAndReferenceId(TypeReference.COMMANDE, commandeId)
+                .orElseThrow(() -> new TransactionNotFoundException(
+                        "Aucune transaction de paiement trouvee pour la commande #" + commandeId));
+
+        if (transaction.getStatut() != StatutTransaction.PAYE) {
+            log.warn("Remboursement demande pour la commande {} dont la transaction n'est pas PAYE (statut: {}). Ignoree.",
+                    commandeId, transaction.getStatut());
+            return;
+        }
+
+        if (transaction.isFondsLiberes()) {
+            log.error("Remboursement demande pour la commande {} dont le sequestre a deja ete libere. Incoherence : une commande livree ne devrait plus pouvoir etre annulee.",
+                    commandeId);
+            return;
+        }
+
+        SoldeVendeur solde = soldeVendeurRepository.findByVendeurId(transaction.getVendeurId())
+                .orElseThrow(() -> new SoldeInsuffisantException(
+                        "Portefeuille introuvable pour le vendeur " + transaction.getVendeurId()));
+
+        // Debite integralement le sequestre : ces fonds ne reviennent pas
+        // au vendeur puisque la commande est annulee.
+        solde.setSoldeSequestre(solde.getSoldeSequestre().subtract(transaction.getMontantNet()));
+        soldeVendeurRepository.save(solde);
+
+        BigDecimal montantRembourseClient = transaction.getMontant().multiply(new BigDecimal("0.90"));
+        BigDecimal fraisAnnulation = transaction.getMontant().subtract(montantRembourseClient);
+
+        transaction.setMontantRembourseClient(montantRembourseClient);
+        transaction.setFraisAnnulation(fraisAnnulation);
+        transaction.setStatut(StatutTransaction.REMBOURSEE);
+        transactionRepository.save(transaction);
+
+        log.info("Commande {} annulee : {} XAF a rembourser au client, {} XAF retenus par la plateforme (sequestre vendeur {} debite de {} XAF)",
+                commandeId, montantRembourseClient, fraisAnnulation, transaction.getVendeurId(), transaction.getMontantNet());
+    }
+
+    /**
      * Traite le webhook passif envoye par Simiz.
      * Valide le paiement de maniere securisee en interrogeant l'API Simiz pour eviter tout spoofing de requete.
      */
