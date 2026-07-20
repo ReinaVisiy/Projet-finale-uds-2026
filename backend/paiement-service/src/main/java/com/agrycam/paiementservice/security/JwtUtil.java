@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -69,5 +70,28 @@ public class JwtUtil {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * Genere un token JWT "de service" (courte duree de vie) signe avec le
+     * meme secret partage que les autres microservices AgryCam.
+     * Utilise par paiement-service pour s'authentifier lui-meme lorsqu'il
+     * appelle certification-service ou commande-service en arriere-plan
+     * (webhook Simiz, verification asynchrone), contextes ou aucun token
+     * utilisateur n'est disponible a propager.
+     * uid=0 identifie conventionnellement un appel systeme (aucun
+     * utilisateur reel ne porte cet identifiant).
+     */
+    public String genererTokenServiceInterne() {
+        long maintenant = System.currentTimeMillis();
+        long expiration = maintenant + 60_000; // 60 secondes : juste le temps de l'appel sortant
+
+        return Jwts.builder()
+                .claim("uid", 0L)
+                .claim("roles", Collections.singletonList("ADMIN"))
+                .issuedAt(new Date(maintenant))
+                .expiration(new Date(expiration))
+                .signWith(getSigningKey())
+                .compact();
     }
 }

@@ -1,5 +1,6 @@
 package com.agrycam.paiementservice.service;
 
+import com.agrycam.paiementservice.client.ServiceCommunicationClient;
 import com.agrycam.paiementservice.dto.*;
 import com.agrycam.paiementservice.entity.*;
 import com.agrycam.paiementservice.exception.SoldeInsuffisantException;
@@ -38,6 +39,7 @@ public class PaiementService {
     private final SoldeVendeurRepository soldeVendeurRepository;
     private final RetraitRepository retraitRepository;
     private final RestTemplate restTemplate;
+    private final ServiceCommunicationClient serviceCommunicationClient;
 
     @Value("${simiz.api.url}")
     private String simizApiUrl;
@@ -201,10 +203,14 @@ public class PaiementService {
             transaction.setStatut(StatutTransaction.ECHOUE);
             transactionRepository.save(transaction);
             log.warn("Paiement Simiz echoue pour la transaction {}", id);
+            serviceCommunicationClient.notifierStatutPaiement(
+                    transaction.getTypeReference(), transaction.getReferenceId(), false);
         } else if ("EXPIRED".equalsIgnoreCase(remoteStatus)) {
             transaction.setStatut(StatutTransaction.EXPIRE);
             transactionRepository.save(transaction);
             log.info("Session de paiement Simiz expiree pour la transaction {}", id);
+            serviceCommunicationClient.notifierStatutPaiement(
+                    transaction.getTypeReference(), transaction.getReferenceId(), false);
         }
 
         return transaction;
@@ -235,6 +241,13 @@ public class PaiementService {
 
         log.info("Portefeuille du vendeur {} credite avec succes du montant net de {} XAF (Transaction #{})",
                 vendeurId, montantNet, transaction.getId());
+
+        // Repercute la confirmation de paiement sur le service concerne
+        // (commande-service ou certification-service), pour que son propre
+        // statut (VALIDEE / paiement PAYE) reste synchronise avec la
+        // transaction reellement confirmee cote Simiz.
+        serviceCommunicationClient.notifierStatutPaiement(
+                transaction.getTypeReference(), transaction.getReferenceId(), true);
     }
 
     /**
