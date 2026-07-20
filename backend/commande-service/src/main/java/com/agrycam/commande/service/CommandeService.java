@@ -2,6 +2,7 @@ package com.agrycam.commande.service;
 
 import com.agrycam.commande.dto.ProduitInfoDTO;
 import com.agrycam.commande.dto.UtilisateurInfoDTO;
+import com.agrycam.commande.exception.AccesRefuseException;
 import com.agrycam.commande.model.Commande;
 import com.agrycam.commande.model.LigneCommande;
 import com.agrycam.commande.model.StatutCommande;
@@ -63,9 +64,32 @@ public class CommandeService {
 
         Commande commande = new Commande(commandeRequest.getClientId());
 
-        List<LigneCommande> lignesCommande = commandeRequest.getLignesCommande().stream()
-                .map(lcReq -> creerLigneCommande(commande, lcReq))
+        // On récupère les infos produit une seule fois par ligne (prix réel +
+        // producteur), pour éviter un double appel réseau vers produit-service.
+        List<ProduitInfoDTO> produitsInfo = commandeRequest.getLignesCommande().stream()
+                .map(lcReq -> recupererProduitInfo(lcReq.getProduitId(), lcReq.getQuantite()))
                 .collect(Collectors.toList());
+
+        // Une Commande n'a plus qu'un seul vendeur : le frontend est censé
+        // scinder un panier multi-vendeurs en une requête par vendeur avant
+        // d'appeler cet endpoint. On vérifie ici que c'est bien le cas
+        // plutôt que de faire confiance silencieusement au client.
+        Long producteurId = produitsInfo.stream()
+                .map(ProduitInfoDTO::getProducteurId)
+                .distinct()
+                .reduce((a, b) -> {
+                    throw new RuntimeException("Une commande ne peut contenir des produits que d'un seul vendeur. Séparez le panier par vendeur avant de commander.");
+                })
+                .orElse(null);
+        commande.setProducteurId(producteurId);
+
+        List<LigneCommande> lignesCommande = new java.util.ArrayList<>();
+        for (int i = 0; i < commandeRequest.getLignesCommande().size(); i++) {
+            LigneCommandeRequest lcReq = commandeRequest.getLignesCommande().get(i);
+            ProduitInfoDTO produit = produitsInfo.get(i);
+            double prixReel = produit.getPrix() != null ? produit.getPrix().doubleValue() : 0.0;
+            lignesCommande.add(new LigneCommande(commande, lcReq.getProduitId(), lcReq.getQuantite(), prixReel));
+        }
 
         commande.setLignesCommande(lignesCommande);
         return commandeRepository.save(commande);
@@ -90,34 +114,32 @@ public class CommandeService {
     }
 
     /**
-     * Construit une ligne de commande en validant le produit auprès de produit-service
-     * et en utilisant le prix et le stock réels du produit.
-     * @param commande La commande parente.
-     * @param lcReq La ligne de commande demandée.
-     * @return La ligne de commande construite avec le prix authentique.
+     * Récupère et valide les informations d'un produit auprès de produit-service :
+     * existence, stock suffisant. Retourne le DTO complet (prix réel, producteur)
+     * pour que l'appelant construise la ligne de commande et vérifie le vendeur.
+     * @param produitId L'ID du produit à valider.
+     * @param quantiteDemandee La quantité demandée dans la commande.
+     * @return Le DTO du produit, avec son prix et son producteur réels.
      */
-    private LigneCommande creerLigneCommande(Commande commande, LigneCommandeRequest lcReq) {
+    private ProduitInfoDTO recupererProduitInfo(Long produitId, int quantiteDemandee) {
         ProduitInfoDTO produit;
         try {
             produit = restTemplate.getForObject(
-                    produitServiceUrl + "/api/produits/" + lcReq.getProduitId(),
+                    produitServiceUrl + "/api/produits/" + produitId,
                     ProduitInfoDTO.class);
         } catch (RuntimeException e) {
-            throw new RuntimeException("Produit introuvable ou service produit indisponible (ID: " + lcReq.getProduitId() + ")");
+            throw new RuntimeException("Produit introuvable ou service produit indisponible (ID: " + produitId + ")");
         }
 
         if (produit == null || produit.getId() == null) {
-            throw new RuntimeException("Produit introuvable (ID: " + lcReq.getProduitId() + ")");
+            throw new RuntimeException("Produit introuvable (ID: " + produitId + ")");
         }
 
-        if (produit.getStock() == null || produit.getStock() < lcReq.getQuantite()) {
-            throw new RuntimeException("Stock insuffisant pour le produit '" + produit.getNom() + "' (ID: " + lcReq.getProduitId() + ")");
+        if (produit.getStock() == null || produit.getStock() < quantiteDemandee) {
+            throw new RuntimeException("Stock insuffisant pour le produit '" + produit.getNom() + "' (ID: " + produitId + ")");
         }
 
-        // Le prix vient de produit-service, jamais du client, pour éviter toute manipulation du prix
-        double prixReel = produit.getPrix() != null ? produit.getPrix().doubleValue() : 0.0;
-
-        return new LigneCommande(commande, lcReq.getProduitId(), lcReq.getQuantite(), prixReel);
+        return produit;
     }
 
     /**
@@ -147,31 +169,85 @@ public class CommandeService {
     }
 
     /**
-     * Met à jour le statut d'une commande.
+     * Récupère les commandes d'un vendeur spécifique.
+     * @param producteurId L'ID du vendeur.
+     * @return Une liste des commandes de ce vendeur.
+     */
+    public List<Commande> getCommandesByProducteurId(Long producteurId) {
+        return commandeRepository.findByProducteurId(producteurId);
+    }
+
+    /**
+     * Met à jour le statut d'une commande, en validant que l'appelant a le
+     * droit de le faire et que la transition demandée est cohérente avec
+     * le cycle de vie de la commande :
+     *   EN_ATTENTE -> VALIDEE -> EN_PREPARATION -> EXPEDIEE -> LIVREE
+     *   ANNULEE possible uniquement avant EXPEDIEE.
+     * Les admins (y compris le token de service interne utilisé par
+     * paiement-service) court-circuitent ces vérifications : ce sont des
+     * transitions automatiques déclenchées par le système, pas par un
+     * humain qui pourrait abuser d'un rôle qu'il n'a pas.
      * @param id L'ID de la commande à mettre à jour.
-     * @param nouveauStatut Le nouveau statut de la commande.
+     * @param nouveauStatut Le nouveau statut demandé.
+     * @param uid L'ID de l'utilisateur authentifié effectuant la demande.
+     * @param estAdmin true si l'appelant est admin ou le service interne.
+     * @param estProducteur true si l'appelant a le rôle producteur/vendeur.
      * @return Un Optional contenant la commande mise à jour si trouvée, vide sinon.
      */
     @Transactional
-    public Optional<Commande> updateStatutCommande(Long id, StatutCommande nouveauStatut) {
+    public Optional<Commande> updateStatutCommande(Long id, StatutCommande nouveauStatut, Long uid, boolean estAdmin, boolean estProducteur) {
         return commandeRepository.findById(id).map(commande -> {
+            if (!estAdmin) {
+                validerTransition(commande, nouveauStatut, uid, estProducteur);
+            }
             commande.setStatut(nouveauStatut);
             return commandeRepository.save(commande);
         });
     }
 
+    private void validerTransition(Commande commande, StatutCommande nouveau, Long uid, boolean estProducteur) {
+        StatutCommande actuel = commande.getStatut();
+        boolean estLeVendeur = estProducteur && uid != null && uid.equals(commande.getProducteurId());
+        boolean estLeClient = uid != null && uid.equals(commande.getClientId());
+
+        switch (nouveau) {
+            case VALIDEE:
+                if (!estLeVendeur) throw new AccesRefuseException("Seul le vendeur de cette commande peut la valider.");
+                if (actuel != StatutCommande.EN_ATTENTE) throw new RuntimeException("Impossible de valider une commande qui n'est pas en attente (statut actuel : " + actuel + ").");
+                break;
+            case EN_PREPARATION:
+                if (!estLeVendeur) throw new AccesRefuseException("Seul le vendeur de cette commande peut la passer en préparation.");
+                if (actuel != StatutCommande.VALIDEE) throw new RuntimeException("Impossible de passer en préparation une commande qui n'est pas validée (statut actuel : " + actuel + ").");
+                break;
+            case EXPEDIEE:
+                if (!estLeVendeur) throw new AccesRefuseException("Seul le vendeur de cette commande peut l'expédier.");
+                if (actuel != StatutCommande.EN_PREPARATION) throw new RuntimeException("Impossible d'expédier une commande qui n'est pas en préparation (statut actuel : " + actuel + ").");
+                break;
+            case LIVREE:
+                if (!estLeClient) throw new AccesRefuseException("Seul le client de cette commande peut confirmer la livraison.");
+                if (actuel != StatutCommande.EXPEDIEE) throw new RuntimeException("Impossible de confirmer la livraison d'une commande qui n'a pas été expédiée (statut actuel : " + actuel + ").");
+                break;
+            case ANNULEE:
+                if (!estLeClient) throw new AccesRefuseException("Seul le client de cette commande peut l'annuler.");
+                if (actuel == StatutCommande.EXPEDIEE || actuel == StatutCommande.LIVREE || actuel == StatutCommande.ANNULEE) {
+                    throw new RuntimeException("Cette commande ne peut plus être annulée une fois expédiée (statut actuel : " + actuel + ").");
+                }
+                break;
+            case EN_ATTENTE:
+                throw new AccesRefuseException("Le statut EN_ATTENTE est défini automatiquement à la création ou par le service de paiement ; il ne peut pas être défini manuellement.");
+        }
+    }
+
     /**
-     * Annule une commande par son ID.
+     * Annule une commande par son ID, en respectant les mêmes règles que
+     * updateStatutCommande (seul le client propriétaire, avant expédition).
      * @param id L'ID de la commande à annuler.
-     * @return true si la commande a été annulée avec succès, false sinon.
+     * @param uid L'ID de l'utilisateur authentifié effectuant la demande.
+     * @return true si la commande a été annulée avec succès, false si non trouvée.
      */
     @Transactional
-    public boolean annulerCommande(Long id) {
-        return commandeRepository.findById(id).map(commande -> {
-            commande.setStatut(StatutCommande.ANNULEE);
-            commandeRepository.save(commande);
-            return true;
-        }).orElse(false);
+    public boolean annulerCommande(Long id, Long uid, boolean estAdmin) {
+        return updateStatutCommande(id, StatutCommande.ANNULEE, uid, estAdmin, false).isPresent();
     }
 
     /**

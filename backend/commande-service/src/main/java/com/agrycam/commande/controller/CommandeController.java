@@ -114,26 +114,50 @@ public class CommandeController {
     }
 
     /**
-     * Met à jour le statut d'une commande.
+     * Met à jour le statut d'une commande. La transition est validée côté
+     * service : rôle requis (vendeur ou client selon le statut demandé),
+     * propriété de la commande, et cohérence avec le statut actuel
+     * (cf. CommandeService#validerTransition). Un admin (ou le token de
+     * service interne utilisé par paiement-service) contourne ces règles.
      * @param id L'ID de la commande à mettre à jour.
      * @param statut Le nouveau statut de la commande.
      * @return La commande mise à jour avec un statut HTTP 200, ou un statut HTTP 404 si non trouvée.
      */
     @PutMapping("/{id}/statut")
-    public ResponseEntity<CommandeResponse> updateStatutCommande(@PathVariable Long id, @RequestParam StatutCommande statut) {
-        return commandeService.updateStatutCommande(id, statut)
+    public ResponseEntity<CommandeResponse> updateStatutCommande(@PathVariable Long id, @RequestParam StatutCommande statut, Authentication authentication) {
+        Object principal = authentication.getPrincipal();
+        Long uid = principal instanceof Long ? (Long) principal : null;
+        return commandeService.updateStatutCommande(id, statut, uid, estAdmin(authentication), estProducteur(authentication))
                 .map(commande -> ResponseEntity.ok(convertToDto(commande)))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     /**
-     * Annule une commande par son ID.
+     * Récupère les commandes d'un vendeur spécifique (le vendeur lui-même
+     * ou un admin uniquement).
+     * @param producteurId L'ID du vendeur.
+     * @return Une liste des commandes de ce vendeur avec un statut HTTP 200.
+     */
+    @GetMapping("/vendeur/{producteurId}")
+    public ResponseEntity<List<CommandeResponse>> getCommandesByProducteurId(@PathVariable Long producteurId, Authentication authentication) {
+        if (!estAdmin(authentication) && !estProprietaire(authentication, producteurId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        List<Commande> commandes = commandeService.getCommandesByProducteurId(producteurId);
+        return ResponseEntity.ok(commandes.stream().map(this::convertToDto).collect(Collectors.toList()));
+    }
+
+    /**
+     * Annule une commande par son ID (le client propriétaire uniquement,
+     * et seulement avant expédition — cf. CommandeService#annulerCommande).
      * @param id L'ID de la commande à annuler.
      * @return Un statut HTTP 204 si l'annulation est réussie, ou un statut HTTP 404 si non trouvée.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> annulerCommande(@PathVariable Long id) {
-        if (commandeService.annulerCommande(id)) {
+    public ResponseEntity<Void> annulerCommande(@PathVariable Long id, Authentication authentication) {
+        Object principal = authentication.getPrincipal();
+        Long uid = principal instanceof Long ? (Long) principal : null;
+        if (commandeService.annulerCommande(id, uid, estAdmin(authentication))) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -148,6 +172,6 @@ public class CommandeController {
         List<LigneCommandeResponse> ligneCommandeResponses = commande.getLignesCommande().stream()
                 .map(lc -> new LigneCommandeResponse(lc.getId(), lc.getProduitId(), lc.getQuantite(), lc.getPrixUnitaire()))
                 .collect(Collectors.toList());
-        return new CommandeResponse(commande.getId(), commande.getClientId(), commande.getStatut(), commande.getDateCommande(), ligneCommandeResponses);
+        return new CommandeResponse(commande.getId(), commande.getClientId(), commande.getProducteurId(), commande.getStatut(), commande.getDateCommande(), ligneCommandeResponses);
     }
 }

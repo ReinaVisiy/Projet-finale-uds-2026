@@ -12,6 +12,7 @@ public class ProduitInfoDTO {
     private String nom;
     private BigDecimal prix;
     private Integer stock;
+    private Long producteurId;
 
     public Long getId() {
         return id;
@@ -43,5 +44,13 @@ public class ProduitInfoDTO {
 
     public void setStock(Integer stock) {
         this.stock = stock;
+    }
+
+    public Long getProducteurId() {
+        return producteurId;
+    }
+
+    public void setProducteurId(Long producteurId) {
+        this.producteurId = producteurId;
     }
 }

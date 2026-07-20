@@ -11,15 +11,17 @@ import java.util.List;
 public class CommandeResponse {
     private Long id;
     private Long clientId;
+    private Long producteurId;
     private StatutCommande statut;
     private LocalDateTime dateCommande;
     private List<LigneCommandeResponse> lignesCommande;
     private double montantTotal;
 
     // Constructeur
-    public CommandeResponse(Long id, Long clientId, StatutCommande statut, LocalDateTime dateCommande, List<LigneCommandeResponse> lignesCommande) {
+    public CommandeResponse(Long id, Long clientId, Long producteurId, StatutCommande statut, LocalDateTime dateCommande, List<LigneCommandeResponse> lignesCommande) {
         this.id = id;
         this.clientId = clientId;
+        this.producteurId = producteurId;
         this.statut = statut;
         this.dateCommande = dateCommande;
         this.lignesCommande = lignesCommande;
@@ -43,6 +45,14 @@ public class CommandeResponse {
 
     public void setClientId(Long clientId) {
         this.clientId = clientId;
+    }
+
+    public Long getProducteurId() {
+        return producteurId;
+    }
+
+    public void setProducteurId(Long producteurId) {
+        this.producteurId = producteurId;
     }
 
     public StatutCommande getStatut() {

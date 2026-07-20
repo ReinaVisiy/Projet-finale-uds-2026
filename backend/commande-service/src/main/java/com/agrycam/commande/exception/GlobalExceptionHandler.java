@@ -15,6 +15,11 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(AccesRefuseException.class)
+    public ResponseEntity<Map<String, String>> handleAccesRefuse(AccesRefuseException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("erreur", ex.getMessage()));
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
         String message = ex.getMessage() != null ? ex.getMessage() : "Erreur inattendue";

@@ -20,6 +20,13 @@ public class Commande {
     // ID du client qui a passé la commande (référence à un utilisateur du microservice utilisateur-service, via auth-service)
     private Long clientId;
 
+    // ID du producteur/vendeur propriétaire de CETTE commande. Un panier
+    // multi-vendeurs est désormais scindé en plusieurs commandes côté
+    // frontend (une par vendeur) : chaque Commande n'a donc plus qu'un seul
+    // vendeur, ce qui permet des actions et un statut indépendants par
+    // vendeur (valider/préparer/expédier sa propre commande uniquement).
+    private Long producteurId;
+
     @Enumerated(EnumType.STRING)
     private StatutCommande statut;
 
@@ -54,6 +61,14 @@ public class Commande {
 
     public void setClientId(Long clientId) {
         this.clientId = clientId;
+    }
+
+    public Long getProducteurId() {
+        return producteurId;
+    }
+
+    public void setProducteurId(Long producteurId) {
+        this.producteurId = producteurId;
     }
 
     public StatutCommande getStatut() {
