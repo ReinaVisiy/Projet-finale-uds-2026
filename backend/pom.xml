@@ -13,6 +13,7 @@
     </properties>
 
     <modules>
+        <module>eureka-server</module>
         <module>commande-service</module>
         <module>signalement-service</module>
         <module>auth-service</module>

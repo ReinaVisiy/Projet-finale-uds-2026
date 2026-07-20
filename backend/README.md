@@ -1,11 +1,12 @@
 # AGRYCAM — Backend Microservices
 
-Backend du projet **AGRYCAM**, une plateforme de mise en relation entre producteurs agricoles et consommateurs. Composé de **10 microservices** indépendants développés avec **Spring Boot**, chacun avec sa propre base de données PostgreSQL, gérés depuis un `pom.xml` parent (multi-module Maven).
+Backend du projet **AGRYCAM**, une plateforme de mise en relation entre producteurs agricoles et consommateurs. Composé de **11 microservices** indépendants développés avec **Spring Boot** (10 services métier + un serveur de découverte Eureka), chacun avec sa propre base de données PostgreSQL (sauf `eureka-server`, sans état), gérés depuis un `pom.xml` parent (multi-module Maven).
 
 ## 🏗️ Architecture
 
 | Service | Port | Base de données | Rôle |
 |---|---|---|---|
+| `eureka-server` | 8761 | *(aucune, sans état)* | Serveur de découverte : tous les autres services s'y enregistrent au démarrage et l'utilisent pour se localiser entre eux. Console web sur `http://localhost:8761`. |
 | `auth-service` | 8080 | *(aucune, sans état)* | Authentification, connexion, génération des tokens JWT. Vérifie les identifiants auprès de `utilisateur-service`. |
 | `utilisateur-service` | 8081 | `utilisateur_db` | Gestion des comptes (clients, producteurs, admins) — source de vérité pour les utilisateurs. |
 | `produit-service` | 8082 | `produit_db` | Catalogue des produits et catégories. |
@@ -13,11 +14,15 @@ Backend du projet **AGRYCAM**, une plateforme de mise en relation entre producte
 | `signalement-service` | 8084 | `signalement_db` | Signalement de produits ou d'utilisateurs, traitement par un administrateur. |
 | `avis-service` | 8085 | `avis_db` | Avis et notes sur les produits. |
 | `certification-service` | 8086 | `certification_db` | Demande et gestion des certifications des producteurs. |
-| `paiement-service` | 8087 | `paiement_db` | Paiements liés aux commandes. |
+| `paiement-service` | 8090 | `paiement_simiz_db` | Paiements via la passerelle Simiz (transactions, retraits, solde vendeur). |
 | `commande-service` | 8088 | `commande_db` | Création et suivi des commandes. |
 | `notification-service` | 8089 | `notification_db` | Notifications adressées aux utilisateurs (commande, paiement, certification, etc.). |
 
 Tous les services valident les tokens JWT avec le **même secret partagé** (émis par `auth-service`), ce qui leur permet de faire confiance à l'identité de l'utilisateur (`uid`, rôles) sans se reparler entre eux à chaque requête.
+
+### Découverte de services (Eureka)
+
+Chaque service métier embarque `spring-cloud-starter-netflix-eureka-client` et s'enregistre auprès d'`eureka-server` au démarrage (`eureka.client.service-url.defaultZone`, par défaut `http://localhost:8761/eureka/`, surchargeable via la variable d'environnement `EUREKA_URI`). Pour l'instant les appels inter-services listés ci-dessous continuent d'utiliser les URLs fixes habituelles (`RestTemplate` + `*.service.url`) ; Eureka sert avant tout à avoir une vue d'ensemble des services en vie (console `http://localhost:8761`) et prépare le terrain pour un appel par nom de service ou une passerelle API à l'avenir.
 
 ### Communications inter-services
 

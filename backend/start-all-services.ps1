@@ -2,9 +2,11 @@
 # Lance les 10 microservices AgryCam, chacun dans sa propre fenêtre PowerShell.
 # À exécuter depuis la racine du projet backend (agrycam-backend/).
 
-# Ordre conseillé : utilisateur-service et auth-service en premier,
-# car plusieurs autres services en dépendent au démarrage.
+# Ordre conseillé : eureka-server en tout premier (les autres services
+# s'enregistrent auprès de lui au démarrage), puis utilisateur-service et
+# auth-service, car plusieurs autres services en dépendent au démarrage.
 $Services = @(
+    "eureka-server",
     "utilisateur-service",
     "auth-service",
     "produit-service",

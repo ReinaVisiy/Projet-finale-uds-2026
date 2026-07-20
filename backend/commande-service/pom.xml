@@ -72,13 +72,11 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- Dépendance pour OpenFeign pour la communication inter-services (si nécessaire) -->
-        <!-- <dependency>
+        <!-- Eureka Client pour l'enregistrement et la découverte de services -->
+        <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-            <version>4.1.2</version>
-        </dependency> -->
-        <!-- Dépendance pour Eureka Client pour l'enregistrement et la découverte de services (si nécessaire) -->
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -91,8 +89,8 @@
         </plugins>
     </build>
 
-    <!-- Gestion des dépendances pour Spring Cloud (si OpenFeign ou Eureka sont utilisés) -->
-    <!-- <dependencyManagement>
+    <!-- Gestion des dépendances pour Spring Cloud (Eureka) -->
+    <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
@@ -102,5 +100,5 @@
                 <scope>import</scope>
             </dependency>
         </dependencies>
-    </dependencyManagement> -->
+    </dependencyManagement>
 </project>

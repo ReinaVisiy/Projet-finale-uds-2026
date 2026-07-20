@@ -19,6 +19,7 @@
 
     <properties>
         <java.version>21</java.version>
+        <spring-cloud.version>2025.0.3</spring-cloud.version>
         <jjwt.version>0.12.6</jjwt.version>
     </properties>
 
@@ -52,7 +53,11 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Eureka Client -->
+        <!-- EUREKA CLIENT -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -65,6 +70,18 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>
