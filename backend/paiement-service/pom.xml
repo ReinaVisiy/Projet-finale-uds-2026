@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.agrycam</groupId>
-    <artifactId>paiement-simiz-service</artifactId>
+    <artifactId>paiement-service</artifactId>
     <version>1.0.0</version>
-    <name>paiement-simiz-service</name>
+    <name>paiement-service</name>
     <description>Microservice Spring Boot de paiement via la passerelle Simiz (AgryCam)</description>
 
     <properties>

@@ -15,7 +15,7 @@ $Databases = @(
     "signalement_db",
     "avis_db",
     "certification_db",
-    "paiement_simiz_db",
+    "paiement_db",
     "commande_db",
     "notification_db"
 )

@@ -1,4 +1,4 @@
-# AgryCam - Service de Paiement Séquestre via Simiz (paiement-simiz-service)
+# AgryCam - Service de Paiement Séquestre via Simiz (paiement-service)
 
 Ce service est un microservice Spring Boot robuste pour la plateforme **AgryCam** (marketplace agricole camerounaise). Il remplace l'ancien système manuel par une intégration automatisée avec la passerelle de paiement **Simiz** (sandbox) et implémente un modèle de **séquestre (escrow)** sécurisé pour les transactions de la plateforme.
 
@@ -23,7 +23,7 @@ Les configurations sensibles et les URL d'intégration inter-services doivent ê
 | Variable | Description | Valeur par défaut |
 | :--- | :--- | :--- |
 | `PORT` | Port d'écoute du microservice | `8090` |
-| `DATABASE_URL` | URL JDBC complète de la base PostgreSQL (harmonisé avec les autres microservices AgryCam) | `jdbc:postgresql://localhost:5432/paiement_simiz_db` |
+| `DATABASE_URL` | URL JDBC complète de la base PostgreSQL (harmonisé avec les autres microservices AgryCam) | `jdbc:postgresql://localhost:5432/paiement_db` |
 | `DATABASE_USERNAME` | Nom d'utilisateur de la base de données | `postgres` |
 | `DATABASE_PASSWORD` | Mot de passe de la base de données | `2026` |
 | `JWT_SECRET` | Clé secrète partagée d'authentification JWT d'AgryCam — **doit être identique dans tous les microservices**, sinon ce service rejette silencieusement les tokens valides émis par `auth-service` | `AgryCamSecuriseCleJWT2026UniversiteDschang` |
@@ -37,7 +37,7 @@ Les configurations sensibles et les URL d'intégration inter-services doivent ê
 
 ### 1. Prérequis
 - Java 21 installé
-- PostgreSQL installé avec une base de données nommée `paiement_simiz_db`
+- PostgreSQL installé avec une base de données nommée `paiement_db`
 - Maven configuré
 
 ### 2. Lancement en local
