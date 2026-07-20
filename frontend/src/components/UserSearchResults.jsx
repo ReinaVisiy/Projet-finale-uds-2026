@@ -63,7 +63,7 @@ export default function UserSearchResults({ onBack, onSelectUser }) {
 
         {!chargement && results !== null && (
           results.length === 0 ? (
-            <p style={styles.emptyText}>{t('userSearch.noResults')} "{query}"</p>
+            <p style={styles.emptyText}>{t('userSearch.noResults')} &quot;{query}&quot;</p>
           ) : (
             <div style={styles.resultsList}>
               {results.map((u) => (

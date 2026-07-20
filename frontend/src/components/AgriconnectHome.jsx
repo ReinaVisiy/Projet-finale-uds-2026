@@ -182,11 +182,11 @@ export default function AgroMarketHome({
           <button style={styles.searchBtn} onClick={handleFilter}>{t('home.filterBtn')}</button>
         </div>
         {filteredProducts !== null && filteredProducts.length === 0 && (
-          <div style={styles.noResult}>{t('home.noResult')} "<strong>{searchQuery}</strong>"</div>
+          <div style={styles.noResult}>{t('home.noResult')} &quot;<strong>{searchQuery}</strong>&quot;</div>
         )}
         {filteredProducts !== null && filteredProducts.length > 0 && !activeCategory && (
           <div style={styles.resultInfo}>
-            {filteredProducts.length} {t('home.resultCount')} "<strong>{searchQuery}</strong>"
+            {filteredProducts.length} {t('home.resultCount')} &quot;<strong>{searchQuery}</strong>&quot;
             <button style={styles.resetBtn} onClick={handleReset}>{t('home.reset')}</button>
           </div>
         )}
