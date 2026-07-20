@@ -1,25 +1,11 @@
 // src/components/ClientPurchases.jsx
 import React from 'react';
 import { ArrowLeft, Package, ShoppingBag } from 'lucide-react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    unknownProduct: 'Produit inconnu', order: 'Commande', back: 'Retour', myPurchases: 'Mes achats',
-    itemsBought: 'article(s) acheté(s)', total: 'Total', noPurchases: "Vous n'avez pas encore d'achats livrés.",
-    startShopping: 'Commencer vos achats', product: 'Produit', quantity: 'Quantité',
-    purchasePrice: "Prix d'achat", deliveryDate: 'Date de livraison',
-  },
-  en: {
-    unknownProduct: 'Unknown product', order: 'Order', back: 'Back', myPurchases: 'My purchases',
-    itemsBought: 'item(s) bought', total: 'Total', noPurchases: "You don't have any delivered purchases yet.",
-    startShopping: 'Start shopping', product: 'Product', quantity: 'Quantity',
-    purchasePrice: 'Purchase price', deliveryDate: 'Delivery date',
-  },
-};
 
 export default function ClientPurchases({ orders, onBackHome }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   // Filtrer uniquement les commandes livrées
   const deliveredOrders = orders.filter(order => order.status === 'Livrée');
 
@@ -29,7 +15,7 @@ export default function ClientPurchases({ orders, onBackHome }) {
     if (order.items && order.items.length > 0) {
       order.items.forEach(item => {
         purchases.push({
-          produit: item.nomProduit || item.name || t.unknownProduct,
+          produit: item.nomProduit || item.name || t('clientPurchases.unknownProduct'),
           quantite: item.quantity || 1,
           prixTotal: item.subtotal || (item.quantity * item.price) || 0,
           date: order.date || new Date().toLocaleDateString('fr-FR'),
@@ -42,7 +28,7 @@ export default function ClientPurchases({ orders, onBackHome }) {
       });
     } else {
       purchases.push({
-        produit: `${t.order} #${order.id}`,
+        produit: `${t('clientPurchases.order')} #${order.id}`,
         quantite: 1,
         prixTotal: order.amount || 0,
         date: order.date || new Date().toLocaleDateString('fr-FR'),
@@ -62,31 +48,31 @@ export default function ClientPurchases({ orders, onBackHome }) {
     <div style={styles.container}>
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={onBackHome}>
-          <ArrowLeft size={20} /> {t.back}
+          <ArrowLeft size={20} /> {t('clientPurchases.back')}
         </button>
         <h1 style={styles.title}>
-          <ShoppingBag size={28} color="#2d6a4f" /> {t.myPurchases}
+          <ShoppingBag size={28} color="#2d6a4f" /> {t('clientPurchases.myPurchases')}
         </h1>
         <p style={styles.subtitle}>
-          {totalItems} {t.itemsBought} — {t.total} {totalSpent.toLocaleString()} FCFA
+          {totalItems} {t('clientPurchases.itemsBought')} — {t('clientPurchases.total')} {totalSpent.toLocaleString()} FCFA
         </p>
       </div>
 
       {purchases.length === 0 ? (
         <div style={styles.emptyState}>
           <Package size={48} color="#adb5bd" />
-          <p style={styles.emptyText}>{t.noPurchases}</p>
-          <button style={styles.emptyBtn} onClick={onBackHome}>{t.startShopping}</button>
+          <p style={styles.emptyText}>{t('clientPurchases.noPurchases')}</p>
+          <button style={styles.emptyBtn} onClick={onBackHome}>{t('clientPurchases.startShopping')}</button>
         </div>
       ) : (
         <div style={styles.tableWrapper}>
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>{t.product}</th>
-                <th style={styles.th}>{t.quantity}</th>
-                <th style={styles.th}>{t.purchasePrice}</th>
-                <th style={styles.th}>{t.deliveryDate}</th>
+                <th style={styles.th}>{t('clientPurchases.product')}</th>
+                <th style={styles.th}>{t('clientPurchases.quantity')}</th>
+                <th style={styles.th}>{t('clientPurchases.purchasePrice')}</th>
+                <th style={styles.th}>{t('clientPurchases.deliveryDate')}</th>
               </tr>
             </thead>
             <tbody>

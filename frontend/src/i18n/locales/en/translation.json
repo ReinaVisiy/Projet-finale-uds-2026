@@ -197,5 +197,26 @@
     "secure": "🔒 SE Secured",
     "gdpr": "📋 GDPR Compliant",
     "certified": "✅ Agri Certified"
+  },
+  "clientPurchases": {
+    "unknownProduct": "Unknown product",
+    "order": "Order",
+    "back": "Back",
+    "myPurchases": "My purchases",
+    "itemsBought": "item(s) bought",
+    "total": "Total",
+    "noPurchases": "You don't have any delivered purchases yet.",
+    "startShopping": "Start shopping",
+    "product": "Product",
+    "quantity": "Quantity",
+    "purchasePrice": "Purchase price",
+    "deliveryDate": "Delivery date"
+  },
+  "userProfile": {
+    "mustLogin": "You must be logged in to view your profile.",
+    "back": "Back",
+    "notProvided": "Not provided",
+    "editProfile": "Edit profile",
+    "changePassword": "Change password"
   }
 }

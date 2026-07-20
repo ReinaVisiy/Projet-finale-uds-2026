@@ -197,5 +197,26 @@
     "secure": "🔒 S.E. Sécurisé",
     "gdpr": "📋 RGPD Contrôle",
     "certified": "✅ Certifié Agri"
+  },
+  "clientPurchases": {
+    "unknownProduct": "Produit inconnu",
+    "order": "Commande",
+    "back": "Retour",
+    "myPurchases": "Mes achats",
+    "itemsBought": "article(s) acheté(s)",
+    "total": "Total",
+    "noPurchases": "Vous n'avez pas encore d'achats livrés.",
+    "startShopping": "Commencer vos achats",
+    "product": "Produit",
+    "quantity": "Quantité",
+    "purchasePrice": "Prix d'achat",
+    "deliveryDate": "Date de livraison"
+  },
+  "userProfile": {
+    "mustLogin": "Vous devez être connecté pour voir votre profil.",
+    "back": "Retour",
+    "notProvided": "Non renseigné",
+    "editProfile": "Modifier le profil",
+    "changePassword": "Modifier le mot de passe"
   }
 }
