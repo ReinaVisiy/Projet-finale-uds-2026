@@ -560,5 +560,18 @@
     "carrierValue": "DHL Express",
     "deliveredToast": "🎉 La commande #2026-001 a été marquée comme LIVRÉE avec succès !",
     "contactToast": "✉️ Ouverture de la messagerie de contact pour Flavier Dschang (+237 6XX XXX XXX)..."
+  },
+  "productCatalog": {
+    "back": "Retour",
+    "title": "Catalogue des produits",
+    "searchPlaceholder": "Rechercher un produit, une ferme ou une catégorie...",
+    "reset": "✕ Réinitialiser",
+    "all": "Tous",
+    "loading": "Chargement des produits...",
+    "noResults": "Aucun produit trouvé pour cette recherche",
+    "seeAll": "Voir tous les produits",
+    "inStock": "En stock",
+    "lowStock": "Stock faible",
+    "addToCart": "Ajouter au panier"
   }
 }

@@ -3,47 +3,15 @@ import React, { useState, useMemo } from 'react';
 import { Search, ShoppingBag, Star, ArrowLeft } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
 import { correspondRecherche } from '../utils/produceSearch';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    back: 'Retour',
-    title: 'Catalogue des produits',
-    subtitle: (n) => `${n} produits disponibles`,
-    searchPlaceholder: 'Rechercher un produit, une ferme ou une catégorie...',
-    reset: '✕ Réinitialiser',
-    all: 'Tous',
-    loading: 'Chargement des produits...',
-    loadError: (e) => `Impossible de charger le catalogue : ${e}`,
-    noResults: 'Aucun produit trouvé pour cette recherche',
-    seeAll: 'Voir tous les produits',
-    inStock: 'En stock',
-    lowStock: 'Stock faible',
-    addToCart: 'Ajouter au panier',
-  },
-  en: {
-    back: 'Back',
-    title: 'Product catalogue',
-    subtitle: (n) => `${n} products available`,
-    searchPlaceholder: 'Search for a product, a farm or a category...',
-    reset: '✕ Reset',
-    all: 'All',
-    loading: 'Loading products...',
-    loadError: (e) => `Unable to load the catalogue: ${e}`,
-    noResults: 'No product found for this search',
-    seeAll: 'See all products',
-    inStock: 'In stock',
-    lowStock: 'Low stock',
-    addToCart: 'Add to cart',
-  },
-};
 
 export default function ProductCatalog({
   onBack,
   onNavigateToProduct,
   onAddToCart,
 }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const { produits, categories, chargement, erreur } = useProduits();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -101,7 +69,7 @@ export default function ProductCatalog({
   if (chargement) {
     return (
       <div style={styles.container}>
-        <p style={styles.subtitle}>{t.loading}</p>
+        <p style={styles.subtitle}>{t('productCatalog.loading')}</p>
       </div>
     );
   }
@@ -110,8 +78,8 @@ export default function ProductCatalog({
     return (
       <div style={styles.container}>
         <div style={styles.emptyState}>
-          <p style={styles.emptyText}>{t.loadError(erreur)}</p>
-          <button style={styles.emptyBtn} onClick={onBack}>{t.back}</button>
+          <p style={styles.emptyText}>{t('productCatalog.loadError')(erreur)}</p>
+          <button style={styles.emptyBtn} onClick={onBack}>{t('productCatalog.back')}</button>
         </div>
       </div>
     );
@@ -121,10 +89,10 @@ export default function ProductCatalog({
     <div style={styles.container}>
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={onBack}>
-          <ArrowLeft size={20} /> {t.back}
+          <ArrowLeft size={20} /> {t('productCatalog.back')}
         </button>
-        <h1 style={styles.title}>{t.title}</h1>
-        <p style={styles.subtitle}>{t.subtitle(produits.length)}</p>
+        <h1 style={styles.title}>{t('productCatalog.title')}</h1>
+        <p style={styles.subtitle}>{t('productCatalog.subtitle')(produits.length)}</p>
       </div>
 
       <div style={styles.searchWrapper}>
@@ -132,13 +100,13 @@ export default function ProductCatalog({
           <Search size={20} color="#6c757d" />
           <input
             type="text"
-            placeholder={t.searchPlaceholder}
+            placeholder={t('productCatalog.searchPlaceholder')}
             style={styles.searchInput}
             value={searchQuery}
             onChange={handleSearchChange}
           />
         </div>
-        <button style={styles.resetBtn} onClick={handleReset}>{t.reset}</button>
+        <button style={styles.resetBtn} onClick={handleReset}>{t('productCatalog.reset')}</button>
       </div>
 
       <div style={styles.categoryFilters}>
@@ -149,7 +117,7 @@ export default function ProductCatalog({
           }}
           onClick={() => handleCategoryClick('all')}
         >
-          {t.all} ({counts.all})
+          {t('productCatalog.all')} ({counts.all})
         </button>
         {categories.map(cat => (
           <button
@@ -167,8 +135,8 @@ export default function ProductCatalog({
 
       {displayedProducts.length === 0 ? (
         <div style={styles.emptyState}>
-          <p style={styles.emptyText}>{t.noResults}</p>
-          <button style={styles.emptyBtn} onClick={handleReset}>{t.seeAll}</button>
+          <p style={styles.emptyText}>{t('productCatalog.noResults')}</p>
+          <button style={styles.emptyBtn} onClick={handleReset}>{t('productCatalog.seeAll')}</button>
         </div>
       ) : (
         <div style={styles.productGrid}>
@@ -207,14 +175,14 @@ export default function ProductCatalog({
                     color: prod.stock ? '#2d6a4f' : '#e07a5f',
                     backgroundColor: prod.stock ? '#e9f5ee' : '#fdf1ed',
                   }}>
-                    {prod.stock ? t.inStock : t.lowStock}
+                    {prod.stock ? t('productCatalog.inStock') : t('productCatalog.lowStock')}
                   </span>
                 </div>
                 <button
                   style={styles.addToCartBtn}
                   onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(prod); }}
                 >
-                  <ShoppingBag size={14} /> {t.addToCart}
+                  <ShoppingBag size={14} /> {t('productCatalog.addToCart')}
                 </button>
               </div>
             </div>
