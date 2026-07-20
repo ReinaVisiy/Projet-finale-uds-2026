@@ -26,6 +26,22 @@ if (Test-Path $EnvFile) {
     Write-Host "Copiez .env.example vers .env et renseignez vos secrets avant de continuer." -ForegroundColor Red
 }
 
+# Mapping explicite des ports pour éviter le conflit causé par un PORT global dans .env
+$Ports = @{
+    "eureka-server"         = 8761
+    "api-gateway"           = 8765
+    "auth-service"          = 8080
+    "utilisateur-service"   = 8081
+    "produit-service"       = 8082
+    "message-service"       = 8083
+    "signalement-service"   = 8084
+    "avis-service"          = 8085
+    "certification-service" = 8086
+    "paiement-service"      = 8087
+    "commande-service"      = 8088
+    "notification-service"  = 8089
+}
+
 # Ordre conseillé : eureka-server en tout premier (les autres services
 # s'enregistrent auprès de lui au démarrage), puis api-gateway (point
 # d'entrée unique du frontend), puis utilisateur-service et auth-service,
@@ -55,8 +71,12 @@ foreach ($service in $Services) {
         continue
     }
 
-    Write-Host "Démarrage de $service..." -ForegroundColor Green
-    Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$path'; mvn spring-boot:run"
+    $port = $Ports[$service]
+    Write-Host "Démarrage de $service sur le port $port..." -ForegroundColor Green
+
+    # On passe explicitement le port dédié dans la commande du sous-processus
+    $command = "cd '$path'; `$env:PORT=$port; mvn spring-boot:run"
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", $command
 
     # eureka-server et api-gateway ont besoin de plus de temps pour finir
     # de démarrer (contexte Spring plus long à charger) avant que les
@@ -71,4 +91,4 @@ foreach ($service in $Services) {
 }
 
 Write-Host "`nLes 12 processus démarrent chacun dans leur propre fenêtre." -ForegroundColor Cyan
-Write-Host "Vérifiez chaque fenêtre pour vous assurer qu'il n'y a pas d'erreur au démarrage." -ForegroundColor Cyan
+Write-Host "Vérifiez chaque fenêtre pour vous assurer qu'il n'y a pas d'erreur au démarrage." -ForegroundColor CyanS
