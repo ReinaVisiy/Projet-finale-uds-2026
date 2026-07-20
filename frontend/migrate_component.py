@@ -88,3 +88,16 @@ if __name__ == '__main__':
     namespace = sys.argv[2]
     locales_dir = sys.argv[3]
     migrate(component_path, namespace, locales_dir)
+
+def check_corruption(namespace, locales_dir):
+    import json as _json
+    bad = []
+    for lang in ['fr', 'en']:
+        path = f"{locales_dir}/{lang}/translation.json"
+        with open(path, encoding='utf-8') as f:
+            d = _json.load(f)
+        ns = d.get(namespace, {})
+        for k, v in ns.items():
+            if isinstance(v, str) and '{t.' in v:
+                bad.append((lang, k, v))
+    return bad
