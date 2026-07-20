@@ -1,64 +1,8 @@
 // src/components/ShoppingCart.jsx
 import React, { useState } from 'react';
 import { ShoppingBag, Trash2, Plus, Minus, ArrowLeft, CreditCard, Truck, Smartphone, CheckCircle, AlertCircle } from 'lucide-react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    continueShopping: 'Continuer vos achats',
-    myCart: 'Mon Panier',
-    itemCount: (n) => `${n} article${n > 1 ? 's' : ''}`,
-    emptyCount: '0 article',
-    emptyTitle: 'Votre panier est vide',
-    emptyDesc: 'Découvrez nos produits frais et ajoutez-les à votre panier.',
-    discoverProducts: 'Découvrir les produits',
-    localProducer: 'Producteur local',
-    orderSummary: 'Résumé de la commande',
-    subtotalLabel: 'Sous-total',
-    totalToPay: 'Total à payer',
-    paymentMethod: 'Mode de paiement',
-    orangeMoney: 'Orange Money',
-    mtnMoney: 'MTN Mobile Money',
-    orangePlaceholder: 'Numéro Orange Money (ex: 6X XX XX XX)',
-    mtnPlaceholder: 'Numéro MTN Mobile Money (ex: 6X XX XX XX)',
-    chooseMethod: 'Veuillez choisir un mode de paiement',
-    enterDetails: 'Veuillez saisir vos coordonnées de paiement',
-    invalidPhone: 'Numéro de téléphone invalide (ex: 6X XX XX XX)',
-    processing: '⏳ Traitement...',
-    paid: '✅ Payé',
-    pay: (total) => `Payer ${total} FCFA`,
-    paymentConfirmed: '✅ Paiement validé ! Redirection...',
-    securePayment: '🔒 Paiement sécurisé',
-    trackedDelivery: '🚚 Livraison suivie',
-  },
-  en: {
-    continueShopping: 'Continue shopping',
-    myCart: 'My Cart',
-    itemCount: (n) => `${n} item${n > 1 ? 's' : ''}`,
-    emptyCount: '0 items',
-    emptyTitle: 'Your cart is empty',
-    emptyDesc: 'Discover our fresh products and add them to your cart.',
-    discoverProducts: 'Discover products',
-    localProducer: 'Local producer',
-    orderSummary: 'Order summary',
-    subtotalLabel: 'Subtotal',
-    totalToPay: 'Total to pay',
-    paymentMethod: 'Payment method',
-    orangeMoney: 'Orange Money',
-    mtnMoney: 'MTN Mobile Money',
-    orangePlaceholder: 'Orange Money number (e.g: 6X XX XX XX)',
-    mtnPlaceholder: 'MTN Mobile Money number (e.g: 6X XX XX XX)',
-    chooseMethod: 'Please choose a payment method',
-    enterDetails: 'Please enter your payment details',
-    invalidPhone: 'Invalid phone number (e.g: 6X XX XX XX)',
-    processing: '⏳ Processing...',
-    paid: '✅ Paid',
-    pay: (total) => `Pay ${total} FCFA`,
-    paymentConfirmed: '✅ Payment confirmed! Redirecting...',
-    securePayment: '🔒 Secure payment',
-    trackedDelivery: '🚚 Tracked delivery',
-  },
-};
 
 export default function ShoppingCart({
   cartItems,
@@ -67,10 +11,10 @@ export default function ShoppingCart({
   onCheckout,
   onContinueShopping,
 }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const paymentMethods = [
-    { id: 'orange-money', label: t.orangeMoney, icon: '📱', placeholder: t.orangePlaceholder },
-    { id: 'mtn-money', label: t.mtnMoney, icon: '📱', placeholder: t.mtnPlaceholder },
+    { id: 'orange-money', label: t('shoppingCart.orangeMoney'), icon: '📱', placeholder: t('shoppingCart.orangePlaceholder') },
+    { id: 'mtn-money', label: t('shoppingCart.mtnMoney'), icon: '📱', placeholder: t('shoppingCart.mtnPlaceholder') },
   ];
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentData, setPaymentData] = useState('');
@@ -93,18 +37,18 @@ export default function ShoppingCart({
   const handlePaymentSubmit = () => {
     // Validation
     if (!paymentMethod) {
-      setPaymentError(t.chooseMethod);
+      setPaymentError(t('shoppingCart.chooseMethod'));
       return;
     }
     if (!paymentData.trim()) {
-      setPaymentError(t.enterDetails);
+      setPaymentError(t('shoppingCart.enterDetails'));
       return;
     }
 
     // Validation du numéro de téléphone (Orange/MTN Money)
     const phoneRegex = /^[6][0-9]{8}$/; // 6X XX XX XX
     if (!phoneRegex.test(paymentData.replace(/\s/g, ''))) {
-      setPaymentError(t.invalidPhone);
+      setPaymentError(t('shoppingCart.invalidPhone'));
       return;
     }
 
@@ -127,18 +71,18 @@ export default function ShoppingCart({
       <div style={styles.container}>
         <div style={styles.header}>
           <button style={styles.backBtn} onClick={onContinueShopping}>
-            <ArrowLeft size={20} /> {t.continueShopping}
+            <ArrowLeft size={20} /> {t('shoppingCart.continueShopping')}
           </button>
-          <h1 style={styles.title}>{t.myCart}</h1>
-          <p style={styles.subtitle}>{t.emptyCount}</p>
+          <h1 style={styles.title}>{t('shoppingCart.myCart')}</h1>
+          <p style={styles.subtitle}>{t('shoppingCart.emptyCount')}</p>
         </div>
 
         <div style={styles.emptyState}>
           <ShoppingBag size={64} color="#adb5bd" />
-          <h3 style={styles.emptyTitle}>{t.emptyTitle}</h3>
-          <p style={styles.emptyDesc}>{t.emptyDesc}</p>
+          <h3 style={styles.emptyTitle}>{t('shoppingCart.emptyTitle')}</h3>
+          <p style={styles.emptyDesc}>{t('shoppingCart.emptyDesc')}</p>
           <button style={styles.emptyBtn} onClick={onContinueShopping}>
-            {t.discoverProducts}
+            {t('shoppingCart.discoverProducts')}
           </button>
         </div>
       </div>
@@ -149,10 +93,10 @@ export default function ShoppingCart({
     <div style={styles.container}>
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={onContinueShopping}>
-          <ArrowLeft size={20} /> {t.continueShopping}
+          <ArrowLeft size={20} /> {t('shoppingCart.continueShopping')}
         </button>
-        <h1 style={styles.title}>{t.myCart}</h1>
-        <p style={styles.subtitle}>{t.itemCount(cartItems.length)}</p>
+        <h1 style={styles.title}>{t('shoppingCart.myCart')}</h1>
+        <p style={styles.subtitle}>{t('shoppingCart.itemCount')(cartItems.length)}</p>
       </div>
 
       <div style={styles.grid}>
@@ -165,7 +109,7 @@ export default function ShoppingCart({
               </div>
               <div style={styles.productInfo}>
                 <h4 style={styles.productName}>{item.name}</h4>
-                <p style={styles.productFarm}>{item.farm || t.localProducer}</p>
+                <p style={styles.productFarm}>{item.farm || t('shoppingCart.localProducer')}</p>
                 <p style={styles.productPrice}>{item.price.toLocaleString()} FCFA</p>
                 <div style={styles.quantityControl}>
                   <button
@@ -200,17 +144,17 @@ export default function ShoppingCart({
 
         {/* Colonne droite : résumé + paiement */}
         <div style={styles.summarySection}>
-          <h3 style={styles.summaryTitle}>{t.orderSummary}</h3>
+          <h3 style={styles.summaryTitle}>{t('shoppingCart.orderSummary')}</h3>
 
           <div style={styles.summaryRow}>
-            <span>{t.subtotalLabel}</span>
+            <span>{t('shoppingCart.subtotalLabel')}</span>
             <span>{subtotal.toLocaleString()} FCFA</span>
           </div>
           <div style={styles.divider} />
 
           {/* Total */}
           <div style={styles.totalRow}>
-            <span style={styles.totalLabel}>{t.totalToPay}</span>
+            <span style={styles.totalLabel}>{t('shoppingCart.totalToPay')}</span>
             <span style={styles.totalValue}>{total.toLocaleString()} FCFA</span>
           </div>
 
@@ -218,7 +162,7 @@ export default function ShoppingCart({
 
           {/* CHOIX DU MODE DE PAIEMENT */}
           <div style={styles.paymentSection}>
-            <h4 style={styles.paymentTitle}>{t.paymentMethod}</h4>
+            <h4 style={styles.paymentTitle}>{t('shoppingCart.paymentMethod')}</h4>
             <div style={styles.paymentOptions}>
               {paymentMethods.map((method) => (
                 <label
@@ -274,7 +218,7 @@ export default function ShoppingCart({
             {paymentSuccess && (
               <div style={styles.successBox}>
                 <CheckCircle size={20} color="#2d6a4f" />
-                <span style={styles.successText}>{t.paymentConfirmed}</span>
+                <span style={styles.successText}>{t('shoppingCart.paymentConfirmed')}</span>
               </div>
             )}
 
@@ -287,15 +231,15 @@ export default function ShoppingCart({
               onClick={handlePaymentSubmit}
               disabled={isProcessing || paymentSuccess}
             >
-              {isProcessing ? t.processing : paymentSuccess ? t.paid : t.pay(total.toLocaleString())}
+              {isProcessing ? t('shoppingCart.processing') : paymentSuccess ? t('shoppingCart.paid') : t('shoppingCart.pay')(total.toLocaleString())}
               {!isProcessing && !paymentSuccess && <CreditCard size={16} />}
             </button>
           </div>
 
           {/* Sécurité */}
           <div style={styles.securityBadges}>
-            <span style={styles.badge}>{t.securePayment}</span>
-            <span style={styles.badge}>{t.trackedDelivery}</span>
+            <span style={styles.badge}>{t('shoppingCart.securePayment')}</span>
+            <span style={styles.badge}>{t('shoppingCart.trackedDelivery')}</span>
           </div>
         </div>
       </div>

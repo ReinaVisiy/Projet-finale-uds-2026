@@ -657,5 +657,30 @@
     "detailToast": "📄 Sale detail — {{product}} for {{client}}",
     "totalsLabel_one": "{{count}} sale · Total:",
     "totalsLabel_other": "{{count}} sales · Total:"
+  },
+  "shoppingCart": {
+    "continueShopping": "Continue shopping",
+    "myCart": "My Cart",
+    "emptyCount": "0 items",
+    "emptyTitle": "Your cart is empty",
+    "emptyDesc": "Discover our fresh products and add them to your cart.",
+    "discoverProducts": "Discover products",
+    "localProducer": "Local producer",
+    "orderSummary": "Order summary",
+    "subtotalLabel": "Subtotal",
+    "totalToPay": "Total to pay",
+    "paymentMethod": "Payment method",
+    "orangeMoney": "Orange Money",
+    "mtnMoney": "MTN Mobile Money",
+    "orangePlaceholder": "Orange Money number (e.g: 6X XX XX XX)",
+    "mtnPlaceholder": "MTN Mobile Money number (e.g: 6X XX XX XX)",
+    "chooseMethod": "Please choose a payment method",
+    "enterDetails": "Please enter your payment details",
+    "invalidPhone": "Invalid phone number (e.g: 6X XX XX XX)",
+    "processing": "⏳ Processing...",
+    "paid": "✅ Paid",
+    "paymentConfirmed": "✅ Payment confirmed! Redirecting...",
+    "securePayment": "🔒 Secure payment",
+    "trackedDelivery": "🚚 Tracked delivery"
   }
 }

@@ -657,5 +657,30 @@
     "detailToast": "📄 Détail vente — {{product}} pour {{client}}",
     "totalsLabel_one": "{{count}} vente · Total :",
     "totalsLabel_other": "{{count}} ventes · Total :"
+  },
+  "shoppingCart": {
+    "continueShopping": "Continuer vos achats",
+    "myCart": "Mon Panier",
+    "emptyCount": "0 article",
+    "emptyTitle": "Votre panier est vide",
+    "emptyDesc": "Découvrez nos produits frais et ajoutez-les à votre panier.",
+    "discoverProducts": "Découvrir les produits",
+    "localProducer": "Producteur local",
+    "orderSummary": "Résumé de la commande",
+    "subtotalLabel": "Sous-total",
+    "totalToPay": "Total à payer",
+    "paymentMethod": "Mode de paiement",
+    "orangeMoney": "Orange Money",
+    "mtnMoney": "MTN Mobile Money",
+    "orangePlaceholder": "Numéro Orange Money (ex: 6X XX XX XX)",
+    "mtnPlaceholder": "Numéro MTN Mobile Money (ex: 6X XX XX XX)",
+    "chooseMethod": "Veuillez choisir un mode de paiement",
+    "enterDetails": "Veuillez saisir vos coordonnées de paiement",
+    "invalidPhone": "Numéro de téléphone invalide (ex: 6X XX XX XX)",
+    "processing": "⏳ Traitement...",
+    "paid": "✅ Payé",
+    "paymentConfirmed": "✅ Paiement validé ! Redirection...",
+    "securePayment": "🔒 Paiement sécurisé",
+    "trackedDelivery": "🚚 Livraison suivie"
   }
 }
