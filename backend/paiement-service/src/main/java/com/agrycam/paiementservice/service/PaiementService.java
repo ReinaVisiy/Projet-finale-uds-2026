@@ -348,6 +348,51 @@ public class PaiementService {
     }
 
     /**
+     * Traite le remboursement lie a un litige "Produit non livre" resolu
+     * par un admin : contrairement a l'annulation par le client (90/10),
+     * il s'agit ici d'un remboursement integral (100%) au client, la
+     * commande n'ayant jamais ete honoree du point de vue du vendeur.
+     * Refuse si les fonds ont deja ete liberes vers le solde disponible
+     * (potentiellement deja retires) : c'est a l'appelant (LitigeService)
+     * de ne proposer cette action que lorsque fondsLiberes est encore faux.
+     * Idempotent comme les deux methodes precedentes.
+     */
+    @Transactional
+    public synchronized void traiterRemboursementLitige(Long commandeId) {
+        Transaction transaction = transactionRepository
+                .findByTypeReferenceAndReferenceId(TypeReference.COMMANDE, commandeId)
+                .orElseThrow(() -> new TransactionNotFoundException(
+                        "Aucune transaction de paiement trouvee pour la commande #" + commandeId));
+
+        if (transaction.getStatut() != StatutTransaction.PAYE) {
+            log.warn("Remboursement de litige demande pour la commande {} dont la transaction n'est pas PAYE (statut: {}). Ignoree.",
+                    commandeId, transaction.getStatut());
+            return;
+        }
+
+        if (transaction.isFondsLiberes()) {
+            log.error("Remboursement de litige refuse pour la commande {} : fonds deja liberes vers le solde disponible (potentiellement deja retires).",
+                    commandeId);
+            throw new SoldeInsuffisantException("Impossible de rembourser automatiquement : les fonds de cette commande ont deja ete liberes vers le solde disponible du vendeur.");
+        }
+
+        SoldeVendeur solde = soldeVendeurRepository.findByVendeurId(transaction.getVendeurId())
+                .orElseThrow(() -> new SoldeInsuffisantException(
+                        "Portefeuille introuvable pour le vendeur " + transaction.getVendeurId()));
+
+        solde.setSoldeSequestre(solde.getSoldeSequestre().subtract(transaction.getMontantNet()));
+        soldeVendeurRepository.save(solde);
+
+        transaction.setMontantRembourseClient(transaction.getMontant());
+        transaction.setFraisAnnulation(BigDecimal.ZERO);
+        transaction.setStatut(StatutTransaction.REMBOURSEE);
+        transactionRepository.save(transaction);
+
+        log.info("Litige resolu pour la commande {} : remboursement integral de {} XAF au client (sequestre vendeur {} debite de {} XAF)",
+                commandeId, transaction.getMontant(), transaction.getVendeurId(), transaction.getMontantNet());
+    }
+
+    /**
      * Traite le webhook passif envoye par Simiz.
      * Valide le paiement de maniere securisee en interrogeant l'API Simiz pour eviter tout spoofing de requete.
      */
@@ -486,6 +531,11 @@ public class PaiementService {
             statutMap.put("paye", transaction.getStatut() == StatutTransaction.PAYE);
             statutMap.put("montant", transaction.getMontant());
             statutMap.put("dateConfirmation", transaction.getDateConfirmation());
+            // Utilise par commande-service (module Litige) pour determiner si
+            // le remboursement en un clic est encore possible : une fois les
+            // fonds liberes vers le solde disponible, ils sont potentiellement
+            // deja retires et ne peuvent plus etre repris automatiquement.
+            statutMap.put("fondsLiberes", transaction.isFondsLiberes());
         }
 
         return statutMap;

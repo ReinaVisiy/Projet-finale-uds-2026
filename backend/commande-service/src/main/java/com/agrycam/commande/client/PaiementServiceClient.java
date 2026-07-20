@@ -7,8 +7,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 /**
  * Client charge de notifier paiement-service depuis commande-service.
@@ -73,5 +76,51 @@ public class PaiementServiceClient {
             log.error("Echec de la notification de remboursement d'annulation pour la commande #{} : {}",
                     commandeId, e.getMessage());
         }
+    }
+
+    /**
+     * Interroge paiement-service pour savoir si le sequestre d'une commande
+     * a deja ete libere vers le solde disponible du vendeur. Utilise par
+     * LitigeService pour calculer le flag "fonds deja retires" qui
+     * conditionne le remboursement en un clic d'un litige. Retourne null
+     * si le statut est indetermine (transaction inexistante, service
+     * injoignable) : l'appelant doit alors traiter le cas avec prudence
+     * (ne pas proposer le remboursement automatique).
+     */
+    public Boolean estFondsLiberes(Long commandeId) {
+        try {
+            String url = paiementServiceUrl + "/api/paiements/statut/COMMANDE/" + commandeId;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(jwtUtil.genererTokenServiceInterne());
+            HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+
+            ResponseEntity<Map> reponse = restTemplate.exchange(url, HttpMethod.GET, httpEntity, Map.class);
+            Object valeur = reponse.getBody() != null ? reponse.getBody().get("fondsLiberes") : null;
+            return valeur instanceof Boolean ? (Boolean) valeur : null;
+        } catch (Exception e) {
+            log.error("Echec de la verification de liberation de sequestre pour la commande #{} : {}",
+                    commandeId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Notifie paiement-service qu'un litige "Produit non livré" vient
+     * d'etre resolu par un admin via remboursement en un clic : declenche
+     * le remboursement integral (100%) au client et le debit du sequestre
+     * du vendeur. Propage l'exception (contrairement aux autres methodes
+     * de ce client) car l'admin doit voir immediatement si le
+     * remboursement a echoue (ex. fonds deja liberes).
+     */
+    public void notifierRemboursementLitige(Long commandeId) {
+        String url = paiementServiceUrl + "/api/paiements/commandes/" + commandeId + "/rembourser-litige";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(jwtUtil.genererTokenServiceInterne());
+        HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+
+        log.info("Notification de paiement-service : remboursement de litige pour la commande #{}", commandeId);
+        restTemplate.exchange(url, HttpMethod.PUT, httpEntity, Void.class);
     }
 }

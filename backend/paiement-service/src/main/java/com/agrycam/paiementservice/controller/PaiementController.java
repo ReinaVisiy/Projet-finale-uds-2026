@@ -107,6 +107,21 @@ public class PaiementController {
     }
 
     /**
+     * PUT /api/paiements/commandes/{commandeId}/rembourser-litige (rôle admin / service interne)
+     * Appele par commande-service (module Litige) lorsqu'un admin resout
+     * un litige "Produit non livré" par un remboursement en un clic :
+     * rembourse 100% au client et debite le sequestre du vendeur. Refuse
+     * (400, via SoldeInsuffisantException) si les fonds ont deja ete
+     * liberes vers le solde disponible.
+     */
+    @PutMapping("/commandes/{commandeId}/rembourser-litige")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> rembourserLitige(@PathVariable Long commandeId) {
+        paiementService.traiterRemboursementLitige(commandeId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * POST /api/paiements/webhook/simiz (Public / Non protege par JWT)
      * Receptionne les notifications asynchrones de paiement de Simiz.
      */
