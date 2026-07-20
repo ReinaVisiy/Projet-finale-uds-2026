@@ -966,9 +966,9 @@ export default function App() {
           }}
         />;
       case 'sales-history':
-        return <SalesHistory onBack={() => navigate('seller-dashboard')} />;
+        return <SalesHistory onBack={() => navigate('seller-dashboard')} adminOrders={toutesLesCommandes} vendeurProducts={vendeurProducts} />;
       case 'stock-alerts':
-        return <StockAlerts onBack={() => navigate('seller-dashboard')} />;
+        return <StockAlerts onBack={() => navigate('seller-dashboard')} vendeurProducts={vendeurProducts} />;
       case 'certification':
         return <CertificationRequest
           onBack={() => navigate('seller-dashboard')}

@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
 
-const stockItems = [
-  { id: 1, product: 'Banane fraîche', emoji: '🍌', stock: 2, unit: 'kg', threshold: 50, alert: 'CRITIQUE', priority: 'Urgent', category: 'Fruits' },
-  { id: 2, product: 'Tomate fraîche', emoji: '🍅', stock: 5, unit: 'kg', threshold: 20, alert: 'FAIBLE', priority: 'Haute', category: 'Légumes' },
-  { id: 3, product: 'Maïs grain', emoji: '🌽', stock: 15, unit: 'kg', threshold: 100, alert: 'CRITIQUE', priority: 'Urgent', category: 'Céréales' },
-  { id: 4, product: 'Lait frais', emoji: '🥛', stock: 10, unit: 'L', threshold: 50, alert: 'FAIBLE', priority: 'Moyenne', category: 'Laitier' },
-  { id: 5, product: 'Œufs fermiers', emoji: '🥚', stock: 20, unit: 'pcs', threshold: 100, alert: 'CRITIQUE', priority: 'Urgent', category: 'Autres' },
-  { id: 6, product: 'Ananas Bio', emoji: '🍍', stock: 4, unit: 'pcs', threshold: 30, alert: 'FAIBLE', priority: 'Haute', category: 'Fruits' },
-];
-
 const alertConfig = {
   CRITIQUE: { color: '#dc3545', bg: '#fde8ea', label: '🔴 CRITIQUE' },
   FAIBLE: { color: '#e07a5f', bg: '#fdf1ed', label: '🟡 FAIBLE' },
@@ -20,8 +11,31 @@ const priorityConfig = {
   Moyenne: { color: '#f0a500', bg: '#fff9e6' },
 };
 
-export default function StockAlerts({ onBack }) {
-  const [items, setItems] = useState(stockItems);
+// Seuils d'alerte, cohérents avec ceux déjà utilisés dans SellerDashboard
+// (lowStockItems = vendeurProducts.filter(p => p.stock <= 10)) :
+// - stock <= 3  -> CRITIQUE (rupture imminente)
+// - stock <= 10 -> FAIBLE
+const CRITICAL_THRESHOLD = 3;
+const LOW_THRESHOLD = 10;
+
+export default function StockAlerts({ onBack, vendeurProducts = [] }) {
+  // Alertes construites à partir des vrais produits du vendeur (stock réel
+  // renvoyé par produit-service), et non plus d'une liste de produits
+  // fictifs (banane, tomate, maïs...) identique pour tout le monde.
+  const items = vendeurProducts
+    .filter(p => (p.stock ?? 0) <= LOW_THRESHOLD)
+    .map(p => ({
+      id: p.id,
+      product: p.name,
+      emoji: '🌾',
+      stock: p.stock ?? 0,
+      unit: 'unité(s)',
+      category: p.category || 'Général',
+      alert: (p.stock ?? 0) <= CRITICAL_THRESHOLD ? 'CRITIQUE' : 'FAIBLE',
+      priority: (p.stock ?? 0) <= CRITICAL_THRESHOLD ? 'Urgent' : (p.stock ?? 0) <= 6 ? 'Haute' : 'Moyenne',
+    }))
+    .sort((a, b) => a.stock - b.stock);
+
   const [filter, setFilter] = useState('Toutes');
   const [toast, setToast] = useState('');
   const [orderedIds, setOrderedIds] = useState([]);
@@ -50,6 +64,18 @@ export default function StockAlerts({ onBack }) {
     setOrderedIds(items.filter(i => i.alert === 'CRITIQUE').map(i => i.id));
     showToast(`🚀 ${critiques.length} commandes d'urgence passées pour les stocks CRITIQUES !`);
   };
+
+  if (items.length === 0) {
+    return (
+      <div style={styles.container} className="fade-in">
+        <div style={styles.emptyOk}>
+          <span style={{ fontSize: '40px' }}>✅</span>
+          <h2 style={styles.emptyOkTitle}>Aucune alerte de stock</h2>
+          <p style={styles.emptyOkText}>Tous vos produits ont un stock supérieur à {LOW_THRESHOLD} unités.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container} className="fade-in">
@@ -145,14 +171,13 @@ export default function StockAlerts({ onBack }) {
           <table style={styles.table}>
             <thead>
               <tr style={styles.tableHeadRow}>
-                {['Produit', 'Stock actuel', 'Seuil minimum', 'Remplissage', 'Alerte', 'Priorité', 'Action'].map(h => (
+                {['Produit', 'Stock actuel', 'Alerte', 'Priorité', 'Action'].map(h => (
                   <th key={h} style={styles.th}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.map((item) => {
-                const fillPct = Math.round((item.stock / item.threshold) * 100);
                 const isOrdered = orderedIds.includes(item.id);
                 const alertCfg = alertConfig[item.alert];
                 const priCfg = priorityConfig[item.priority];
@@ -175,23 +200,6 @@ export default function StockAlerts({ onBack }) {
                       <strong style={{ color: item.alert === 'CRITIQUE' ? '#dc3545' : '#e07a5f', fontSize: '14px' }}>
                         {item.stock} {item.unit}
                       </strong>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={styles.thresholdText}>{item.threshold} {item.unit}</span>
-                    </td>
-                    <td style={{ ...styles.td, minWidth: '120px' }}>
-                      <div style={styles.fillWrapper}>
-                        <div style={styles.fillBar}>
-                          <div style={{
-                            ...styles.fillFill,
-                            width: `${fillPct}%`,
-                            backgroundColor: fillPct < 15 ? '#dc3545' : '#e07a5f',
-                          }} />
-                        </div>
-                        <span style={{ ...styles.fillPct, color: fillPct < 15 ? '#dc3545' : '#e07a5f' }}>
-                          {fillPct}%
-                        </span>
-                      </div>
                     </td>
                     <td style={styles.td}>
                       <span style={{
@@ -271,6 +279,26 @@ export default function StockAlerts({ onBack }) {
 }
 
 const styles = {
+  emptyOk: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px',
+    padding: '80px 24px',
+    textAlign: 'center',
+  },
+  emptyOkTitle: {
+    fontSize: '18px',
+    fontWeight: '800',
+    color: '#212529',
+    margin: 0,
+  },
+  emptyOkText: {
+    fontSize: '13px',
+    color: '#6c757d',
+    margin: 0,
+  },
   container: {
     maxWidth: '1100px',
     margin: '0 auto',
@@ -279,8 +307,7 @@ const styles = {
   },
   toast: {
     position: 'fixed',
-    bottom: '24px',
-    right: '24px',
+    bottom: '24px',    right: '24px',
     backgroundColor: '#1b4d3e',
     color: '#ffffff',
     padding: '14px 20px',

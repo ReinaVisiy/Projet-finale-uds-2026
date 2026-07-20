@@ -2,72 +2,43 @@ import React, { useState } from 'react';
 import { useDict, useLanguage } from '../context/LanguageContext';
 
 // Avant : toutes les données (mois, catégories, transactions, statuts,
-// période) étaient des chaînes françaises codées en dur, utilisées à la
-// fois pour l'affichage ET pour le filtrage (recherche/statut/période).
-// Résultat : impossible à traduire sans casser les filtres. On sépare
-// maintenant une clé stable (ex. 'livree', 'banane_fraiche') du libellé
-// affiché (fr/en), pour que la recherche et les filtres donnent
-// exactement les mêmes résultats quelle que soit la langue affichée —
-// chercher "pastèque" ou "watermelon" doit remonter la même ligne.
+// KPIs) étaient des tableaux fictifs codés en dur (mêmes 6 "ventes" pour
+// tout le monde, montants inventés). Elles sont désormais calculées à
+// partir des vraies commandes reçues (adminOrders) filtrées sur les
+// produits de ce vendeur (vendeurProducts), comme le fait déjà
+// SellerDashboard pour son propre graphique de ventes mensuelles.
 
-const PRODUCT_LABELS = {
-  banane: { fr: 'Banane fraîche', en: 'Fresh banana' },
-  tomate: { fr: 'Tomate fraîche', en: 'Fresh tomato' },
-  mais: { fr: 'Maïs grain', en: 'Corn grain' },
-  lait: { fr: 'Lait frais', en: 'Fresh milk' },
-  ananas: { fr: 'Ananas Bio', en: 'Organic pineapple' },
-  gombo: { fr: 'Gombo séché', en: 'Dried okra' },
+// Les 6 statuts réels renvoyés par commande-service (voir
+// STATUT_BACKEND_TO_FRANCAIS dans commandeMapping.js).
+const STATUS_ORDER = ['En attente', 'Validée', 'En préparation', 'En livraison', 'Livrée', 'Annulée'];
+const STATUS_EN = {
+  'En attente': 'Pending',
+  'Validée': 'Validated',
+  'En préparation': 'Preparing',
+  'En livraison': 'Shipping',
+  'Livrée': 'Delivered',
+  'Annulée': 'Cancelled',
+};
+const STATUS_COLORS = {
+  'En attente': { color: '#f0a500', bg: '#fff9e6' },
+  'Validée': { color: '#6c757d', bg: '#f1f3f5' },
+  'En préparation': { color: '#6c757d', bg: '#f1f3f5' },
+  'En livraison': { color: '#0066cc', bg: '#e0f0ff' },
+  'Livrée': { color: '#2d6a4f', bg: '#d8f3dc' },
+  'Annulée': { color: '#dc3545', bg: '#fde8ea' },
 };
 
-const STATUS_LABELS = {
-  livree: { fr: 'Livrée', en: 'Delivered' },
-  en_livraison: { fr: 'En livraison', en: 'Shipping' },
-  annulee: { fr: 'Annulée', en: 'Cancelled' },
-};
+const MONTH_LABELS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+const MONTH_LABELS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const CATEGORY_LABELS = {
-  fruits_legumes: { fr: 'Fruits & Légumes', en: 'Fruits & Vegetables' },
-  cereales: { fr: 'Céréales', en: 'Grains' },
-  laitiers: { fr: 'Produits laitiers', en: 'Dairy products' },
-  epices: { fr: 'Épices & Condiments', en: 'Spices & Condiments' },
-};
-
-const chartData = [
-  { monthKey: 'jan', sales: 380000, orders: 18 },
-  { monthKey: 'fev', sales: 420000, orders: 22 },
-  { monthKey: 'mar', sales: 310000, orders: 15 },
-  { monthKey: 'avr', sales: 550000, orders: 28 },
-  { monthKey: 'mai', sales: 490000, orders: 24 },
-  { monthKey: 'jun', sales: 680000, orders: 34 },
-];
-
-const MONTH_LABELS = {
-  jan: { fr: 'Jan', en: 'Jan' },
-  fev: { fr: 'Fév', en: 'Feb' },
-  mar: { fr: 'Mar', en: 'Mar' },
-  avr: { fr: 'Avr', en: 'Apr' },
-  mai: { fr: 'Mai', en: 'May' },
-  jun: { fr: 'Jun', en: 'Jun' },
-};
-
-const categories = [
-  { key: 'fruits_legumes', pct: 42, amount: '523,000', color: '#2d6a4f', icon: '🥭' },
-  { key: 'cereales', pct: 28, amount: '348,500', color: '#40916c', icon: '🌾' },
-  { key: 'laitiers', pct: 18, amount: '224,000', color: '#95d5b2', icon: '🥛' },
-  { key: 'epices', pct: 12, amount: '149,500', color: '#d8f3dc', icon: '🌶️' },
-];
-
-const transactions = [
-  { date: '15/05', productKey: 'banane', qty: '10 kg', amount: 25000, client: 'Bakari Sow', statusKey: 'livree' },
-  { date: '14/05', productKey: 'tomate', qty: '5 kg', amount: 7500, client: 'Aminata Fall', statusKey: 'livree' },
-  { date: '13/05', productKey: 'mais', qty: '20 kg', amount: 60000, client: 'Kofi Mensah', statusKey: 'en_livraison' },
-  { date: '12/05', productKey: 'lait', qty: '25 L', amount: 30000, client: 'Fatou Diallo', statusKey: 'livree' },
-  { date: '11/05', productKey: 'ananas', qty: '8 pcs', amount: 22400, client: 'Ibrahim Sagna', statusKey: 'livree' },
-  { date: '10/05', productKey: 'gombo', qty: '3 kg', amount: 9000, client: 'Mariama Bah', statusKey: 'annulee' },
-];
+// Palette cyclique pour le donut des catégories (les vraies catégories du
+// vendeur ne sont pas connues à l'avance, contrairement à l'ancienne
+// liste fixe fruits/céréales/laitiers/épices).
+const CATEGORY_COLORS = ['#2d6a4f', '#40916c', '#95d5b2', '#d8f3dc', '#74c69d', '#b7e4c7'];
 
 const periodKeys = ['7j', '30j', '3m', '1a'];
-const statusKeys = ['toutes', 'livree', 'en_livraison', 'annulee'];
+const PERIOD_DAYS = { '7j': 7, '30j': 30, '3m': 90, '1a': 365 };
+const statusKeys = ['toutes', ...STATUS_ORDER];
 
 const translations = {
   fr: {
@@ -76,14 +47,13 @@ const translations = {
     exportBtn: 'Exporter CSV',
     exportToast: '📊 Export CSV en cours de génération...',
     periods: { '7j': '7 jours', '30j': '30 jours', '3m': '3 mois', '1a': '1 an' },
-    statusLabels: { toutes: 'Toutes', ...Object.fromEntries(Object.entries(STATUS_LABELS).map(([k, v]) => [k, v.fr])) },
-    kpis: [
-      { label: 'Total des ventes', value: '450,000', unit: 'FCFA', change: '+15%', up: true, icon: '💰' },
-      { label: 'Commandes', value: '24', unit: '', change: '+8%', up: true, icon: '📦' },
-      { label: 'Panier moyen', value: '18,750', unit: 'FCFA', change: '+5%', up: true, icon: '🛒' },
-      { label: 'Produit top', value: 'Banane', unit: '45 ventes', change: '1er', up: true, icon: '🏆' },
-    ],
+    statusLabels: { toutes: 'Toutes', ...Object.fromEntries(STATUS_ORDER.map(s => [s, s])) },
+    kpiLabels: {
+      totalSales: 'Total des ventes', orders: 'Commandes', avgBasket: 'Panier moyen', topProduct: 'Produit top',
+      noSales: 'Aucune vente', sales: (n) => `${n} vente${n > 1 ? 's' : ''}`,
+    },
     salesLabel: 'Ventes',
+    last6Months: '6 derniers mois',
     ordersLabel: 'Commandes',
     revenueSub: "Chiffre d'affaires mensuel en FCFA",
     topCategoriesTitle: 'Top catégories',
@@ -103,14 +73,13 @@ const translations = {
     exportBtn: 'Export CSV',
     exportToast: '📊 CSV export in progress...',
     periods: { '7j': '7 days', '30j': '30 days', '3m': '3 months', '1a': '1 year' },
-    statusLabels: { toutes: 'All', ...Object.fromEntries(Object.entries(STATUS_LABELS).map(([k, v]) => [k, v.en])) },
-    kpis: [
-      { label: 'Total sales', value: '450,000', unit: 'FCFA', change: '+15%', up: true, icon: '💰' },
-      { label: 'Orders', value: '24', unit: '', change: '+8%', up: true, icon: '📦' },
-      { label: 'Average basket', value: '18,750', unit: 'FCFA', change: '+5%', up: true, icon: '🛒' },
-      { label: 'Top product', value: 'Banana', unit: '45 sales', change: '1st', up: true, icon: '🏆' },
-    ],
+    statusLabels: { toutes: 'All', ...Object.fromEntries(STATUS_ORDER.map(s => [s, STATUS_EN[s]])) },
+    kpiLabels: {
+      totalSales: 'Total sales', orders: 'Orders', avgBasket: 'Average basket', topProduct: 'Top product',
+      noSales: 'No sales yet', sales: (n) => `${n} sale${n > 1 ? 's' : ''}`,
+    },
     salesLabel: 'Sales',
+    last6Months: 'Last 6 months',
     ordersLabel: 'Orders',
     revenueSub: 'Monthly revenue in FCFA',
     topCategoriesTitle: 'Top categories',
@@ -126,7 +95,7 @@ const translations = {
   },
 };
 
-export default function SalesHistory({ onBack }) {
+export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts = [] }) {
   const t = useDict(translations);
   const { lang } = useLanguage();
   const [selectedPeriod, setSelectedPeriod] = useState('30j');
@@ -140,18 +109,95 @@ export default function SalesHistory({ onBack }) {
     setTimeout(() => setToast(''), 3000);
   };
 
-  const maxSales = Math.max(...chartData.map(d => d.sales));
+  // ===== Transactions réelles =====
+  // Une "transaction" = une ligne de commande dont le produit appartient
+  // à ce vendeur (même filtrage que SellerDashboard pour ses revenus).
+  const allTransactions = [];
+  adminOrders.forEach(order => {
+    (order.items || []).forEach(item => {
+      const produit = vendeurProducts.find(p => p.name === item.nomProduit || p.name === item.name);
+      if (!produit) return;
+      allTransactions.push({
+        date: order.date,
+        dateISO: order.dateISO,
+        product: item.nomProduit || item.name || produit.name,
+        category: produit.category || 'Général',
+        qty: `${item.quantity} unité(s)`,
+        amount: item.subtotal || 0,
+        client: order.client,
+        status: order.status,
+        orderId: order.id,
+      });
+    });
+  });
+  allTransactions.sort((a, b) => new Date(b.dateISO || 0) - new Date(a.dateISO || 0));
 
-  // La recherche compare la requête aux libellés FR ET EN du produit, pas
-  // seulement à celui actuellement affiché : taper "pastèque" ou son
-  // équivalent anglais doit retrouver la même ligne, quelle que soit la
-  // langue active de l'interface.
-  const filtered = transactions.filter(row => {
+  // ===== Filtre période (7j/30j/3m/1a) =====
+  // Auparavant purement décoratif : les boutons changeaient de style sans
+  // jamais filtrer les données affichées.
+  const now = new Date();
+  const periodStart = new Date(now);
+  periodStart.setDate(now.getDate() - PERIOD_DAYS[selectedPeriod]);
+  const transactionsInPeriod = allTransactions.filter(txn => {
+    if (!txn.dateISO) return true;
+    const d = new Date(txn.dateISO);
+    return d >= periodStart && d <= now;
+  });
+
+  // ===== KPIs =====
+  const totalSales = transactionsInPeriod.reduce((s, t2) => s + t2.amount, 0);
+  const ordersInPeriod = new Set(transactionsInPeriod.map(t2 => t2.orderId)).size;
+  const avgBasket = ordersInPeriod > 0 ? Math.round(totalSales / ordersInPeriod) : 0;
+  const salesByProduct = {};
+  transactionsInPeriod.forEach(t2 => {
+    salesByProduct[t2.product] = (salesByProduct[t2.product] || 0) + t2.amount;
+  });
+  const topProductEntry = Object.entries(salesByProduct).sort((a, b) => b[1] - a[1])[0];
+  const fmt = (n) => n.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR');
+  const kpis = [
+    { label: t.kpiLabels.totalSales, value: fmt(totalSales), unit: 'FCFA', icon: '💰' },
+    { label: t.kpiLabels.orders, value: String(ordersInPeriod), unit: '', icon: '📦' },
+    { label: t.kpiLabels.avgBasket, value: fmt(avgBasket), unit: 'FCFA', icon: '🛒' },
+    { label: t.kpiLabels.topProduct, value: topProductEntry ? topProductEntry[0] : t.kpiLabels.noSales, unit: '', icon: '🏆' },
+  ];
+
+  // ===== Graphique : 6 derniers mois (dynamique, pas Jan-Jun figé) =====
+  const monthLabels = lang === 'en' ? MONTH_LABELS_EN : MONTH_LABELS_FR;
+  const chartData = Array.from({ length: 6 }).map((_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    const monthTxns = allTransactions.filter(t2 => {
+      if (!t2.dateISO) return false;
+      const td = new Date(t2.dateISO);
+      return td.getMonth() === d.getMonth() && td.getFullYear() === d.getFullYear();
+    });
+    return {
+      label: monthLabels[d.getMonth()],
+      sales: monthTxns.reduce((s, t2) => s + t2.amount, 0),
+      orders: new Set(monthTxns.map(t2 => t2.orderId)).size,
+    };
+  });
+  const maxSales = Math.max(1, ...chartData.map(d => d.sales));
+  const maxOrders = Math.max(1, ...chartData.map(d => d.orders));
+
+  // ===== Catégories =====
+  const salesByCategory = {};
+  transactionsInPeriod.forEach(t2 => {
+    salesByCategory[t2.category] = (salesByCategory[t2.category] || 0) + t2.amount;
+  });
+  const categories = Object.entries(salesByCategory)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, amount], i) => ({
+      name,
+      amount: fmt(amount),
+      pct: totalSales > 0 ? Math.round((amount / totalSales) * 100) : 0,
+      color: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
+    }));
+
+  // La recherche compare la requête au nom du produit et au client.
+  const filtered = transactionsInPeriod.filter(row => {
     const q = searchQuery.toLowerCase();
-    const productFr = PRODUCT_LABELS[row.productKey].fr.toLowerCase();
-    const productEn = PRODUCT_LABELS[row.productKey].en.toLowerCase();
-    const matchSearch = productFr.includes(q) || productEn.includes(q) || row.client.toLowerCase().includes(q);
-    const matchStatus = statusFilter === 'toutes' || row.statusKey === statusFilter;
+    const matchSearch = row.product.toLowerCase().includes(q) || row.client.toLowerCase().includes(q);
+    const matchStatus = statusFilter === 'toutes' || row.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
@@ -197,24 +243,17 @@ export default function SalesHistory({ onBack }) {
 
       {/* ── KPI Cards ── */}
       <div style={styles.kpiGrid}>
-        {t.kpis.map((k, i) => (
+        {kpis.map((k, i) => (
           <div key={i} style={styles.kpiCard}>
             <div style={styles.kpiRow}>
               <div style={styles.kpiIconWrap}>
                 <span style={styles.kpiIcon}>{k.icon}</span>
               </div>
-              <span style={{
-                ...styles.kpiChange,
-                color: k.up ? '#2d6a4f' : '#dc3545',
-                backgroundColor: k.up ? '#d8f3dc' : '#fde8ea',
-              }}>
-                {k.up ? '▲' : '▼'} {k.change}
-              </span>
             </div>
             <p style={styles.kpiLabel}>{k.label}</p>
             <p style={styles.kpiValue}>
               {k.value}
-              <span style={styles.kpiUnit}> {k.unit}</span>
+              {k.unit && <span style={styles.kpiUnit}> {k.unit}</span>}
             </p>
           </div>
         ))}
@@ -227,7 +266,7 @@ export default function SalesHistory({ onBack }) {
         <div style={styles.chartCard}>
           <div style={styles.cardHeader}>
             <div>
-              <h3 style={styles.cardTitle}>{t.salesLabel} — {t.periods[selectedPeriod]}</h3>
+              <h3 style={styles.cardTitle}>{t.salesLabel} — {t.last6Months}</h3>
               <p style={styles.cardSub}>{t.revenueSub}</p>
             </div>
             <div style={styles.chartLegend}>
@@ -247,9 +286,9 @@ export default function SalesHistory({ onBack }) {
               {chartData.map((d, i) => {
                 const isHov = hoveredBar === i;
                 const barH = (d.sales / maxSales) * 100;
-                const ordH = (d.orders / 40) * 100;
+                const ordH = (d.orders / maxOrders) * 100;
                 return (
-                  <div key={d.monthKey} style={styles.barGroupDouble}
+                  <div key={i} style={styles.barGroupDouble}
                     onMouseEnter={() => setHoveredBar(i)}
                     onMouseLeave={() => setHoveredBar(null)}
                   >
@@ -277,7 +316,7 @@ export default function SalesHistory({ onBack }) {
                         backgroundColor: isHov ? '#c05a40' : '#e07a5f',
                       }} />
                     </div>
-                    <span style={styles.barLabel}>{MONTH_LABELS[d.monthKey][lang]}</span>
+                    <span style={styles.barLabel}>{d.label}</span>
                   </div>
                 );
               })}
@@ -326,18 +365,21 @@ export default function SalesHistory({ onBack }) {
                   );
                 });
               })()}
-              <text x="70" y="66" textAnchor="middle" fill="#212529" fontSize="14" fontWeight="800">450K</text>
+              <text x="70" y="66" textAnchor="middle" fill="#212529" fontSize="14" fontWeight="800">
+                {totalSales >= 1000 ? `${Math.round(totalSales / 1000)}K` : totalSales}
+              </text>
               <text x="70" y="80" textAnchor="middle" fill="#adb5bd" fontSize="9" fontWeight="600">FCFA</text>
             </svg>
           </div>
 
           <div style={styles.categoryList}>
-            {categories.map((cat, i) => (
+            {categories.length === 0 ? (
+              <p style={{ fontSize: '13px', color: '#adb5bd', textAlign: 'center', padding: '12px 0' }}>{t.kpiLabels.noSales}</p>
+            ) : categories.map((cat, i) => (
               <div key={i} style={styles.categoryItem}>
                 <div style={styles.catLeft}>
                   <div style={{ ...styles.catDot, backgroundColor: cat.color }} />
-                  <span style={styles.catIcon}>{cat.icon}</span>
-                  <span style={styles.catName}>{CATEGORY_LABELS[cat.key][lang]}</span>
+                  <span style={styles.catName}>{cat.name}</span>
                 </div>
                 <div style={styles.catRight}>
                   <span style={styles.catAmount}>{cat.amount} F</span>
@@ -406,17 +448,12 @@ export default function SalesHistory({ onBack }) {
                 </tr>
               ) : (
                 filtered.map((row, i) => {
-                  const statusStyles = {
-                    livree: { color: '#2d6a4f', bg: '#d8f3dc' },
-                    en_livraison: { color: '#0066cc', bg: '#e0f0ff' },
-                    annulee: { color: '#dc3545', bg: '#fde8ea' },
-                  }[row.statusKey] || { color: '#6c757d', bg: '#f1f3f5' };
-                  const productLabel = PRODUCT_LABELS[row.productKey][lang];
+                  const statusStyles = STATUS_COLORS[row.status] || { color: '#6c757d', bg: '#f1f3f5' };
 
                   return (
                     <tr key={i} style={styles.tr}>
                       <td style={styles.td}><span style={styles.dateChip}>{row.date}</span></td>
-                      <td style={styles.td}><strong style={{ color: '#212529' }}>{productLabel}</strong></td>
+                      <td style={styles.td}><strong style={{ color: '#212529' }}>{row.product}</strong></td>
                       <td style={styles.td}>{row.qty}</td>
                       <td style={styles.td}><strong style={{ color: '#e07a5f' }}>{row.amount.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR')} FCFA</strong></td>
                       <td style={styles.td}>{row.client}</td>
@@ -426,13 +463,13 @@ export default function SalesHistory({ onBack }) {
                           color: statusStyles.color,
                           backgroundColor: statusStyles.bg,
                         }}>
-                          {t.statusLabels[row.statusKey]}
+                          {t.statusLabels[row.status] || row.status}
                         </span>
                       </td>
                       <td style={styles.td}>
                         <button
                           style={styles.actionLink}
-                          onClick={() => showToast(t.detailToast(productLabel, row.client))}
+                          onClick={() => showToast(t.detailToast(row.product, row.client))}
                         >
                           {t.view}
                         </button>
