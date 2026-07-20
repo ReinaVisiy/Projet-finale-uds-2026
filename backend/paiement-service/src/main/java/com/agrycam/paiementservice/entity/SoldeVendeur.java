@@ -11,7 +11,12 @@ import java.time.LocalDateTime;
 
 /**
  * Entite représentant le portefeuille (solde) d'un vendeur sur AgryCam.
- * Les fonds issus des transactions y sont credites après deduction de la commission de 5%.
+ * Le solde est scinde en deux :
+ *   - soldeSequestre : fonds verrouilles des qu'un paiement est confirme,
+ *     tant que la commande correspondante n'est pas LIVREE. Ne peut pas
+ *     etre retire.
+ *   - soldeDisponible : fonds liberes du sequestre une fois la commande
+ *     LIVREE (ou son remboursement traite). Seul ce solde peut etre retire.
  */
 @Entity
 @Table(name = "soldes_vendeurs")
@@ -28,8 +33,11 @@ public class SoldeVendeur {
     @Column(name = "vendeur_id", nullable = false, unique = true)
     private Long vendeurId;
 
-    @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal solde; // Solde net disponible pour retrait
+    @Column(name = "solde_sequestre", nullable = false, precision = 12, scale = 2)
+    private BigDecimal soldeSequestre;
+
+    @Column(name = "solde_disponible", nullable = false, precision = 12, scale = 2)
+    private BigDecimal soldeDisponible;
 
     @Column(nullable = false, length = 10)
     private String devise; // ex. "XAF"
@@ -40,8 +48,11 @@ public class SoldeVendeur {
     @PrePersist
     protected void onCreate() {
         this.dateMiseAJour = LocalDateTime.now();
-        if (this.solde == null) {
-            this.solde = BigDecimal.ZERO;
+        if (this.soldeSequestre == null) {
+            this.soldeSequestre = BigDecimal.ZERO;
+        }
+        if (this.soldeDisponible == null) {
+            this.soldeDisponible = BigDecimal.ZERO;
         }
         if (this.devise == null) {
             this.devise = "XAF";

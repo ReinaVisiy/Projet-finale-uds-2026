@@ -225,21 +225,25 @@ public class PaiementService {
         transaction.setDateConfirmation(LocalDateTime.now());
         transactionRepository.save(transaction);
 
-        // Crediter le solde du vendeur (Montant net = 95%)
+        // Crediter le SEQUESTRE du vendeur (Montant net = 95%) : les fonds
+        // restent verrouilles tant que la commande n'est pas LIVREE. Ils ne
+        // deviennent retirables (soldeDisponible) qu'a la livraison
+        // confirmee (cf. libererFondsSequestre, declenche par commande-service).
         Long vendeurId = transaction.getVendeurId();
         BigDecimal montantNet = transaction.getMontantNet();
 
         SoldeVendeur solde = soldeVendeurRepository.findByVendeurId(vendeurId)
                 .orElseGet(() -> SoldeVendeur.builder()
                         .vendeurId(vendeurId)
-                        .solde(BigDecimal.ZERO)
+                        .soldeSequestre(BigDecimal.ZERO)
+                        .soldeDisponible(BigDecimal.ZERO)
                         .devise("XAF")
                         .build());
 
-        solde.setSolde(solde.getSolde().add(montantNet));
+        solde.setSoldeSequestre(solde.getSoldeSequestre().add(montantNet));
         soldeVendeurRepository.save(solde);
 
-        log.info("Portefeuille du vendeur {} credite avec succes du montant net de {} XAF (Transaction #{})",
+        log.info("Sequestre du vendeur {} credite avec succes du montant net de {} XAF (Transaction #{}) - verrouille jusqu'a livraison",
                 vendeurId, montantNet, transaction.getId());
 
         // Repercute la confirmation de paiement sur le service concerne
@@ -294,7 +298,8 @@ public class PaiementService {
                 .orElseGet(() -> {
                     SoldeVendeur nouveauSolde = SoldeVendeur.builder()
                             .vendeurId(vendeurId)
-                            .solde(BigDecimal.ZERO)
+                            .soldeSequestre(BigDecimal.ZERO)
+                            .soldeDisponible(BigDecimal.ZERO)
                             .devise("XAF")
                             .build();
                     return soldeVendeurRepository.save(nouveauSolde);
@@ -330,13 +335,17 @@ public class PaiementService {
         SoldeVendeur soldeVendeur = soldeVendeurRepository.findByVendeurId(vendeurId)
                 .orElseThrow(() -> new SoldeInsuffisantException("Portefeuille vendeur inexistant. Retrait impossible."));
 
-        if (soldeVendeur.getSolde().compareTo(montant) < 0) {
-            throw new SoldeInsuffisantException(String.format("Solde insuffisant pour retirer %s XAF. Votre solde disponible est de %s XAF.",
-                    montant, soldeVendeur.getSolde()));
+        // Seul le solde DISPONIBLE (fonds liberes apres livraison confirmee)
+        // peut etre retire. Le solde sequestre reste verrouille meme si le
+        // total des deux serait suffisant : ce sont des fonds qui ne
+        // appartiennent pas encore definitivement au vendeur.
+        if (soldeVendeur.getSoldeDisponible().compareTo(montant) < 0) {
+            throw new SoldeInsuffisantException(String.format("Solde disponible insuffisant pour retirer %s XAF. Votre solde disponible est de %s XAF (le solde en sequestre n'est pas retirable tant que la commande n'est pas livree).",
+                    montant, soldeVendeur.getSoldeDisponible()));
         }
 
-        // Decrementer le solde
-        soldeVendeur.setSolde(soldeVendeur.getSolde().subtract(montant));
+        // Decrementer le solde disponible
+        soldeVendeur.setSoldeDisponible(soldeVendeur.getSoldeDisponible().subtract(montant));
         soldeVendeurRepository.save(soldeVendeur);
 
         // Generer la reference factice du reçu de virement

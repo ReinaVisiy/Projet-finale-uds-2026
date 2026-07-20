@@ -76,7 +76,12 @@ public class ServiceCommunicationClient {
     }
 
     private void notifierCommande(Long commandeId, boolean paye) {
-        String nouveauStatut = paye ? "VALIDEE" : "ANNULEE";
+        // EN_ATTENTE est le statut que la commande porte deja depuis sa
+        // creation (avant meme le paiement) : on le repose ici surtout pour
+        // le cas d'echec/expiration -> ANNULEE. VALIDEE est desormais une
+        // action reservee au VENDEUR (il accepte la commande) : la
+        // confirmation de paiement ne doit plus la definir elle-meme.
+        String nouveauStatut = paye ? "EN_ATTENTE" : "ANNULEE";
 
         String url = UriComponentsBuilder.fromHttpUrl(commandeServiceUrl + "/api/commandes/" + commandeId + "/statut")
                 .queryParam("statut", nouveauStatut)
