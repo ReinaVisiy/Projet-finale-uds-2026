@@ -1,8 +1,31 @@
 // src/components/VendeurOrders.jsx
 import React, { useState } from 'react';
 import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { useDict } from '../context/LanguageContext';
+
+const translations = {
+  fr: {
+    receivedOrders: 'Mes commandes reçues', manageOrders: 'Gérez les commandes des clients',
+    noOrdersYet: "Vous n'avez reçu aucune commande pour le moment.", order: 'Commande',
+    client: 'Client', email: 'Email', notProvided: 'Non renseigné', date: 'Date',
+    totalAmount: 'Montant total', orderedProducts: 'Produits commandés', product: 'Produit',
+    quantity: 'Quantité', unitPrice: 'Prix unit.', total: 'Total', changeStatus: 'Changer le statut :',
+    statusPending: 'En attente', statusPreparing: 'En préparation', statusShipping: 'En livraison',
+    statusDelivered: 'Livrée', statusCancelled: 'Annulée',
+  },
+  en: {
+    receivedOrders: 'Orders received', manageOrders: "Manage your customers' orders",
+    noOrdersYet: "You haven't received any orders yet.", order: 'Order',
+    client: 'Client', email: 'Email', notProvided: 'Not provided', date: 'Date',
+    totalAmount: 'Total amount', orderedProducts: 'Ordered products', product: 'Product',
+    quantity: 'Quantity', unitPrice: 'Unit price', total: 'Total', changeStatus: 'Change status:',
+    statusPending: 'Pending', statusPreparing: 'Preparing', statusShipping: 'Shipping',
+    statusDelivered: 'Delivered', statusCancelled: 'Cancelled',
+  },
+};
 
 export default function VendeurOrders({ orders, vendeurProducts, onUpdateOrderStatus }) {
+  const t = useDict(translations);
   const [expandedOrder, setExpandedOrder] = useState(null);
 
   // Filtrer les commandes contenant au moins un produit du vendeur
@@ -56,14 +79,14 @@ export default function VendeurOrders({ orders, vendeurProducts, onUpdateOrderSt
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}>Mes commandes reçues</h2>
-        <p style={styles.subtitle}>Gérez les commandes des clients</p>
+        <h2 style={styles.title}>{t.receivedOrders}</h2>
+        <p style={styles.subtitle}>{t.manageOrders}</p>
       </div>
 
       {vendeurOrders.length === 0 ? (
         <div style={styles.emptyState}>
           <Package size={48} color="#adb5bd" />
-          <p style={styles.emptyText}>Vous n'avez reçu aucune commande pour le moment.</p>
+          <p style={styles.emptyText}>{t.noOrdersYet}</p>
         </div>
       ) : (
         <div style={styles.list}>
@@ -78,7 +101,7 @@ export default function VendeurOrders({ orders, vendeurProducts, onUpdateOrderSt
               <div key={order.id} style={styles.orderCard}>
                 <div style={styles.orderHeader} onClick={() => toggleExpand(order.id)}>
                   <div style={styles.orderLeft}>
-                    <div style={styles.orderId}>Commande #{order.id}</div>
+                    <div style={styles.orderId}>{t.order} #{order.id}</div>
                     <div style={styles.orderDate}>{order.date}</div>
                   </div>
                   <div style={styles.orderRight}>
@@ -100,32 +123,32 @@ export default function VendeurOrders({ orders, vendeurProducts, onUpdateOrderSt
                   <div style={styles.orderDetails}>
                     <div style={styles.detailsGrid}>
                       <div>
-                        <p style={styles.detailLabel}>Client</p>
+                        <p style={styles.detailLabel}>{t.client}</p>
                         <p style={styles.detailValue}>{order.client}</p>
                       </div>
                       <div>
-                        <p style={styles.detailLabel}>Email</p>
-                        <p style={styles.detailValue}>{order.clientEmail || 'Non renseigné'}</p>
+                        <p style={styles.detailLabel}>{t.email}</p>
+                        <p style={styles.detailValue}>{order.clientEmail || t.notProvided}</p>
                       </div>
                       <div>
-                        <p style={styles.detailLabel}>Date</p>
+                        <p style={styles.detailLabel}>{t.date}</p>
                         <p style={styles.detailValue}>{order.date}</p>
                       </div>
                       <div>
-                        <p style={styles.detailLabel}>Montant total</p>
+                        <p style={styles.detailLabel}>{t.totalAmount}</p>
                         <p style={styles.detailValue}>{totalAmount.toLocaleString()} FCFA</p>
                       </div>
                     </div>
 
                     <div style={styles.productsSection}>
-                      <h4 style={styles.productsTitle}>Produits commandés</h4>
+                      <h4 style={styles.productsTitle}>{t.orderedProducts}</h4>
                       <table style={styles.table}>
                         <thead>
                           <tr>
-                            <th style={styles.th}>Produit</th>
-                            <th style={styles.th}>Quantité</th>
-                            <th style={styles.th}>Prix unit.</th>
-                            <th style={styles.th}>Total</th>
+                            <th style={styles.th}>{t.product}</th>
+                            <th style={styles.th}>{t.quantity}</th>
+                            <th style={styles.th}>{t.unitPrice}</th>
+                            <th style={styles.th}>{t.total}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -142,17 +165,17 @@ export default function VendeurOrders({ orders, vendeurProducts, onUpdateOrderSt
                     </div>
 
                     <div style={styles.actionsSection}>
-                      <label style={styles.statusLabel}>Changer le statut :</label>
+                      <label style={styles.statusLabel}>{t.changeStatus}</label>
                       <select
                         value={order.status}
                         onChange={(e) => handleStatusChange(order.id, e.target.value)}
                         style={styles.statusSelect}
                       >
-                        <option value="En attente">En attente</option>
-                        <option value="En préparation">En préparation</option>
-                        <option value="En livraison">En livraison</option>
-                        <option value="Livrée">Livrée</option>
-                        <option value="Annulée">Annulée</option>
+                        <option value="En attente">{t.statusPending}</option>
+                        <option value="En préparation">{t.statusPreparing}</option>
+                        <option value="En livraison">{t.statusShipping}</option>
+                        <option value="Livrée">{t.statusDelivered}</option>
+                        <option value="Annulée">{t.statusCancelled}</option>
                       </select>
                     </div>
                   </div>
