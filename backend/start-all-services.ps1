@@ -91,4 +91,4 @@ foreach ($service in $Services) {
 }
 
 Write-Host "`nLes 12 processus démarrent chacun dans leur propre fenêtre." -ForegroundColor Cyan
-Write-Host "Vérifiez chaque fenêtre pour vous assurer qu'il n'y a pas d'erreur au démarrage." -ForegroundColor CyanS
+Write-Host "Vérifiez chaque fenêtre pour vous assurer qu'il n'y a pas d'erreur au démarrage." -ForegroundColor Cyan
