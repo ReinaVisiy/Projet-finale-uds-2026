@@ -15,7 +15,7 @@ Backend du projet **AGRYCAM**, une plateforme de mise en relation entre producte
 | `signalement-service` | 8084 | `signalement_db` | Signalement de produits ou d'utilisateurs, traitement par un administrateur. |
 | `avis-service` | 8085 | `avis_db` | Avis et notes sur les produits. |
 | `certification-service` | 8086 | `certification_db` | Demande et gestion des certifications des producteurs. |
-| `paiement-service` | 8090 | `paiement_db` | Paiements via la passerelle Simiz (transactions, retraits, solde vendeur). |
+| `paiement-service` | 8087 | `paiement_db` | Paiements via la passerelle Simiz (transactions, retraits, solde vendeur). |
 | `commande-service` | 8088 | `commande_db` | Création et suivi des commandes. |
 | `notification-service` | 8089 | `notification_db` | Notifications adressées aux utilisateurs (commande, paiement, certification, etc.). |
 

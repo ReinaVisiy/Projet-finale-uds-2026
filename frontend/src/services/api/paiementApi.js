@@ -1,5 +1,5 @@
 // src/services/api/paiementApi.js
-// Maps to paiement-service (/api/paiements) — port 8090 by default.
+// Correspond a paiement-service (/api/paiements) — port 8087 par defaut.
 // Depuis le passage a la passerelle de paiement Simiz, ce service ne
 // fonctionne plus par simple creation/mise a jour d'un "Paiement" : il
 // initie une session de paiement Simiz, puis expose sa verification.

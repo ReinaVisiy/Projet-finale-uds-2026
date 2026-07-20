@@ -22,7 +22,7 @@ Les configurations sensibles et les URL d'intégration inter-services doivent ê
 
 | Variable | Description | Valeur par défaut |
 | :--- | :--- | :--- |
-| `PORT` | Port d'écoute du microservice | `8090` |
+| `PORT` | Port d'écoute du microservice | `8087` |
 | `DATABASE_URL` | URL JDBC complète de la base PostgreSQL (harmonisé avec les autres microservices AgryCam) | `jdbc:postgresql://localhost:5432/paiement_db` |
 | `DATABASE_USERNAME` | Nom d'utilisateur de la base de données | `postgres` |
 | `DATABASE_PASSWORD` | Mot de passe de la base de données | `2026` |
@@ -48,7 +48,7 @@ export SIMIZ_PUBLIC_KEY="votre_cle_publique_simiz"
 mvn spring-boot:run
 ```
 
-Le service démarre sur le port `8090`.
+Le service démarre sur le port `8087`.
 
 ### 3. Déploiement sur une plateforme cloud (Render, Heroku, etc.)
 Le service détectera automatiquement la variable d'environnement `PORT` injectée par la plateforme d'hébergement.
