@@ -1,5 +1,6 @@
  // src/components/NotificationsCenter.jsx
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 
 const typeIconMap = {
@@ -25,6 +26,7 @@ export default function NotificationsCenter({
   onDelete,
   onNavigateToLink,
 }) {
+  const { t, i18n } = useTranslation();
   const [filterType, setFilterType] = useState('all');
 
   // Sécurité : si notifications n'est pas un tableau, on le définit comme vide
@@ -58,17 +60,17 @@ export default function NotificationsCenter({
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <button style={styles.backBtn} onClick={onBack}>← Retour</button>
+        <button style={styles.backBtn} onClick={onBack}>{t('notificationsCenter.back')}</button>
         <h1 style={styles.title}>
-          <Bell size={24} /> Notifications
+          <Bell size={24} /> {t('notificationsCenter.title')}
           {unreadCount > 0 && (
-            <span style={styles.unreadBadge}>{unreadCount} non lues</span>
+            <span style={styles.unreadBadge}>{t('notificationsCenter.unreadBadge', { count: unreadCount })}</span>
           )}
         </h1>
         <div style={styles.actions}>
           {unreadCount > 0 && (
             <button style={styles.markAllBtn} onClick={handleMarkAllAsRead}>
-              Tout marquer lu
+              {t('notificationsCenter.markAllRead')}
             </button>
           )}
         </div>
@@ -79,38 +81,38 @@ export default function NotificationsCenter({
           style={{ ...styles.tab, ...(filterType === 'all' ? styles.activeTab : {}) }}
           onClick={() => setFilterType('all')}
         >
-          Toutes ({userNotifs.length})
+          {t('notificationsCenter.tabAll', { count: userNotifs.length })}
         </button>
         <button
           style={{ ...styles.tab, ...(filterType === 'info' ? styles.activeTab : {}) }}
           onClick={() => setFilterType('info')}
         >
-          Info ({userNotifs.filter(n => n.type === 'info').length})
+          {t('notificationsCenter.tabInfo', { count: userNotifs.filter(n => n.type === 'info').length })}
         </button>
         <button
           style={{ ...styles.tab, ...(filterType === 'success' ? styles.activeTab : {}) }}
           onClick={() => setFilterType('success')}
         >
-          Succès ({userNotifs.filter(n => n.type === 'success').length})
+          {t('notificationsCenter.tabSuccess', { count: userNotifs.filter(n => n.type === 'success').length })}
         </button>
         <button
           style={{ ...styles.tab, ...(filterType === 'warning' ? styles.activeTab : {}) }}
           onClick={() => setFilterType('warning')}
         >
-          Alertes ({userNotifs.filter(n => n.type === 'warning').length})
+          {t('notificationsCenter.tabWarning', { count: userNotifs.filter(n => n.type === 'warning').length })}
         </button>
         <button
           style={{ ...styles.tab, ...(filterType === 'error' ? styles.activeTab : {}) }}
           onClick={() => setFilterType('error')}
         >
-          Erreurs ({userNotifs.filter(n => n.type === 'error').length})
+          {t('notificationsCenter.tabError', { count: userNotifs.filter(n => n.type === 'error').length })}
         </button>
       </div>
 
       {filtered.length === 0 ? (
         <div style={styles.emptyState}>
           <Bell size={64} color="#dee2e6" />
-          <p style={styles.emptyText}>Aucune notification dans cette catégorie</p>
+          <p style={styles.emptyText}>{t('notificationsCenter.emptyText')}</p>
         </div>
       ) : (
         <div style={styles.list}>
@@ -136,7 +138,7 @@ export default function NotificationsCenter({
                   </div>
                   <div style={styles.bottomRow}>
                     <span style={styles.date}>
-                      {new Date(notif.dateCreation).toLocaleString('fr-FR', {
+                      {new Date(notif.dateCreation).toLocaleString(i18n.language === 'en' ? 'en-US' : 'fr-FR', {
                         day: '2-digit',
                         month: 'short',
                         hour: '2-digit',
@@ -151,11 +153,11 @@ export default function NotificationsCenter({
                           if (onNavigateToLink) {
                             onNavigateToLink(notif.lien);
                           } else {
-                            alert('Navigation vers : ' + notif.lien);
+                            alert(t('notificationsCenter.navigateAlert', { link: notif.lien }));
                           }
                         }}
                       >
-                        Voir plus →
+                        {t('notificationsCenter.seeMore')}
                       </button>
                     )}
                     <button

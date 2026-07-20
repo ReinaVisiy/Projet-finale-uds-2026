@@ -754,5 +754,20 @@
     "confirmPasswordPlaceholder": "Repeat your password",
     "inProgress": "In progress...",
     "resetPassword": "Reset password"
+  },
+  "notificationsCenter": {
+    "back": "← Back",
+    "title": "Notifications",
+    "unreadBadge_one": "{{count}} unread",
+    "unreadBadge_other": "{{count}} unread",
+    "markAllRead": "Mark all as read",
+    "tabAll": "All ({{count}})",
+    "tabInfo": "Info ({{count}})",
+    "tabSuccess": "Success ({{count}})",
+    "tabWarning": "Alerts ({{count}})",
+    "tabError": "Errors ({{count}})",
+    "emptyText": "No notifications in this category",
+    "navigateAlert": "Navigating to: {{link}}",
+    "seeMore": "See more →"
   }
 }

@@ -754,5 +754,20 @@
     "confirmPasswordPlaceholder": "Répétez votre mot de passe",
     "inProgress": "En cours...",
     "resetPassword": "Réinitialiser le mot de passe"
+  },
+  "notificationsCenter": {
+    "back": "← Retour",
+    "title": "Notifications",
+    "unreadBadge_one": "{{count}} non lue",
+    "unreadBadge_other": "{{count}} non lues",
+    "markAllRead": "Tout marquer lu",
+    "tabAll": "Toutes ({{count}})",
+    "tabInfo": "Info ({{count}})",
+    "tabSuccess": "Succès ({{count}})",
+    "tabWarning": "Alertes ({{count}})",
+    "tabError": "Erreurs ({{count}})",
+    "emptyText": "Aucune notification dans cette catégorie",
+    "navigateAlert": "Navigation vers : {{link}}",
+    "seeMore": "Voir plus →"
   }
 }
