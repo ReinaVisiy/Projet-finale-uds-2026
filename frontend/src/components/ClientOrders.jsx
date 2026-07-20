@@ -1,27 +1,11 @@
  // src/components/ClientOrders.jsx
 import React, { useState } from 'react';
 import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    back: 'Retour', myOrders: 'Mes commandes', ordersPlaced: 'commande(s) passée(s)',
-    noOrdersYet: "Vous n'avez pas encore passé de commande.", startShopping: 'Commencer vos achats',
-    order: 'Commande', client: 'Client', items: 'Articles', itemsCount: 'article(s)',
-    totalAmount: 'Montant total', status: 'Statut', orderedProducts: 'Produits commandés',
-    product: 'Produit', qty: 'Qté', unitPrice: 'Prix unit.', total: 'Total',
-  },
-  en: {
-    back: 'Back', myOrders: 'My orders', ordersPlaced: 'order(s) placed',
-    noOrdersYet: "You haven't placed any orders yet.", startShopping: 'Start shopping',
-    order: 'Order', client: 'Client', items: 'Items', itemsCount: 'item(s)',
-    totalAmount: 'Total amount', status: 'Status', orderedProducts: 'Ordered products',
-    product: 'Product', qty: 'Qty', unitPrice: 'Unit price', total: 'Total',
-  },
-};
 
 export default function ClientOrders({ orders, onBackHome }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [expandedOrder, setExpandedOrder] = useState(null);
 
   const getStatusStyle = (status) => {
@@ -41,19 +25,19 @@ export default function ClientOrders({ orders, onBackHome }) {
     <div style={styles.container}>
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={onBackHome}>
-          <ArrowLeft size={20} /> {t.back}
+          <ArrowLeft size={20} /> {t('clientOrders.back')}
         </button>
         <h1 style={styles.title}>
-          <Package size={28} color="#2d6a4f" /> {t.myOrders}
+          <Package size={28} color="#2d6a4f" /> {t('clientOrders.myOrders')}
         </h1>
-        <p style={styles.subtitle}>{orders.length} {t.ordersPlaced}</p>
+        <p style={styles.subtitle}>{orders.length} {t('clientOrders.ordersPlaced')}</p>
       </div>
 
       {orders.length === 0 ? (
         <div style={styles.emptyState}>
           <Package size={48} color="#adb5bd" />
-          <p style={styles.emptyText}>{t.noOrdersYet}</p>
-          <button style={styles.emptyBtn} onClick={onBackHome}>{t.startShopping}</button>
+          <p style={styles.emptyText}>{t('clientOrders.noOrdersYet')}</p>
+          <button style={styles.emptyBtn} onClick={onBackHome}>{t('clientOrders.startShopping')}</button>
         </div>
       ) : (
         <div style={styles.list}>
@@ -65,7 +49,7 @@ export default function ClientOrders({ orders, onBackHome }) {
               <div key={order.id} style={styles.orderCard}>
                 <div style={styles.orderHeader} onClick={() => toggleExpand(order.id)}>
                   <div style={styles.orderLeft}>
-                    <div style={styles.orderId}>{t.order} #{order.id}</div>
+                    <div style={styles.orderId}>{t('clientOrders.order')} #{order.id}</div>
                     <div style={styles.orderDate}>{order.date}</div>
                   </div>
                   <div style={styles.orderRight}>
@@ -87,33 +71,33 @@ export default function ClientOrders({ orders, onBackHome }) {
                   <div style={styles.orderDetails}>
                     <div style={styles.detailsGrid}>
                       <div>
-                        <p style={styles.detailLabel}>{t.client}</p>
+                        <p style={styles.detailLabel}>{t('clientOrders.client')}</p>
                         <p style={styles.detailValue}>{order.client}</p>
                       </div>
                       <div>
-                        <p style={styles.detailLabel}>{t.items}</p>
-                        <p style={styles.detailValue}>{totalItems} {t.itemsCount}</p>
+                        <p style={styles.detailLabel}>{t('clientOrders.items')}</p>
+                        <p style={styles.detailValue}>{totalItems} {t('clientOrders.itemsCount')}</p>
                       </div>
                       <div>
-                        <p style={styles.detailLabel}>{t.totalAmount}</p>
+                        <p style={styles.detailLabel}>{t('clientOrders.totalAmount')}</p>
                         <p style={styles.detailValue}>{order.amount.toLocaleString()} FCFA</p>
                       </div>
                       <div>
-                        <p style={styles.detailLabel}>{t.status}</p>
+                        <p style={styles.detailLabel}>{t('clientOrders.status')}</p>
                         <p style={styles.detailValue}>{order.status}</p>
                       </div>
                     </div>
 
                     {order.items && order.items.length > 0 && (
                       <div style={styles.productsSection}>
-                        <h4 style={styles.productsTitle}>{t.orderedProducts}</h4>
+                        <h4 style={styles.productsTitle}>{t('clientOrders.orderedProducts')}</h4>
                         <table style={styles.table}>
                           <thead>
                             <tr>
-                              <th style={styles.th}>{t.product}</th>
-                              <th style={styles.th}>{t.qty}</th>
-                              <th style={styles.th}>{t.unitPrice}</th>
-                              <th style={styles.th}>{t.total}</th>
+                              <th style={styles.th}>{t('clientOrders.product')}</th>
+                              <th style={styles.th}>{t('clientOrders.qty')}</th>
+                              <th style={styles.th}>{t('clientOrders.unitPrice')}</th>
+                              <th style={styles.th}>{t('clientOrders.total')}</th>
                             </tr>
                           </thead>
                           <tbody>

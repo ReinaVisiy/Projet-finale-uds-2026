@@ -1,47 +1,11 @@
 // src/components/Registerpage.jsx
 import React, { useState, useRef } from 'react';
 import { User, Mail, Lock, Phone, Eye, EyeOff, CheckCircle, ArrowRight, Camera } from 'lucide-react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    firstNameRequired: 'Le prénom est requis', lastNameRequired: 'Le nom est requis',
-    emailRequired: "L'email est requis", emailInvalid: 'Email invalide',
-    phoneRequired: 'Le téléphone est requis', passwordRequired: 'Le mot de passe est requis',
-    passwordMin: 'Minimum 6 caractères', passwordMismatch: 'Les mots de passe ne correspondent pas',
-    genericError: 'Une erreur est survenue lors de la création du compte. Cet email est peut-être déjà utilisé.',
-    weak: 'Faible', medium: 'Moyen', good: 'Bon', excellent: 'Excellent',
-    createAccount: 'Créer un compte', joinThousands: "Rejoignez des milliers d'agriculteurs et clients",
-    addPhoto: 'Ajouter une photo', imClient: '🛒 Je suis Client', imVendor: '🌾 Je suis Vendeur',
-    firstName: 'Prénom *', firstNamePlaceholder: 'ex: Ravie', lastName: 'Nom *', lastNamePlaceholder: 'ex: Dupont',
-    emailAddress: 'Adresse email *', emailPlaceholder: 'ex: ravie@email.com',
-    phone: 'Téléphone *', phonePlaceholder: 'ex: 6XX XXX XXX',
-    password: 'Mot de passe *', passwordPlaceholder: 'Minimum 6 caractères',
-    confirmPassword: 'Confirmer le mot de passe *', confirmPlaceholder: 'Répétez le mot de passe',
-    creating: 'Création en cours...', createMyAccount: 'Créer mon compte',
-    alreadyAccount: 'Déjà un compte ?', logIn: 'Se connecter',
-  },
-  en: {
-    firstNameRequired: 'First name is required', lastNameRequired: 'Last name is required',
-    emailRequired: 'Email is required', emailInvalid: 'Invalid email',
-    phoneRequired: 'Phone number is required', passwordRequired: 'Password is required',
-    passwordMin: 'Minimum 6 characters', passwordMismatch: 'Passwords do not match',
-    genericError: 'An error occurred while creating the account. This email may already be in use.',
-    weak: 'Weak', medium: 'Medium', good: 'Good', excellent: 'Excellent',
-    createAccount: 'Create an account', joinThousands: 'Join thousands of farmers and customers',
-    addPhoto: 'Add a photo', imClient: '🛒 I am a Client', imVendor: '🌾 I am a Vendor',
-    firstName: 'First name *', firstNamePlaceholder: 'e.g. Ravie', lastName: 'Last name *', lastNamePlaceholder: 'e.g. Dupont',
-    emailAddress: 'Email address *', emailPlaceholder: 'e.g. ravie@email.com',
-    phone: 'Phone *', phonePlaceholder: 'e.g. 6XX XXX XXX',
-    password: 'Password *', passwordPlaceholder: 'Minimum 6 characters',
-    confirmPassword: 'Confirm password *', confirmPlaceholder: 'Repeat your password',
-    creating: 'Creating...', createMyAccount: 'Create my account',
-    alreadyAccount: 'Already have an account?', logIn: 'Log in',
-  },
-};
 
 export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [role, setRole] = useState('client');
@@ -81,14 +45,14 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
 
   const validate = () => {
     const newErrors = {};
-    if (!form.prenom.trim()) newErrors.prenom = t.firstNameRequired;
-    if (!form.nom.trim()) newErrors.nom = t.lastNameRequired;
-    if (!form.email.trim()) newErrors.email = t.emailRequired;
-    else if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = t.emailInvalid;
-    if (!form.telephone.trim()) newErrors.telephone = t.phoneRequired;
-    if (!form.password) newErrors.password = t.passwordRequired;
-    else if (form.password.length < 6) newErrors.password = t.passwordMin;
-    if (form.confirm !== form.password) newErrors.confirm = t.passwordMismatch;
+    if (!form.prenom.trim()) newErrors.prenom = t('register.firstNameRequired');
+    if (!form.nom.trim()) newErrors.nom = t('register.lastNameRequired');
+    if (!form.email.trim()) newErrors.email = t('register.emailRequired');
+    else if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = t('register.emailInvalid');
+    if (!form.telephone.trim()) newErrors.telephone = t('register.phoneRequired');
+    if (!form.password) newErrors.password = t('register.passwordRequired');
+    else if (form.password.length < 6) newErrors.password = t('register.passwordMin');
+    if (form.confirm !== form.password) newErrors.confirm = t('register.passwordMismatch');
     return newErrors;
   };
 
@@ -114,7 +78,7 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
     } catch (err) {
       const message = err.message && err.message.length < 200
         ? err.message
-        : t.genericError;
+        : t('register.genericError');
       setErrors({ general: message });
     } finally {
       setLoading(false);
@@ -124,10 +88,10 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
   const getPasswordStrength = () => {
     const p = form.password;
     if (!p) return { label: '', color: '#dee2e6', width: '0%' };
-    if (p.length < 4) return { label: t.weak, color: '#e07a5f', width: '25%' };
-    if (p.length < 6) return { label: t.medium, color: '#f5b041', width: '50%' };
-    if (p.length < 10) return { label: t.good, color: '#2d6a4f', width: '75%' };
-    return { label: t.excellent, color: '#1b4d3e', width: '100%' };
+    if (p.length < 4) return { label: t('register.weak'), color: '#e07a5f', width: '25%' };
+    if (p.length < 6) return { label: t('register.medium'), color: '#f5b041', width: '50%' };
+    if (p.length < 10) return { label: t('register.good'), color: '#2d6a4f', width: '75%' };
+    return { label: t('register.excellent'), color: '#1b4d3e', width: '100%' };
   };
   const strength = getPasswordStrength();
 
@@ -136,8 +100,8 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
       <div style={styles.card}>
         <div style={styles.header}>
           <div style={styles.logo}>🌿</div>
-          <h1 style={styles.title}>{t.createAccount}</h1>
-          <p style={styles.subtitle}>{t.joinThousands}</p>
+          <h1 style={styles.title}>{t('register.createAccount')}</h1>
+          <p style={styles.subtitle}>{t('register.joinThousands')}</p>
         </div>
 
         {/* Photo de profil */}
@@ -148,7 +112,7 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
             ) : (
               <div style={styles.photoPlaceholder}>
                 <Camera size={32} color="#adb5bd" />
-                <span style={styles.photoPlaceholderText}>{t.addPhoto}</span>
+                <span style={styles.photoPlaceholderText}>{t('register.addPhoto')}</span>
               </div>
             )}
             <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handlePhotoChange} />
@@ -160,56 +124,56 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
         {/* Choix du rôle */}
         <div style={styles.roleRow}>
           <button type="button" style={{ ...styles.roleBtn, ...(role === 'client' ? styles.roleBtnActive : {}) }} onClick={() => setRole('client')}>
-            {t.imClient}
+            {t('register.imClient')}
           </button>
           <button type="button" style={{ ...styles.roleBtn, ...(role === 'vendeur' ? styles.roleBtnActiveGreen : {}) }} onClick={() => setRole('vendeur')}>
-            {t.imVendor}
+            {t('register.imVendor')}
           </button>
         </div>
 
         <form style={styles.form} onSubmit={handleSubmit}>
           <div style={styles.row2}>
             <div style={styles.field}>
-              <label style={styles.label}>{t.firstName}</label>
+              <label style={styles.label}>{t('register.firstName')}</label>
               <div style={{ ...styles.inputWrap, borderColor: errors.prenom ? '#e07a5f' : '#dee2e6' }}>
                 <User size={16} color="#6c757d" />
-                <input name="prenom" type="text" placeholder={t.firstNamePlaceholder} style={styles.input} value={form.prenom} onChange={handleChange} />
+                <input name="prenom" type="text" placeholder={t('register.firstNamePlaceholder')} style={styles.input} value={form.prenom} onChange={handleChange} />
               </div>
               {errors.prenom && <span style={styles.error}>{errors.prenom}</span>}
             </div>
             <div style={styles.field}>
-              <label style={styles.label}>{t.lastName}</label>
+              <label style={styles.label}>{t('register.lastName')}</label>
               <div style={{ ...styles.inputWrap, borderColor: errors.nom ? '#e07a5f' : '#dee2e6' }}>
                 <User size={16} color="#6c757d" />
-                <input name="nom" type="text" placeholder={t.lastNamePlaceholder} style={styles.input} value={form.nom} onChange={handleChange} />
+                <input name="nom" type="text" placeholder={t('register.lastNamePlaceholder')} style={styles.input} value={form.nom} onChange={handleChange} />
               </div>
               {errors.nom && <span style={styles.error}>{errors.nom}</span>}
             </div>
           </div>
 
           <div style={styles.field}>
-            <label style={styles.label}>{t.emailAddress}</label>
+            <label style={styles.label}>{t('register.emailAddress')}</label>
             <div style={{ ...styles.inputWrap, borderColor: errors.email ? '#e07a5f' : '#dee2e6' }}>
               <Mail size={16} color="#6c757d" />
-              <input name="email" type="email" placeholder={t.emailPlaceholder} style={styles.input} value={form.email} onChange={handleChange} />
+              <input name="email" type="email" placeholder={t('register.emailPlaceholder')} style={styles.input} value={form.email} onChange={handleChange} />
             </div>
             {errors.email && <span style={styles.error}>{errors.email}</span>}
           </div>
 
           <div style={styles.field}>
-            <label style={styles.label}>{t.phone}</label>
+            <label style={styles.label}>{t('register.phone')}</label>
             <div style={{ ...styles.inputWrap, borderColor: errors.telephone ? '#e07a5f' : '#dee2e6' }}>
               <Phone size={16} color="#6c757d" />
-              <input name="telephone" type="tel" placeholder={t.phonePlaceholder} style={styles.input} value={form.telephone} onChange={handleChange} />
+              <input name="telephone" type="tel" placeholder={t('register.phonePlaceholder')} style={styles.input} value={form.telephone} onChange={handleChange} />
             </div>
             {errors.telephone && <span style={styles.error}>{errors.telephone}</span>}
           </div>
 
           <div style={styles.field}>
-            <label style={styles.label}>{t.password}</label>
+            <label style={styles.label}>{t('register.password')}</label>
             <div style={{ ...styles.inputWrap, borderColor: errors.password ? '#e07a5f' : '#dee2e6' }}>
               <Lock size={16} color="#6c757d" />
-              <input name="password" type={showPassword ? 'text' : 'password'} placeholder={t.passwordPlaceholder} style={styles.input} value={form.password} onChange={handleChange} />
+              <input name="password" type={showPassword ? 'text' : 'password'} placeholder={t('register.passwordPlaceholder')} style={styles.input} value={form.password} onChange={handleChange} />
               <button style={styles.eyeBtn} onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <EyeOff size={16} color="#6c757d" /> : <Eye size={16} color="#6c757d" />}
               </button>
@@ -224,10 +188,10 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
           </div>
 
           <div style={styles.field}>
-            <label style={styles.label}>{t.confirmPassword}</label>
+            <label style={styles.label}>{t('register.confirmPassword')}</label>
             <div style={{ ...styles.inputWrap, borderColor: errors.confirm ? '#e07a5f' : '#dee2e6' }}>
               <Lock size={16} color="#6c757d" />
-              <input name="confirm" type={showConfirm ? 'text' : 'password'} placeholder={t.confirmPlaceholder} style={styles.input} value={form.confirm} onChange={handleChange} />
+              <input name="confirm" type={showConfirm ? 'text' : 'password'} placeholder={t('register.confirmPlaceholder')} style={styles.input} value={form.confirm} onChange={handleChange} />
               <button style={styles.eyeBtn} onClick={() => setShowConfirm(!showConfirm)}>
                 {showConfirm ? <EyeOff size={16} color="#6c757d" /> : <Eye size={16} color="#6c757d" />}
               </button>
@@ -236,13 +200,13 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
           </div>
 
           <button type="submit" style={{ ...styles.submitBtn, opacity: loading ? 0.7 : 1 }} disabled={loading}>
-            {loading ? t.creating : t.createMyAccount} {!loading && <ArrowRight size={18} />}
+            {loading ? t('register.creating') : t('register.createMyAccount')} {!loading && <ArrowRight size={18} />}
           </button>
 
           <p style={styles.loginText}>
-            {t.alreadyAccount}{' '}
+            {t('register.alreadyAccount')}{' '}
             <button type="button" style={styles.loginLink} onClick={onNavigateToLogin}>
-              {t.logIn}
+              {t('register.logIn')}
             </button>
           </p>
         </form>
