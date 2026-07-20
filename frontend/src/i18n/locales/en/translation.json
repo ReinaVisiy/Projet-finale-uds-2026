@@ -682,5 +682,16 @@
     "paymentConfirmed": "✅ Payment confirmed! Redirecting...",
     "securePayment": "🔒 Secure payment",
     "trackedDelivery": "🚚 Tracked delivery"
+  },
+  "messagePage": {
+    "online": "● Online",
+    "loadingConversation": "Loading conversation...",
+    "noMessages": "No messages yet. Say hello 👋",
+    "inputPlaceholder": "Write a message...",
+    "pressEnter": "Press Enter to send",
+    "noRecipient": "Unable to start the conversation: producer not found.",
+    "loadFailed": "Unable to load the conversation.",
+    "sendFailed": "Failed to send the message. Try again.",
+    "aboutProduct": "Conversation about:"
   }
 }

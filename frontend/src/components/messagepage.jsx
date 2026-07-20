@@ -1,32 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ArrowLeft, Send, Phone, Video, MoreVertical, Check, CheckCheck } from 'lucide-react';
 import { messageApi } from '../services/api';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    online: '● En ligne',
-    loadingConversation: 'Chargement de la conversation...',
-    noMessages: 'Aucun message pour le moment. Dites bonjour 👋',
-    inputPlaceholder: 'Écrire un message...',
-    pressEnter: 'Appuyez sur Entrée pour envoyer',
-    noRecipient: 'Impossible de démarrer la conversation : producteur introuvable.',
-    loadFailed: 'Impossible de charger la conversation.',
-    sendFailed: "L'envoi du message a échoué. Réessayez.",
-    aboutProduct: 'Conversation à propos de :',
-  },
-  en: {
-    online: '● Online',
-    loadingConversation: 'Loading conversation...',
-    noMessages: 'No messages yet. Say hello 👋',
-    inputPlaceholder: 'Write a message...',
-    pressEnter: 'Press Enter to send',
-    noRecipient: 'Unable to start the conversation: producer not found.',
-    loadFailed: 'Unable to load the conversation.',
-    sendFailed: 'Failed to send the message. Try again.',
-    aboutProduct: 'Conversation about:',
-  },
-};
 
 /** Convertit un MessageResponse backend en objet bulle affichable. */
 function mapMessage(msg, currentUserId) {
@@ -42,7 +18,7 @@ function mapMessage(msg, currentUserId) {
 }
 
 export default function MessagePage({ onBack, vendor, currentUser }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
 
   const vendorInfo = vendor || { name: 'Ferme Dschang', product: 'Banane Fraîche' };
   const destinataireId = vendorInfo.id;
@@ -57,7 +33,7 @@ export default function MessagePage({ onBack, vendor, currentUser }) {
   // Charge la conversation réelle depuis message-service au montage.
   const chargerConversation = useCallback(async () => {
     if (!destinataireId) {
-      setErreur(t.noRecipient);
+      setErreur(t('messagePage.noRecipient'));
       setChargement(false);
       return;
     }
@@ -75,7 +51,7 @@ export default function MessagePage({ onBack, vendor, currentUser }) {
           messageApi.marquerLu(m.id).catch(() => {});
         });
     } catch (e) {
-      setErreur(e?.message || t.loadFailed);
+      setErreur(e?.message || t('messagePage.loadFailed'));
     } finally {
       setChargement(false);
     }
@@ -101,7 +77,7 @@ export default function MessagePage({ onBack, vendor, currentUser }) {
       setMessages((prev) => [...prev, mapMessage(response, currentUser?.id)]);
       setInput('');
     } catch (e) {
-      setErreur(e?.message || t.sendFailed);
+      setErreur(e?.message || t('messagePage.sendFailed'));
     } finally {
       setEnvoiEnCours(false);
     }
@@ -127,7 +103,7 @@ export default function MessagePage({ onBack, vendor, currentUser }) {
           <div style={styles.avatar}>{vendorInfo.name[0]}</div>
           <div>
             <h3 style={styles.vendorName}>{vendorInfo.name}</h3>
-            <span style={styles.onlineStatus}>{t.online}</span>
+            <span style={styles.onlineStatus}>{t('messagePage.online')}</span>
           </div>
         </div>
 
@@ -141,7 +117,7 @@ export default function MessagePage({ onBack, vendor, currentUser }) {
       {/* Produit concerné */}
       <div style={styles.productBanner}>
         <span style={styles.productBannerText}>
-          💬 {t.aboutProduct} <strong>{vendorInfo.product}</strong>
+          💬 {t('messagePage.aboutProduct')} <strong>{vendorInfo.product}</strong>
         </span>
       </div>
 
@@ -152,10 +128,10 @@ export default function MessagePage({ onBack, vendor, currentUser }) {
       {/* MESSAGES */}
       <div style={styles.messagesArea}>
         {chargement && (
-          <p style={styles.hint}>{t.loadingConversation}</p>
+          <p style={styles.hint}>{t('messagePage.loadingConversation')}</p>
         )}
         {!chargement && messages.length === 0 && !erreur && (
-          <p style={styles.hint}>{t.noMessages}</p>
+          <p style={styles.hint}>{t('messagePage.noMessages')}</p>
         )}
         {messages.map(msg => (
           <div
@@ -194,7 +170,7 @@ export default function MessagePage({ onBack, vendor, currentUser }) {
         <div style={styles.inputWrap}>
           <textarea
             style={styles.input}
-            placeholder={t.inputPlaceholder}
+            placeholder={t('messagePage.inputPlaceholder')}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -212,7 +188,7 @@ export default function MessagePage({ onBack, vendor, currentUser }) {
             <Send size={18} color={input.trim() && !envoiEnCours ? '#ffffff' : '#adb5bd'} />
           </button>
         </div>
-        <p style={styles.hint}>{t.pressEnter}</p>
+        <p style={styles.hint}>{t('messagePage.pressEnter')}</p>
       </div>
 
     </div>

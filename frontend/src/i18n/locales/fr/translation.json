@@ -682,5 +682,16 @@
     "paymentConfirmed": "✅ Paiement validé ! Redirection...",
     "securePayment": "🔒 Paiement sécurisé",
     "trackedDelivery": "🚚 Livraison suivie"
+  },
+  "messagePage": {
+    "online": "● En ligne",
+    "loadingConversation": "Chargement de la conversation...",
+    "noMessages": "Aucun message pour le moment. Dites bonjour 👋",
+    "inputPlaceholder": "Écrire un message...",
+    "pressEnter": "Appuyez sur Entrée pour envoyer",
+    "noRecipient": "Impossible de démarrer la conversation : producteur introuvable.",
+    "loadFailed": "Impossible de charger la conversation.",
+    "sendFailed": "L'envoi du message a échoué. Réessayez.",
+    "aboutProduct": "Conversation à propos de :"
   }
 }
