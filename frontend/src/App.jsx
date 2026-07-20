@@ -468,61 +468,50 @@ export default function App() {
   };
 
   // ===== VALIDATION DE COMMANDE (commande-service + paiement-service) =====
-  // Crée la vraie commande, puis initie un vrai paiement Simiz si le moyen
-  // choisi est supporté (ORANGE_MONEY / MOBILE_MONEY uniquement : il
-  // n'existe pas de valeur 'CARTE' côté backend, l'option carte a donc été
-  // retirée de ShoppingCart.jsx plutôt que d'envoyer un appel voué à échouer).
-  // Le vendeurId transmis à paiement-service est celui du premier article
-  // du panier : le modèle de données actuel (Commande/LigneCommande) ne
-  // permet pas encore de scinder une commande multi-producteurs en
-  // plusieurs paiements distincts.
-  const handleCheckout = async ({ paymentMethod, paymentData } = {}) => {
-    try {
-      const lignesCommande = cartItems.map(item => ({
-        produitId: item.id,
-        quantite: item.quantity,
-        prixUnitaire: item.price,
-      }));
-      const commande = await commandeApi.createCommande({
-        clientId: currentUser.id,
-        lignesCommande,
-      });
-
-      const methode = paymentMethod === 'orange-money' ? 'ORANGE_MONEY'
-        : paymentMethod === 'mtn-money' ? 'MOBILE_MONEY'
-        : null;
-
-      if (methode) {
-        const vendeurId = cartItems[0]?.producteurId;
-        if (!vendeurId) {
-          throw new Error("Impossible d'identifier le vendeur pour ce paiement.");
-        }
-
-        const transaction = await paiementApi.initierPaiement({
-          typeReference: 'COMMANDE',
-          referenceId: commande.id,
-          vendeurId,
-          montant: commande.montantTotal,
-        });
-
-        setCartItems([]);
-
-        if (transaction?.simizCheckoutUrl) {
-          // Redirection vers la page de paiement Simiz : le client revient
-          // ensuite sur /pay/success ou /pay/cancel (cf. PaymentReturn).
-          window.location.href = transaction.simizCheckoutUrl;
-          return;
-        }
-      }
-
-      notifierAdmins('info', `Nouvelle commande #${commande.id} de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client'}`, '/admin/order-management-admin');
-      addNotification(currentUser.id, 'success', `Commande #${commande.id} confirmée !`, '/orders');
-      setCartItems([]);
-      await chargerMesCommandes();
-      navigate('orders');
-    } catch (err) {
-      alert(err?.message || "La création de la commande a échoué.");
+  // Le panier est scindé par vendeur (ShoppingCart.jsx affiche un bouton
+  // de paiement indépendant par groupe) : une Commande côté backend ne
+  // peut plus contenir des produits que d'un seul producteur. On crée
+  // donc ici une Commande + une Transaction Simiz pour le seul groupe
+  // concerné, puis on redirige directement vers Simiz — sans demander de
+  // numéro de téléphone sur AgriCam au préalable.
+  const handleCheckout = async (vendeurId) => {
+    const itemsDuGroupe = cartItems.filter(item => item.producteurId === vendeurId);
+    if (itemsDuGroupe.length === 0) {
+      throw new Error("Ce groupe de panier est introuvable.");
     }
+
+    const lignesCommande = itemsDuGroupe.map(item => ({
+      produitId: item.id,
+      quantite: item.quantity,
+      prixUnitaire: item.price,
+    }));
+    const commande = await commandeApi.createCommande({
+      clientId: currentUser.id,
+      lignesCommande,
+    });
+
+    const transaction = await paiementApi.initierPaiement({
+      typeReference: 'COMMANDE',
+      referenceId: commande.id,
+      vendeurId,
+      montant: commande.montantTotal,
+    });
+
+    // Seuls les articles de ce vendeur quittent le panier ; les autres
+    // groupes restent disponibles pour un paiement séparé.
+    setCartItems(prev => prev.filter(item => item.producteurId !== vendeurId));
+
+    if (transaction?.simizCheckoutUrl) {
+      // Redirection vers la page de paiement Simiz : le client revient
+      // ensuite sur /pay/success ou /pay/cancel (cf. PaymentReturn).
+      window.location.href = transaction.simizCheckoutUrl;
+      return;
+    }
+
+    notifierAdmins('info', `Nouvelle commande #${commande.id} de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client'}`, '/admin/order-management-admin');
+    addNotification(currentUser.id, 'success', `Commande #${commande.id} confirmée !`, '/orders');
+    await chargerMesCommandes();
+    navigate('orders');
   };
 
   const openSignalement = (product) => {
