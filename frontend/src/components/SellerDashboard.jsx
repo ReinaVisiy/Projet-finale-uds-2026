@@ -1,5 +1,5 @@
 // src/components/SellerDashboard.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Package, ShoppingBag, Bell, User,
   BarChart3, AlertTriangle, LogOut, Menu, X,

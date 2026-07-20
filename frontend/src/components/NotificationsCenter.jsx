@@ -1,5 +1,5 @@
  // src/components/NotificationsCenter.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bell, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 

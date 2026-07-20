@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Star, Share2, Shield, Truck, Package, Plus, Minus, ShoppingCart, MessageCircle, Flag, ChevronRight } from 'lucide-react';
 import { getAvisParProduit, getAvisStats, publierAvis } from '../services/api/avisApi';
 import { useTranslation } from 'react-i18next';

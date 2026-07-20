@@ -1,5 +1,5 @@
 // src/components/NavigationConsole.jsx
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ShoppingCart, User, LogOut, ChevronDown, ShieldCheck, Home, Package, LayoutGrid, Bell, Users, ShoppingBag, Menu, X, MessageCircle, Search } from 'lucide-react';
 

@@ -1,5 +1,4 @@
 // src/components/UserProfile.jsx
-import React from 'react';
 import { User, Mail, Phone, ArrowLeft, Settings, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 

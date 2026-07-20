@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import * as paiementApi from '../services/api/paiementApi';

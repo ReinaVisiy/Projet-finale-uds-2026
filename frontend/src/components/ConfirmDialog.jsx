@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 // Remplace window.confirm(), qui affiche la popup native du navigateur

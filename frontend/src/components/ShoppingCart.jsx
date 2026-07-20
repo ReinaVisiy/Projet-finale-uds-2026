@@ -1,5 +1,5 @@
 // src/components/ShoppingCart.jsx
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ShoppingBag, Trash2, Plus, Minus, ArrowLeft, CreditCard, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 

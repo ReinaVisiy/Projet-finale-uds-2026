@@ -1,5 +1,5 @@
 // src/components/UserSearchResults.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search, ArrowLeft, User, ShieldCheck } from 'lucide-react';
 import { utilisateurApi } from '../services/api';
 import { mapProfileToFrontendUser } from '../services/userMapping';

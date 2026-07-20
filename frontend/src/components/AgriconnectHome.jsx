@@ -1,5 +1,5 @@
 // src/components/AgroMarketHome.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, ShoppingBag, Leaf, ShieldCheck, Truck, Star, ArrowRight, UserPlus, PackageSearch } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
 import { useTranslation } from 'react-i18next';

@@ -1,5 +1,5 @@
 // src/components/EditProfile.jsx
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Camera, Save, X, User, Mail, Phone, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 

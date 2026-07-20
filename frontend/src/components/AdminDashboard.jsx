@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Shield, ShieldCheck, CheckCircle, XCircle, Clock, Eye, FileText, AlertOctagon, Lock, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 

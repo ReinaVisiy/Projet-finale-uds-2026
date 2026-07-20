@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Star, MessageCircle, ShieldCheck, Edit3, Trash2, Flag, Package, ShoppingBag, MessageSquareText } from 'lucide-react';
 import { produitApi, avisApi, certificationApi } from '../services/api';

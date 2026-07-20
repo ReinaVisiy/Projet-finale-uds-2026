@@ -1,5 +1,5 @@
 // src/components/LoginPage.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 

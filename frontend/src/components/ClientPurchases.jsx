@@ -1,5 +1,4 @@
 // src/components/ClientPurchases.jsx
-import React from 'react';
 import { ArrowLeft, Package, ShoppingBag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 

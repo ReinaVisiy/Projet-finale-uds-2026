@@ -1,5 +1,5 @@
 // src/components/EditProduct.jsx
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { produitApi } from '../services/api';
 import { mapCategorie, mapProduitPourVendeur, construireProduitRequest } from '../services/productMapping';

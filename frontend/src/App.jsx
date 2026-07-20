@@ -1,5 +1,5 @@
 // src/App.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import NavigationConsole from './components/NavigationConsole';
 import AgroMarketHome from './components/AgriconnectHome';
 import AddProduct from './components/AddProduct';

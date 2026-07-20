@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { messageApi } from '../services/api';
 import { useTranslation } from 'react-i18next';

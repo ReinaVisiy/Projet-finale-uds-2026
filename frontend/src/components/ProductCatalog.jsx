@@ -1,5 +1,5 @@
 // src/components/ProductCatalog.jsx
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, ShoppingBag, Star, ArrowLeft } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
 import { correspondRecherche } from '../utils/produceSearch';

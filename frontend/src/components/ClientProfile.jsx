@@ -1,5 +1,5 @@
 // src/components/ClientProfile.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Star, MessageCircle, Flag, User } from 'lucide-react';
 import { avisApi, produitApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
