@@ -1,5 +1,6 @@
 # start-all-services.ps1
-# Lance les 10 microservices AgryCam, chacun dans sa propre fenêtre PowerShell.
+# Lance les 12 processus AgryCam (10 microservices métier + eureka-server
+# + api-gateway), chacun dans sa propre fenêtre PowerShell.
 # À exécuter depuis la racine du projet backend (agrycam-backend/).
 
 # Ordre conseillé : eureka-server en tout premier (les autres services
@@ -34,9 +35,17 @@ foreach ($service in $Services) {
     Write-Host "Démarrage de $service..." -ForegroundColor Green
     Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$path'; mvn spring-boot:run"
 
-    # Petite pause pour éviter que tous les services ne tapent PostgreSQL en même temps
-    Start-Sleep -Seconds 3
+    # eureka-server et api-gateway ont besoin de plus de temps pour finir
+    # de démarrer (contexte Spring plus long à charger) avant que les
+    # services suivants ne tentent de s'enregistrer ou de router au travers
+    # d'eux ; les autres services se contentent d'une pause plus courte
+    # pour éviter que tous ne tapent PostgreSQL en même temps.
+    if ($service -eq "eureka-server" -or $service -eq "api-gateway") {
+        Start-Sleep -Seconds 20
+    } else {
+        Start-Sleep -Seconds 3
+    }
 }
 
-Write-Host "`nLes 10 services démarrent chacun dans leur propre fenêtre." -ForegroundColor Cyan
+Write-Host "`nLes 12 processus démarrent chacun dans leur propre fenêtre." -ForegroundColor Cyan
 Write-Host "Vérifiez chaque fenêtre pour vous assurer qu'il n'y a pas d'erreur au démarrage." -ForegroundColor Cyan

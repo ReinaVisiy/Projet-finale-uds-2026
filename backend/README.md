@@ -74,7 +74,7 @@ Chaque service ne déclare que les variables correspondant aux services qu'il ap
 
 ### Prérequis
 
-- JDK 17
+- JDK 21
 - Maven
 - PostgreSQL installé et lancé localement (port 5432, utilisateur `postgres`, mot de passe `2026` — à adapter si différent chez vous)
 
