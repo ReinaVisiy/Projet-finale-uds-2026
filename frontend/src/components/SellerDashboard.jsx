@@ -5,11 +5,11 @@ import {
   BarChart3, AlertTriangle, LogOut, Menu, X,
   ShoppingCart, DollarSign, CheckCircle, XCircle,
   Shield, Clock, Plus, Edit, Trash2, Send, CreditCard,
-  Upload
+  Upload, Wallet, Lock, AlertCircle
 } from 'lucide-react';
 import VendeurOrders from './VendeurOrders';
 import ConfirmDialog from './ConfirmDialog';
-import { certificationApi } from '../services/api';
+import { certificationApi, paiementApi } from '../services/api';
 import { useTranslation } from 'react-i18next';
 
 
@@ -20,6 +20,7 @@ function getMenuItems(t) {
     { id: 'products', label: t('sellerDashboard.myProducts'), icon: <Package size={18} /> },
     { id: 'stock', label: t('sellerDashboard.stockAlerts'), icon: <AlertTriangle size={18} /> },
     { id: 'orders', label: t('sellerDashboard.myOrders'), icon: <ShoppingBag size={18} /> },
+    { id: 'withdrawal', label: t('sellerDashboard.withdrawals'), icon: <Wallet size={18} /> },
     { id: 'certification', label: t('sellerDashboard.myCertification'), icon: <Shield size={18} /> },
     { id: 'notifications', label: t('sellerDashboard.notifications'), icon: <Bell size={18} /> },
     { id: 'profile', label: t('sellerDashboard.myProfile'), icon: <User size={18} /> },
@@ -41,6 +42,49 @@ export default function SellerDashboard({
   const [confirmDeleteProduct, setConfirmDeleteProduct] = useState(null); // { name } | null
 
   const [certificationStatus, setCertificationStatus] = useState('none');
+
+  // Solde vendeur (paiement-service) : sequestre vs disponible, et
+  // historique des retraits deja effectues.
+  const [solde, setSolde] = useState(null);
+  const [mesRetraits, setMesRetraits] = useState([]);
+  const [montantRetrait, setMontantRetrait] = useState('');
+  const [retraitEnCours, setRetraitEnCours] = useState(false);
+  const [retraitError, setRetraitError] = useState('');
+  const [retraitSuccess, setRetraitSuccess] = useState('');
+
+  const chargerSoldeEtRetraits = () => {
+    paiementApi.getMonSolde().then(setSolde).catch(() => setSolde(null));
+    paiementApi.getMesRetraits().then(setMesRetraits).catch(() => setMesRetraits([]));
+  };
+
+  useEffect(() => {
+    chargerSoldeEtRetraits();
+  }, []);
+
+  const handleDemanderRetrait = async () => {
+    const montant = parseFloat(montantRetrait);
+    setRetraitError('');
+    setRetraitSuccess('');
+    if (!montant || montant <= 0) {
+      setRetraitError(t('sellerDashboard.withdrawInvalidAmount'));
+      return;
+    }
+    if (solde && montant > Number(solde.soldeDisponible)) {
+      setRetraitError(t('sellerDashboard.withdrawInsufficientFunds'));
+      return;
+    }
+    setRetraitEnCours(true);
+    try {
+      await paiementApi.demanderRetrait(montant);
+      setRetraitSuccess(t('sellerDashboard.withdrawSuccess'));
+      setMontantRetrait('');
+      chargerSoldeEtRetraits();
+    } catch (err) {
+      setRetraitError(err?.message || t('sellerDashboard.withdrawError'));
+    } finally {
+      setRetraitEnCours(false);
+    }
+  };
 
   useEffect(() => {
     certificationApi.getMesCertifications()
@@ -133,6 +177,25 @@ export default function SellerDashboard({
         <div style={styles.kpiCard}>
           <div style={{ ...styles.kpiIcon, backgroundColor: '#fdf1ed' }}><AlertTriangle size={20} color="#e07a5f" /></div>
           <div><p style={styles.kpiLabel}>{t('sellerDashboard.criticalStock')}</p><p style={styles.kpiValue}>{lowStockItems.length}</p></div>
+        </div>
+      </div>
+
+      {/* Solde sequestre vs disponible : separation visuelle claire
+          demandee par le cahier des charges (section 4). */}
+      <div style={styles.kpiGrid}>
+        <div style={styles.kpiCard}>
+          <div style={{ ...styles.kpiIcon, backgroundColor: '#fff3e0' }}><Lock size={20} color="#f5b041" /></div>
+          <div>
+            <p style={styles.kpiLabel}>{t('sellerDashboard.escrowBalance')}</p>
+            <p style={styles.kpiValue}>{Number(solde?.soldeSequestre || 0).toLocaleString()} FCFA</p>
+          </div>
+        </div>
+        <div style={styles.kpiCard}>
+          <div style={{ ...styles.kpiIcon, backgroundColor: '#e9f5ee' }}><Wallet size={20} color="#2d6a4f" /></div>
+          <div>
+            <p style={styles.kpiLabel}>{t('sellerDashboard.withdrawableBalance')}</p>
+            <p style={styles.kpiValue}>{Number(solde?.soldeDisponible || 0).toLocaleString()} FCFA</p>
+          </div>
         </div>
       </div>
 
