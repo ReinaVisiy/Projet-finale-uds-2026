@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, CheckCircle, X, Shield, Clock, AlertCircle, XCircle, Image as ImageIcon } from 'lucide-react';
 import { certificationApi } from '../services/api';
 
@@ -11,13 +12,6 @@ const DUREES = [
   { mois: 12, montant: 6000 },
 ];
 
-const TYPES_DOCUMENT = [
-  { value: 'CARTE_IDENTITE', label: "Carte d'identité" },
-  { value: 'PASSEPORT', label: 'Passeport' },
-  { value: 'PERMIS_CONDUIRE', label: 'Permis de conduire' },
-  { value: 'RECIPISSE', label: 'Récépissé' },
-];
-
 const readAsDataUrl = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
   reader.onload = (ev) => resolve(ev.target.result);
@@ -26,6 +20,11 @@ const readAsDataUrl = (file) => new Promise((resolve, reject) => {
 });
 
 export default function CertificationRequest({ onBack }) {
+  const { t, i18n } = useTranslation();
+  const TYPES_DOCUMENT = ['CARTE_IDENTITE', 'PASSEPORT', 'PERMIS_CONDUIRE', 'RECIPISSE'].map((value) => ({
+    value,
+    label: t(`certificationRequest.docTypes.${value}`),
+  }));
   // certification: dernière demande du producteur (ou null si aucune)
   const [certification, setCertification] = useState(null);
   const [paymentInfo, setPaymentInfo] = useState([]);
@@ -55,7 +54,7 @@ export default function CertificationRequest({ onBack }) {
         setCertification(derniere || null);
         setPaymentInfo(infos);
       })
-      .catch((err) => setError(err.message || 'Impossible de charger votre statut de certification'))
+      .catch((err) => setError(err.message || t('certificationRequest.loadStatusError')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -70,7 +69,7 @@ export default function CertificationRequest({ onBack }) {
 
   const handleSubmit = () => {
     if (!idRecto || !idVerso || !photoUtilisateur || !numeroPaiement.trim()) {
-      setError("Veuillez fournir le recto/verso de votre pièce, votre photo, et le numéro utilisé pour le paiement.");
+      setError(t('certificationRequest.submitMissingFields'));
       return;
     }
     setError('');
@@ -86,7 +85,7 @@ export default function CertificationRequest({ onBack }) {
       numeroPaiement: numeroPaiement.trim(),
     })
       .then((response) => setCertification(response))
-      .catch((err) => setError(err.message || "Échec de l'envoi de la demande de certification"))
+      .catch((err) => setError(err.message || t('certificationRequest.submitFailed')))
       .finally(() => setSubmitting(false));
   };
 
@@ -94,7 +93,7 @@ export default function CertificationRequest({ onBack }) {
     return (
       <div style={styles.wrapper}>
         <div style={styles.statusCard}>
-          <p style={styles.statusText}>Chargement de votre statut de certification...</p>
+          <p style={styles.statusText}>{t('certificationRequest.loadingStatus')}</p>
         </div>
       </div>
     );
@@ -108,28 +107,28 @@ export default function CertificationRequest({ onBack }) {
           <div style={styles.statusIconWrap}>
             <Clock size={48} color="#f5b041" />
           </div>
-          <h2 style={styles.statusTitle}>Demande en cours d'examen ⏳</h2>
+          <h2 style={styles.statusTitle}>{t('certificationRequest.pendingTitle')}</h2>
           <p style={styles.statusText}>
-            Votre demande de certification a été envoyée avec succès.<br />
-            Notre équipe l'examine dès que le paiement est confirmé.
+            {t('certificationRequest.pendingText1')}<br />
+            {t('certificationRequest.pendingText2')}
           </p>
           <div style={styles.statusDetails}>
             <div style={styles.statusRow}>
-              <span style={styles.statusLabel}>Durée demandée</span>
-              <span style={styles.statusValue}>{certification.dureeMois} mois</span>
+              <span style={styles.statusLabel}>{t('certificationRequest.requestedDuration')}</span>
+              <span style={styles.statusValue}>{t('certificationRequest.durationMonths', { count: certification.dureeMois })}</span>
             </div>
             <div style={styles.statusRow}>
-              <span style={styles.statusLabel}>Montant</span>
+              <span style={styles.statusLabel}>{t('certificationRequest.amount')}</span>
               <span style={styles.statusValue}>{certification.montant} FCFA</span>
             </div>
             <div style={styles.statusRow}>
-              <span style={styles.statusLabel}>Statut du paiement</span>
+              <span style={styles.statusLabel}>{t('certificationRequest.paymentStatus')}</span>
               <span style={styles.statusValue}>
-                {certification.statutPaiement === 'PAYE' ? 'Payé ✅' : certification.statutPaiement === 'NON_PAYE' ? 'Non payé ❌' : 'En attente de confirmation'}
+                {certification.statutPaiement === 'PAYE' ? t('certificationRequest.paid') : certification.statutPaiement === 'NON_PAYE' ? t('certificationRequest.unpaid') : t('certificationRequest.awaitingConfirmation')}
               </span>
             </div>
           </div>
-          <button style={styles.backToStatusBtn} onClick={onBack}>Retour au tableau de bord</button>
+          <button style={styles.backToStatusBtn} onClick={onBack}>{t('certificationRequest.backToDashboard')}</button>
         </div>
       </div>
     );
@@ -143,12 +142,12 @@ export default function CertificationRequest({ onBack }) {
           <div style={{ ...styles.statusIconWrap, backgroundColor: '#fdecea' }}>
             <XCircle size={48} color="#c0392b" />
           </div>
-          <h2 style={styles.statusTitle}>Demande rejetée</h2>
+          <h2 style={styles.statusTitle}>{t('certificationRequest.rejectedTitle')}</h2>
           <p style={styles.statusText}>
-            {certification.motifRejet || "Votre demande de certification n'a pas été retenue."}
+            {certification.motifRejet || t('certificationRequest.rejectedDefault')}
           </p>
           <button style={styles.submitBtn} onClick={() => setCertification(null)}>
-            <Shield size={18} /> Soumettre une nouvelle demande
+            <Shield size={18} /> {t('certificationRequest.submitNew')}
           </button>
         </div>
       </div>
@@ -163,12 +162,12 @@ export default function CertificationRequest({ onBack }) {
           <div style={{ ...styles.statusIconWrap, backgroundColor: '#e9f5ee' }}>
             <Shield size={48} color="#2d6a4f" />
           </div>
-          <h2 style={styles.statusTitle}>Vous êtes certifié ! ✅</h2>
+          <h2 style={styles.statusTitle}>{t('certificationRequest.certifiedTitle')}</h2>
           <p style={styles.statusText}>
-            Le badge <strong>✅ Certifié</strong> apparaît désormais sur tous vos produits, jusqu'au{' '}
-            <strong>{certification.dateExpiration ? new Date(certification.dateExpiration).toLocaleDateString('fr-FR') : ''}</strong>.
+            {t('certificationRequest.certifiedText')}{' '}
+            <strong>{certification.dateExpiration ? new Date(certification.dateExpiration).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'fr-FR') : ''}</strong>.
           </p>
-          <button style={styles.backToStatusBtn} onClick={onBack}>Retour au tableau de bord</button>
+          <button style={styles.backToStatusBtn} onClick={onBack}>{t('certificationRequest.backToDashboard')}</button>
         </div>
       </div>
     );
@@ -181,14 +180,14 @@ export default function CertificationRequest({ onBack }) {
 
         <div style={styles.header}>
           <button style={styles.backBtn} onClick={onBack}>
-            <ArrowLeft size={18} /> Retour
+            <ArrowLeft size={18} /> {t('certificationRequest.back')}
           </button>
           <div style={styles.headerBadge}>
             <Shield size={28} color="#ffffff" />
           </div>
-          <h1 style={styles.title}>Demande de certification</h1>
+          <h1 style={styles.title}>{t('certificationRequest.formTitle')}</h1>
           <p style={styles.subtitle}>
-            Obtenez le badge <strong>✅ Certifié</strong> pour renforcer la confiance de vos clients
+            {t('certificationRequest.formSubtitle')}
           </p>
         </div>
 
@@ -196,25 +195,25 @@ export default function CertificationRequest({ onBack }) {
 
           <div style={styles.formCard}>
 
-            <h3 style={styles.sectionTitle}>Pièce d'identité</h3>
+            <h3 style={styles.sectionTitle}>{t('certificationRequest.idSection')}</h3>
 
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Type de document *</label>
+              <label style={styles.label}>{t('certificationRequest.docType')}</label>
               <select style={styles.input} value={typeDocument} onChange={(e) => setTypeDocument(e.target.value)}>
-                {TYPES_DOCUMENT.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                {TYPES_DOCUMENT.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
 
             <div style={styles.row2}>
               <div style={styles.inputGroup}>
-                <label style={styles.label}>Recto *</label>
+                <label style={styles.label}>{t('certificationRequest.front')}</label>
                 <div style={styles.uploadZone} onClick={() => rectoRef.current.click()}>
                   <input ref={rectoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload(setIdRecto)} />
                   {idRecto ? <img src={idRecto} alt="Recto" style={styles.previewImg} /> : <ImageIcon size={24} color="#2d6a4f" />}
                 </div>
               </div>
               <div style={styles.inputGroup}>
-                <label style={styles.label}>Verso *</label>
+                <label style={styles.label}>{t('certificationRequest.back_side')}</label>
                 <div style={styles.uploadZone} onClick={() => versoRef.current.click()}>
                   <input ref={versoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload(setIdVerso)} />
                   {idVerso ? <img src={idVerso} alt="Verso" style={styles.previewImg} /> : <ImageIcon size={24} color="#2d6a4f" />}
@@ -222,17 +221,17 @@ export default function CertificationRequest({ onBack }) {
               </div>
             </div>
 
-            <h3 style={styles.sectionTitle}>Votre photo *</h3>
-            <p style={styles.hint}>Une photo récente de vous, pour vérifier votre identité.</p>
+            <h3 style={styles.sectionTitle}>{t('certificationRequest.yourPhoto')}</h3>
+            <p style={styles.hint}>{t('certificationRequest.photoHint')}</p>
             <div style={styles.uploadZone} onClick={() => photoRef.current.click()}>
               <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload(setPhotoUtilisateur)} />
               {photoUtilisateur ? <img src={photoUtilisateur} alt="Vous" style={styles.previewImg} /> : <ImageIcon size={24} color="#2d6a4f" />}
             </div>
 
-            <h3 style={styles.sectionTitle}>Durée & paiement</h3>
+            <h3 style={styles.sectionTitle}>{t('certificationRequest.durationSection')}</h3>
 
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Durée de la certification *</label>
+              <label style={styles.label}>{t('certificationRequest.certDuration')}</label>
               <div style={styles.dureeRow}>
                 {DUREES.map(d => (
                   <button
@@ -241,14 +240,14 @@ export default function CertificationRequest({ onBack }) {
                     onClick={() => setDureeMois(d.mois)}
                     style={{ ...styles.dureeBtn, ...(dureeMois === d.mois ? styles.dureeBtnActive : {}) }}
                   >
-                    {d.mois} mois<br /><strong>{d.montant} FCFA</strong>
+                    {t('certificationRequest.durationMonths', { count: d.mois })}<br /><strong>{d.montant} FCFA</strong>
                   </button>
                 ))}
               </div>
             </div>
 
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Moyen de paiement *</label>
+              <label style={styles.label}>{t('certificationRequest.paymentMethod')}</label>
               <select style={styles.input} value={moyenPaiement} onChange={(e) => setMoyenPaiement(e.target.value)}>
                 <option value="MTN_MOMO">MTN Mobile Money</option>
                 <option value="ORANGE_MONEY">Orange Money</option>
@@ -259,16 +258,16 @@ export default function CertificationRequest({ onBack }) {
               <div style={styles.infoBox}>
                 <AlertCircle size={16} color="#e07a5f" />
                 <span style={styles.infoText}>
-                  Effectuez le paiement de <strong>{montantSelectionne} FCFA</strong> au numéro <strong>{numeroReception}</strong>, puis indiquez ci-dessous le numéro utilisé.
+                  {t('certificationRequest.payAt')} <strong>{montantSelectionne} {t('certificationRequest.payAtMiddle')} {numeroReception}</strong>{t('certificationRequest.payAtEnd')}
                 </span>
               </div>
             )}
 
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Votre numéro de paiement *</label>
+              <label style={styles.label}>{t('certificationRequest.yourPaymentNumber')}</label>
               <input
                 type="tel"
-                placeholder="Ex: 6XX XXX XXX"
+                placeholder={t('certificationRequest.phonePlaceholder')}
                 style={styles.input}
                 value={numeroPaiement}
                 onChange={(e) => setNumeroPaiement(e.target.value)}
@@ -278,30 +277,30 @@ export default function CertificationRequest({ onBack }) {
             {error && <p style={styles.errorText}>{error}</p>}
 
             <button style={styles.submitBtn} onClick={handleSubmit} disabled={submitting}>
-              <Shield size={18} /> {submitting ? 'Envoi en cours...' : 'Envoyer la demande de certification'}
+              <Shield size={18} /> {submitting ? t('certificationRequest.sending') : t('certificationRequest.sendRequest')}
             </button>
           </div>
 
           <div style={styles.sideCard}>
-            <h3 style={styles.sideTitle}>Pourquoi se certifier ?</h3>
+            <h3 style={styles.sideTitle}>{t('certificationRequest.whyCertify')}</h3>
             <div style={styles.benefitList}>
               <div style={styles.benefitItem}>
                 <CheckCircle size={18} color="#2d6a4f" />
-                <span>Badge <strong>✅ Certifié</strong> visible sur tous vos produits</span>
+                <span>{t('certificationRequest.benefit1')}</span>
               </div>
               <div style={styles.benefitItem}>
                 <CheckCircle size={18} color="#2d6a4f" />
-                <span>Confiance accrue des acheteurs</span>
+                <span>{t('certificationRequest.benefit2')}</span>
               </div>
               <div style={styles.benefitItem}>
                 <CheckCircle size={18} color="#2d6a4f" />
-                <span>Meilleur classement dans les résultats</span>
+                <span>{t('certificationRequest.benefit3')}</span>
               </div>
             </div>
             <div style={styles.infoBox}>
               <AlertCircle size={16} color="#e07a5f" />
               <span style={styles.infoText}>
-                Votre demande est examinée par un administrateur après confirmation du paiement.
+                {t('certificationRequest.reviewNotice')}
               </span>
             </div>
           </div>
