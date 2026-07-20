@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, ShieldCheck, FileText, CreditCard, CheckCircle,
   XCircle, Clock, AlertCircle, Phone, Mail, Search, Wallet,
@@ -10,6 +11,7 @@ import {
 //   statutPaiement ('EN_ATTENTE'|'PAYE'|'NON_PAYE'), submittedAt, status,
 //   motifRejet }]
 export default function VendorVerificationAdmin({ pendingVerifications = [], onApprove, onReject, onConfirmerPaiement, onBack }) {
+  const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState(pendingVerifications[0]?.id ?? null);
   const [search, setSearch] = useState('');
   const [rejectReason, setRejectReason] = useState('');
@@ -27,15 +29,15 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
   const selected = pendingVerifications.find(v => v.id === selectedId) || filtered[0];
 
   const statusBadge = (status) => {
-    if (status === 'approved') return { label: '✅ Approuvé', bg: '#e9f5ee', color: '#2d6a4f' };
-    if (status === 'rejected') return { label: '❌ Rejeté', bg: '#fdecea', color: '#c0392b' };
-    return { label: '⏳ En attente', bg: '#fff8e8', color: '#f5b041' };
+    if (status === 'approved') return { label: t('vendorVerificationAdmin.statusApproved'), bg: '#e9f5ee', color: '#2d6a4f' };
+    if (status === 'rejected') return { label: t('vendorVerificationAdmin.statusRejected'), bg: '#fdecea', color: '#c0392b' };
+    return { label: t('vendorVerificationAdmin.statusPending'), bg: '#fff8e8', color: '#f5b041' };
   };
 
   const paiementBadge = (statutPaiement) => {
-    if (statutPaiement === 'PAYE') return { label: '✅ Payé', bg: '#e9f5ee', color: '#2d6a4f' };
-    if (statutPaiement === 'NON_PAYE') return { label: '❌ Non payé', bg: '#fdecea', color: '#c0392b' };
-    return { label: '⏳ En attente de confirmation', bg: '#fff8e8', color: '#f5b041' };
+    if (statutPaiement === 'PAYE') return { label: t('vendorVerificationAdmin.paymentPaid'), bg: '#e9f5ee', color: '#2d6a4f' };
+    if (statutPaiement === 'NON_PAYE') return { label: t('vendorVerificationAdmin.paymentUnpaid'), bg: '#fdecea', color: '#c0392b' };
+    return { label: t('vendorVerificationAdmin.paymentAwaiting'), bg: '#fff8e8', color: '#f5b041' };
   };
 
   const handleConfirmerPaiement = () => {
@@ -71,14 +73,14 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
 
         <div style={styles.header}>
           <button style={styles.backBtn} onClick={onBack}>
-            <ArrowLeft size={18} /> Retour
+            <ArrowLeft size={18} /> {t('vendorVerificationAdmin.back')}
           </button>
           <div style={styles.headerTitleRow}>
             <div style={styles.headerBadge}><ShieldCheck size={24} color="#ffffff" /></div>
             <div>
-              <h1 style={styles.title}>Certifications</h1>
+              <h1 style={styles.title}>{t('vendorVerificationAdmin.title')}</h1>
               <p style={styles.subtitle}>
-                {pendingCount} demande{pendingCount !== 1 ? 's' : ''} en attente de validation
+                {t('vendorVerificationAdmin.pendingCount', { count: pendingCount })}
               </p>
             </div>
           </div>
@@ -86,10 +88,10 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
 
         <div style={styles.filterRow}>
           {[
-            { id: 'all', label: 'Toutes', count: pendingVerifications.length },
-            { id: 'pending', label: '⏳ En attente', count: pendingCount },
-            { id: 'approved', label: '✅ Approuvées', count: approvedCount },
-            { id: 'rejected', label: '❌ Rejetées', count: rejectedCount },
+            { id: 'all', label: t('vendorVerificationAdmin.filterAll'), count: pendingVerifications.length },
+            { id: 'pending', label: t('vendorVerificationAdmin.filterPending'), count: pendingCount },
+            { id: 'approved', label: t('vendorVerificationAdmin.filterApproved'), count: approvedCount },
+            { id: 'rejected', label: t('vendorVerificationAdmin.filterRejected'), count: rejectedCount },
           ].map(f => (
             <button
               key={f.id}
@@ -109,7 +111,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
               <Search size={16} color="#adb5bd" />
               <input
                 type="text"
-                placeholder="Rechercher un vendeur..."
+                placeholder={t('vendorVerificationAdmin.searchPlaceholder')}
                 style={styles.searchInput}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -118,7 +120,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
 
             <div style={styles.list}>
               {filteredByStatus.length === 0 && (
-                <p style={styles.emptyText}>Aucune demande trouvée.</p>
+                <p style={styles.emptyText}>{t('vendorVerificationAdmin.noRequestsFound')}</p>
               )}
               {filteredByStatus.map((v) => {
                 const badge = statusBadge(v.status);
@@ -153,7 +155,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
             {!selected ? (
               <div style={styles.emptyState}>
                 <ShieldCheck size={48} color="#dee2e6" />
-                <p>Sélectionnez une demande pour voir les détails</p>
+                <p>{t('vendorVerificationAdmin.selectRequest')}</p>
               </div>
             ) : (
               <>
@@ -181,57 +183,57 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
                 </div>
 
                 <div style={styles.section}>
-                  <h3 style={styles.sectionTitle}><FileText size={16} color="#2d6a4f" /> {selected.typeDocumentLabel || "Pièce d'identité"}</h3>
+                  <h3 style={styles.sectionTitle}><FileText size={16} color="#2d6a4f" /> {selected.typeDocumentLabel || t('vendorVerificationAdmin.idDocument')}</h3>
                   {(selected.idRecto || selected.idVerso || selected.photoUtilisateur) ? (
                     <div style={styles.photoGrid}>
                       {selected.idRecto && (
                         <div style={styles.photoItem}>
                           <img src={selected.idRecto} alt="Recto" style={styles.photoImg} />
-                          <span style={styles.photoCaption}>Recto</span>
+                          <span style={styles.photoCaption}>{t('vendorVerificationAdmin.front')}</span>
                         </div>
                       )}
                       {selected.idVerso && (
                         <div style={styles.photoItem}>
                           <img src={selected.idVerso} alt="Verso" style={styles.photoImg} />
-                          <span style={styles.photoCaption}>Verso</span>
+                          <span style={styles.photoCaption}>{t('vendorVerificationAdmin.back_side')}</span>
                         </div>
                       )}
                       {selected.photoUtilisateur && (
                         <div style={styles.photoItem}>
                           <img src={selected.photoUtilisateur} alt="Photo du titulaire" style={styles.photoImg} />
-                          <span style={styles.photoCaption}>Titulaire</span>
+                          <span style={styles.photoCaption}>{t('vendorVerificationAdmin.holder')}</span>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <p style={styles.missing}>Aucun document fourni</p>
+                    <p style={styles.missing}>{t('vendorVerificationAdmin.noDocuments')}</p>
                   )}
                 </div>
 
                 <div style={styles.section}>
-                  <h3 style={styles.sectionTitle}><CreditCard size={16} color="#2d6a4f" /> Détails de la demande</h3>
+                  <h3 style={styles.sectionTitle}><CreditCard size={16} color="#2d6a4f" /> {t('vendorVerificationAdmin.requestDetails')}</h3>
                   <div style={styles.infoGrid}>
                     <div style={styles.infoRow}>
-                      <span style={styles.infoLabel}>Durée demandée</span>
-                      <span style={styles.infoValue}>{selected.dureeMois} mois</span>
+                      <span style={styles.infoLabel}>{t('vendorVerificationAdmin.requestedDuration')}</span>
+                      <span style={styles.infoValue}>{t('vendorVerificationAdmin.durationMonths', { count: selected.dureeMois })}</span>
                     </div>
                     <div style={styles.infoRow}>
-                      <span style={styles.infoLabel}>Montant</span>
+                      <span style={styles.infoLabel}>{t('vendorVerificationAdmin.amount')}</span>
                       <span style={styles.infoValue}>{selected.montant} FCFA</span>
                     </div>
                     <div style={styles.infoRow}>
-                      <span style={styles.infoLabel}>Moyen de paiement</span>
+                      <span style={styles.infoLabel}>{t('vendorVerificationAdmin.paymentMethod')}</span>
                       <span style={styles.infoValue}>{selected.moyenPaiementLabel || '—'}</span>
                     </div>
                     <div style={styles.infoRow}>
-                      <span style={styles.infoLabel}>N° de paiement utilisé</span>
+                      <span style={styles.infoLabel}>{t('vendorVerificationAdmin.paymentNumberUsed')}</span>
                       <span style={styles.infoValue}>{selected.numeroPaiement || '—'}</span>
                     </div>
                   </div>
                 </div>
 
                 <div style={styles.section}>
-                  <h3 style={styles.sectionTitle}><Wallet size={16} color="#2d6a4f" /> Statut du paiement</h3>
+                  <h3 style={styles.sectionTitle}><Wallet size={16} color="#2d6a4f" /> {t('vendorVerificationAdmin.paymentStatus')}</h3>
                   <span
                     style={{
                       ...styles.statusPill,
@@ -243,7 +245,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
                   </span>
                   {selected.status === 'pending' && selected.statutPaiement !== 'PAYE' && (
                     <button style={styles.confirmPaymentBtn} onClick={handleConfirmerPaiement}>
-                      Confirmer la réception du paiement
+                      {t('vendorVerificationAdmin.confirmPaymentReceived')}
                     </button>
                   )}
                 </div>
@@ -251,9 +253,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
                 <div style={styles.tipBox}>
                   <AlertCircle size={16} color="#e07a5f" />
                   <span style={styles.tipText}>
-                    Vérifiez que le paiement a bien été reçu sur le numéro indiqué avant de le
-                    confirmer. L'approbation n'est possible qu'une fois le paiement confirmé.
-                    En cas de doute sur les documents, rejetez avec un motif clair.
+                    {t('vendorVerificationAdmin.tipText')}
                   </span>
                 </div>
 
@@ -262,7 +262,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
                     {!showRejectBox ? (
                       <div style={styles.actionRow}>
                         <button style={styles.rejectBtn} onClick={() => setShowRejectBox(true)}>
-                          <XCircle size={18} /> Rejeter
+                          <XCircle size={18} /> {t('vendorVerificationAdmin.reject')}
                         </button>
                         <button
                           style={{
@@ -271,25 +271,25 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
                           }}
                           onClick={handleApprove}
                           disabled={selected.statutPaiement !== 'PAYE'}
-                          title={selected.statutPaiement !== 'PAYE' ? 'Confirmez le paiement avant d\'approuver' : ''}
+                          title={selected.statutPaiement !== 'PAYE' ? t('vendorVerificationAdmin.confirmPaymentFirst') : ''}
                         >
-                          <CheckCircle size={18} /> Approuver
+                          <CheckCircle size={18} /> {t('vendorVerificationAdmin.approve')}
                         </button>
                       </div>
                     ) : (
                       <div style={styles.rejectBox}>
-                        <label style={styles.label}>Motif du rejet</label>
+                        <label style={styles.label}>{t('vendorVerificationAdmin.rejectReasonLabel')}</label>
                         <textarea
                           style={styles.textarea}
                           rows="3"
-                          placeholder="Ex: document illisible, photo ne correspond pas..."
+                          placeholder={t('vendorVerificationAdmin.rejectReasonPlaceholder')}
                           value={rejectReason}
                           onChange={(e) => setRejectReason(e.target.value)}
                         />
                         <div style={styles.actionRow}>
-                          <button style={styles.backBtnSmall} onClick={() => setShowRejectBox(false)}>Annuler</button>
+                          <button style={styles.backBtnSmall} onClick={() => setShowRejectBox(false)}>{t('vendorVerificationAdmin.cancel')}</button>
                           <button style={styles.rejectConfirmBtn} onClick={handleReject}>
-                            Confirmer le rejet
+                            {t('vendorVerificationAdmin.confirmReject')}
                           </button>
                         </div>
                       </div>
@@ -301,7 +301,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
                   <div style={styles.decidedBox}>
                     <Clock size={16} color="#6c757d" />
                     <span>
-                      Cette demande a déjà été traitée{selected.status === 'rejected' && selected.motifRejet ? ` (motif : ${selected.motifRejet})` : ''}.
+                      {t('vendorVerificationAdmin.alreadyProcessed')}{selected.status === 'rejected' && selected.motifRejet ? t('vendorVerificationAdmin.reasonSuffix', { reason: selected.motifRejet }) : ''}.
                     </span>
                   </div>
                 )}
