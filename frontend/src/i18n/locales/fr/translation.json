@@ -381,5 +381,29 @@
     "emptyMsg": "Aucun produit dans cette catégorie.",
     "seeAll": "Voir tous les produits",
     "voirCatalogue": "Voir tout le catalogue"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "catalogue": "Catalogue",
+    "myProducts": "Mes produits",
+    "searchTitle": "Rechercher un utilisateur",
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "myProfile": "Mon profil",
+    "notifications": "Notifications",
+    "myMessages": "Mes messages",
+    "myOrders": "Mes commandes",
+    "myPurchases": "Mes achats",
+    "dashboard": "Tableau de bord",
+    "receivedOrders": "Commandes reçues",
+    "backToVendorMode": "Revenir en mode vendeur",
+    "loginAsClient": "Se connecter en tant que client",
+    "adminDashboard": "Tableau de bord admin",
+    "logout": "Déconnexion",
+    "clientModeBadge": "🛒 Client (mode)",
+    "vendorBadge": "🌾 Vendeur",
+    "adminBadge": "🛡️ Admin",
+    "clientBadge": "🛒 Client",
+    "clientOnlySection": "Vous êtes en mode client, cette section est réservée aux vendeurs."
   }
 }

@@ -381,5 +381,29 @@
     "emptyMsg": "No products in this category.",
     "seeAll": "See all products",
     "voirCatalogue": "See full catalogue"
+  },
+  "navigation": {
+    "home": "Home",
+    "catalogue": "Catalogue",
+    "myProducts": "My products",
+    "searchTitle": "Search for a user",
+    "login": "Login",
+    "register": "Sign up",
+    "myProfile": "My profile",
+    "notifications": "Notifications",
+    "myMessages": "My messages",
+    "myOrders": "My orders",
+    "myPurchases": "My purchases",
+    "dashboard": "Dashboard",
+    "receivedOrders": "Received orders",
+    "backToVendorMode": "Back to vendor mode",
+    "loginAsClient": "Log in as client",
+    "adminDashboard": "Admin dashboard",
+    "logout": "Log out",
+    "clientModeBadge": "🛒 Client (mode)",
+    "vendorBadge": "🌾 Vendor",
+    "adminBadge": "🛡️ Admin",
+    "clientBadge": "🛒 Client",
+    "clientOnlySection": "You are in client mode, this section is reserved for vendors."
   }
 }
