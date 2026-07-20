@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useDict } from '../context/LanguageContext';
+import ConfirmDialog from './ConfirmDialog';
 
 const translations = {
   fr: {
@@ -80,13 +81,11 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
   const normalized = useMemo(() => products.map(normalize), [products, t]);
   const [filterTab, setFilterTab] = useState('Tous');
   const [notification, setNotification] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(null); // { id, name } | null
 
   // Handle product deletion
   const handleDelete = (id, name) => {
-    if (window.confirm(t.confirmDelete(name))) {
-      onDeleteProduct && onDeleteProduct(id);
-      showToast(t.deletedToast(name));
-    }
+    setConfirmDelete({ id, name });
   };
 
   // Handle product duplication
@@ -125,6 +124,18 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
           <span>🔔 {notification}</span>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        title={t.myProducts}
+        message={confirmDelete ? t.confirmDelete(confirmDelete.name) : ''}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          onDeleteProduct && onDeleteProduct(confirmDelete.id);
+          showToast(t.deletedToast(confirmDelete.name));
+          setConfirmDelete(null);
+        }}
+      />
 
       {/* Header */}
       <div style={styles.header}>

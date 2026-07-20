@@ -8,6 +8,7 @@ import {
   Upload
 } from 'lucide-react';
 import VendeurOrders from './VendeurOrders';
+import ConfirmDialog from './ConfirmDialog';
 import { certificationApi } from '../services/api';
 import { useDict } from '../context/LanguageContext';
 
@@ -83,6 +84,7 @@ export default function SellerDashboard({
   const menuItems = getMenuItems(t);
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [confirmDeleteProduct, setConfirmDeleteProduct] = useState(null); // { name } | null
 
   const [certificationStatus, setCertificationStatus] = useState('none');
 
@@ -307,11 +309,7 @@ export default function SellerDashboard({
                       <button style={styles.iconBtn} onClick={() => onNavigate && onNavigate('add-product')}>
                         <Edit size={14} color="#2d6a4f" />
                       </button>
-                      <button style={styles.iconBtn} onClick={() => {
-                        if (window.confirm(`${t.deleteConfirm} "${p.name}" ?`)) {
-                          alert(t.deletedSim);
-                        }
-                      }}>
+                      <button style={styles.iconBtn} onClick={() => setConfirmDeleteProduct({ name: p.name })}>
                         <Trash2 size={14} color="#e07a5f" />
                       </button>
                     </div>
@@ -435,6 +433,16 @@ export default function SellerDashboard({
 
   return (
     <div style={styles.wrapper}>
+      <ConfirmDialog
+        open={!!confirmDeleteProduct}
+        title={t.myWorkspace}
+        message={confirmDeleteProduct ? `${t.deleteConfirm} "${confirmDeleteProduct.name}" ?` : ''}
+        onCancel={() => setConfirmDeleteProduct(null)}
+        onConfirm={() => {
+          setConfirmDeleteProduct(null);
+          alert(t.deletedSim);
+        }}
+      />
       <aside style={{ ...styles.sidebar, width: sidebarOpen ? '250px' : '72px' }}>
         <div style={styles.sidebarHeader}>
           <button style={styles.toggleBtn} onClick={() => setSidebarOpen(!sidebarOpen)}>

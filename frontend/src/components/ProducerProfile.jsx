@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Star, MessageCircle, ShieldCheck, Edit3, Trash2, Flag, Package, ShoppingBag, MessageSquareText } from 'lucide-react';
 import { produitApi, avisApi, certificationApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
+import ConfirmDialog from './ConfirmDialog';
 
 // Un avis (backend AvisResponse) : { id, note, commentaire, date, clientId, clientNom, produitId }
 export default function ProducerProfile({
@@ -31,6 +32,7 @@ export default function ProducerProfile({
   const [chargement, setChargement] = useState(true);
   const [chargeErreur, setChargeErreur] = useState(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const [confirmDeleteAvis, setConfirmDeleteAvis] = useState(null); // avisId | null
 
   // Charge tous les produits du producteur, puis tous les avis de ces
   // produits (avis-service note un produit, pas directement un producteur).
@@ -152,8 +154,13 @@ export default function ProducerProfile({
     }
   };
 
-  const handleDelete = async (avisId) => {
-    if (!window.confirm('Supprimer votre avis ?')) return;
+  const handleDelete = (avisId) => {
+    setConfirmDeleteAvis(avisId);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    const avisId = confirmDeleteAvis;
+    setConfirmDeleteAvis(null);
     setEnvoiEnCours(true);
     setError('');
     try {
@@ -209,6 +216,14 @@ export default function ProducerProfile({
   return (
     <div style={styles.wrapper}>
       <div style={styles.container}>
+
+        <ConfirmDialog
+          open={!!confirmDeleteAvis}
+          title="Supprimer l'avis"
+          message="Supprimer votre avis ?"
+          onCancel={() => setConfirmDeleteAvis(null)}
+          onConfirm={handleDeleteConfirmed}
+        />
 
         <button style={styles.backBtn} onClick={onBack}>
           <ArrowLeft size={18} /> Retour
