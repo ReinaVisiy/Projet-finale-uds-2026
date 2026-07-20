@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const alertConfig = {
-  CRITIQUE: { color: '#dc3545', bg: '#fde8ea', label: '🔴 CRITIQUE' },
-  FAIBLE: { color: '#e07a5f', bg: '#fdf1ed', label: '🟡 FAIBLE' },
+  CRITIQUE: { color: '#dc3545', bg: '#fde8ea' },
+  FAIBLE: { color: '#e07a5f', bg: '#fdf1ed' },
 };
 
 const priorityConfig = {
@@ -19,6 +20,7 @@ const CRITICAL_THRESHOLD = 3;
 const LOW_THRESHOLD = 10;
 
 export default function StockAlerts({ onBack, vendeurProducts = [] }) {
+  const { t } = useTranslation();
   // Alertes construites à partir des vrais produits du vendeur (stock réel
   // renvoyé par produit-service), et non plus d'une liste de produits
   // fictifs (banane, tomate, maïs...) identique pour tout le monde.
@@ -29,8 +31,8 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
       product: p.name,
       emoji: '🌾',
       stock: p.stock ?? 0,
-      unit: 'unité(s)',
-      category: p.category || 'Général',
+      unit: t('stockAlerts.unit'),
+      category: p.category || t('stockAlerts.categoryGeneral'),
       alert: (p.stock ?? 0) <= CRITICAL_THRESHOLD ? 'CRITIQUE' : 'FAIBLE',
       priority: (p.stock ?? 0) <= CRITICAL_THRESHOLD ? 'Urgent' : (p.stock ?? 0) <= 6 ? 'Haute' : 'Moyenne',
     }))
@@ -57,12 +59,12 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
   const handleOrder = (id) => {
     setOrderedIds(prev => [...prev, id]);
     const item = items.find(i => i.id === id);
-    showToast(`✅ Commande d'urgence passée pour ${item.product} ! Livraison sous 48h.`);
+    showToast(t('stockAlerts.orderToast', { product: item.product }));
   };
 
   const handleOrderAll = () => {
     setOrderedIds(items.filter(i => i.alert === 'CRITIQUE').map(i => i.id));
-    showToast(`🚀 ${critiques.length} commandes d'urgence passées pour les stocks CRITIQUES !`);
+    showToast(t('stockAlerts.orderAllToast', { count: critiques.length }));
   };
 
   if (items.length === 0) {
@@ -70,8 +72,8 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
       <div style={styles.container} className="fade-in">
         <div style={styles.emptyOk}>
           <span style={{ fontSize: '40px' }}>✅</span>
-          <h2 style={styles.emptyOkTitle}>Aucune alerte de stock</h2>
-          <p style={styles.emptyOkText}>Tous vos produits ont un stock supérieur à {LOW_THRESHOLD} unités.</p>
+          <h2 style={styles.emptyOkTitle}>{t('stockAlerts.noAlertsTitle')}</h2>
+          <p style={styles.emptyOkText}>{t('stockAlerts.noAlertsText', { threshold: LOW_THRESHOLD })}</p>
         </div>
       </div>
     );
@@ -89,9 +91,9 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
             <span style={styles.bannerIcon}>⚠️</span>
           </div>
           <div>
-            <h2 style={styles.bannerTitle}>ALERTE STOCK</h2>
+            <h2 style={styles.bannerTitle}>{t('stockAlerts.bannerTitle')}</h2>
             <p style={styles.bannerSubtitle}>
-              {critiques.length} rupture{critiques.length > 1 ? 's' : ''} critique{critiques.length > 1 ? 's' : ''} détectée{critiques.length > 1 ? 's' : ''} · Action immédiate requise
+              {t('stockAlerts.bannerSubtitle', { count: critiques.length })}
             </p>
           </div>
         </div>
@@ -101,7 +103,7 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
               <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
             </svg>
-            Commander tout en urgence
+            {t('stockAlerts.orderAllUrgent')}
           </button>
         </div>
       </div>
@@ -114,8 +116,8 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
               <span style={styles.summaryIcon}>🔴</span>
             </div>
             <div>
-              <p style={{ ...styles.summaryCount, color: '#dc3545' }}>{critiques.length} produits en rupture</p>
-              <p style={styles.summaryDesc}>Stock actuel &lt; 10% du seuil minimum. Réapprovisionnement urgent.</p>
+              <p style={{ ...styles.summaryCount, color: '#dc3545' }}>{t('stockAlerts.criticalCount', { count: critiques.length })}</p>
+              <p style={styles.summaryDesc}>{t('stockAlerts.criticalDesc')}</p>
             </div>
           </div>
           <div style={{ ...styles.summaryLine, backgroundColor: '#dc3545' }} />
@@ -127,8 +129,8 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
               <span style={styles.summaryIcon}>🟡</span>
             </div>
             <div>
-              <p style={{ ...styles.summaryCount, color: '#e07a5f' }}>{faibles.length} produits stock faible</p>
-              <p style={styles.summaryDesc}>Stock actuel entre 10% et 30% du seuil. Commander prochainement.</p>
+              <p style={{ ...styles.summaryCount, color: '#e07a5f' }}>{t('stockAlerts.lowCount', { count: faibles.length })}</p>
+              <p style={styles.summaryDesc}>{t('stockAlerts.lowDesc')}</p>
             </div>
           </div>
           <div style={{ ...styles.summaryLine, backgroundColor: '#e07a5f' }} />
@@ -139,8 +141,8 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
       <div style={styles.tableCard}>
         <div style={styles.tableHeader}>
           <div style={styles.tableHeaderLeft}>
-            <h3 style={styles.tableTitle}>Détail des alertes stock</h3>
-            <p style={styles.tableSub}>{filtered.length} produit(s)</p>
+            <h3 style={styles.tableTitle}>{t('stockAlerts.detailTitle')}</h3>
+            <p style={styles.tableSub}>{t('stockAlerts.productCount', { count: filtered.length })}</p>
           </div>
           <div style={styles.filterTabs}>
             {['Toutes', 'Critique', 'Faible'].map(f => (
@@ -153,7 +155,7 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
                 onClick={() => setFilter(f)}
               >
                 {f === 'Critique' && '🔴 '}{f === 'Faible' && '🟡 '}
-                {f}
+                {f === 'Toutes' ? t('stockAlerts.filterAll') : f === 'Critique' ? t('stockAlerts.filterCritical') : t('stockAlerts.filterLow')}
                 <span style={{
                   ...styles.filterCount,
                   backgroundColor: filter === f ? '#1b4d3e' : '#e9ecef',
@@ -171,7 +173,13 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
           <table style={styles.table}>
             <thead>
               <tr style={styles.tableHeadRow}>
-                {['Produit', 'Stock actuel', 'Alerte', 'Priorité', 'Action'].map(h => (
+                {[
+                  t('stockAlerts.colProduct'),
+                  t('stockAlerts.colStock'),
+                  t('stockAlerts.colAlert'),
+                  t('stockAlerts.colPriority'),
+                  t('stockAlerts.colAction'),
+                ].map(h => (
                   <th key={h} style={styles.th}>{h}</th>
                 ))}
               </tr>
@@ -207,7 +215,7 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
                         color: alertCfg.color,
                         backgroundColor: alertCfg.bg,
                       }}>
-                        {alertCfg.label}
+                        {item.alert === 'CRITIQUE' ? t('stockAlerts.alertCritical') : t('stockAlerts.alertLow')}
                       </span>
                     </td>
                     <td style={styles.td}>
@@ -216,7 +224,7 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
                         color: priCfg.color,
                         backgroundColor: priCfg.bg,
                       }}>
-                        {item.priority}
+                        {item.priority === 'Urgent' ? t('stockAlerts.priorityUrgent') : item.priority === 'Haute' ? t('stockAlerts.priorityHigh') : t('stockAlerts.priorityMedium')}
                       </span>
                     </td>
                     <td style={styles.td}>
@@ -233,7 +241,7 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
-                            Commandé
+                            {t('stockAlerts.ordered')}
                           </>
                         ) : (
                           <>
@@ -241,7 +249,7 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
                               <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
                               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                             </svg>
-                            Commander
+                            {t('stockAlerts.order')}
                           </>
                         )}
                       </button>
@@ -260,7 +268,7 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
             <span style={styles.ctaInfoText}>
-              Les commandes d'urgence sont livrées en 24 à 48h. Vos fournisseurs habituels seront automatiquement contactés.
+              {t('stockAlerts.ctaText')}
             </span>
           </div>
           <button
@@ -270,7 +278,7 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
             </svg>
-            Commander immédiatement
+            {t('stockAlerts.orderImmediately')}
           </button>
         </div>
       </div>
