@@ -1,8 +1,10 @@
 // src/components/ChangePassword.jsx
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Lock, Eye, EyeOff, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function ChangePassword({ onBack, onSave, currentUser }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -23,15 +25,15 @@ export default function ChangePassword({ onBack, onSave, currentUser }) {
   const validate = () => {
     const newErrors = {};
     if (!formData.currentPassword.trim()) {
-      newErrors.currentPassword = 'Veuillez saisir votre mot de passe actuel';
+      newErrors.currentPassword = t('changePassword.errCurrentRequired');
     }
     if (!formData.newPassword.trim()) {
-      newErrors.newPassword = 'Veuillez saisir un nouveau mot de passe';
+      newErrors.newPassword = t('changePassword.errNewRequired');
     } else if (formData.newPassword.length < 6) {
-      newErrors.newPassword = 'Minimum 6 caractères';
+      newErrors.newPassword = t('changePassword.errMinLength');
     }
     if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+      newErrors.confirmPassword = t('changePassword.errMismatch');
     }
     return newErrors;
   };
@@ -59,7 +61,7 @@ export default function ChangePassword({ onBack, onSave, currentUser }) {
       }, 1500);
     } catch (err) {
       setLoading(false);
-      setErrors({ currentPassword: err?.message || 'Mot de passe actuel incorrect' });
+      setErrors({ currentPassword: err?.message || t('changePassword.errWrongCurrent') });
     }
   };
 
@@ -71,27 +73,27 @@ export default function ChangePassword({ onBack, onSave, currentUser }) {
           <button style={styles.backBtn} onClick={onBack}>
             <ArrowLeft size={20} />
           </button>
-          <h1 style={styles.title}>Modifier le mot de passe</h1>
-          <p style={styles.subtitle}>Sécurisez votre compte en changeant votre mot de passe</p>
+          <h1 style={styles.title}>{t('changePassword.title')}</h1>
+          <p style={styles.subtitle}>{t('changePassword.subtitle')}</p>
         </div>
 
         {success && (
           <div style={styles.successBox}>
             <CheckCircle size={18} color="#2d6a4f" />
-            <span style={styles.successText}>Mot de passe modifié avec succès !</span>
+            <span style={styles.successText}>{t('changePassword.successMsg')}</span>
           </div>
         )}
 
         <form style={styles.form} onSubmit={handleSubmit}>
           {/* Mot de passe actuel */}
           <div style={styles.field}>
-            <label style={styles.label}>Mot de passe actuel *</label>
+            <label style={styles.label}>{t('changePassword.currentPassword')}</label>
             <div style={{ ...styles.inputWrap, borderColor: errors.currentPassword ? '#e07a5f' : '#dee2e6' }}>
               <Lock size={18} color="#6c757d" />
               <input
                 type={showCurrent ? 'text' : 'password'}
                 name="currentPassword"
-                placeholder="Votre mot de passe actuel"
+                placeholder={t('changePassword.currentPasswordPlaceholder')}
                 style={styles.input}
                 value={formData.currentPassword}
                 onChange={handleChange}
@@ -105,13 +107,13 @@ export default function ChangePassword({ onBack, onSave, currentUser }) {
 
           {/* Nouveau mot de passe */}
           <div style={styles.field}>
-            <label style={styles.label}>Nouveau mot de passe *</label>
+            <label style={styles.label}>{t('changePassword.newPassword')}</label>
             <div style={{ ...styles.inputWrap, borderColor: errors.newPassword ? '#e07a5f' : '#dee2e6' }}>
               <Lock size={18} color="#6c757d" />
               <input
                 type={showNew ? 'text' : 'password'}
                 name="newPassword"
-                placeholder="Minimum 6 caractères"
+                placeholder={t('changePassword.newPasswordPlaceholder')}
                 style={styles.input}
                 value={formData.newPassword}
                 onChange={handleChange}
@@ -122,19 +124,19 @@ export default function ChangePassword({ onBack, onSave, currentUser }) {
             </div>
             {errors.newPassword && <span style={styles.error}>{errors.newPassword}</span>}
             {formData.newPassword.length > 0 && formData.newPassword.length < 6 && (
-              <div style={styles.hint}>⚠️ Le mot de passe doit faire au moins 6 caractères</div>
+              <div style={styles.hint}>{t('changePassword.minLengthHint')}</div>
             )}
           </div>
 
           {/* Confirmer le nouveau mot de passe */}
           <div style={styles.field}>
-            <label style={styles.label}>Confirmer le nouveau mot de passe *</label>
+            <label style={styles.label}>{t('changePassword.confirmPassword')}</label>
             <div style={{ ...styles.inputWrap, borderColor: errors.confirmPassword ? '#e07a5f' : '#dee2e6' }}>
               <Lock size={18} color="#6c757d" />
               <input
                 type={showConfirm ? 'text' : 'password'}
                 name="confirmPassword"
-                placeholder="Répétez le nouveau mot de passe"
+                placeholder={t('changePassword.confirmPasswordPlaceholder')}
                 style={styles.input}
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -150,18 +152,17 @@ export default function ChangePassword({ onBack, onSave, currentUser }) {
           <div style={styles.securityBox}>
             <AlertCircle size={16} color="#f5b041" />
             <span style={styles.securityText}>
-              Pour votre sécurité, nous vous recommandons d'utiliser un mot de passe unique,
-              d'au moins 8 caractères, avec des lettres, chiffres et symboles.
+              {t('changePassword.securityMsg')}
             </span>
           </div>
 
           {/* Boutons */}
           <div style={styles.actionRow}>
             <button type="button" style={styles.cancelBtn} onClick={onBack}>
-              Annuler
+              {t('changePassword.cancel')}
             </button>
             <button type="submit" style={{ ...styles.saveBtn, opacity: loading ? 0.7 : 1 }} disabled={loading}>
-              {loading ? 'Modification...' : 'Modifier le mot de passe'}
+              {loading ? t('changePassword.saving') : t('changePassword.save')}
             </button>
           </div>
         </form>

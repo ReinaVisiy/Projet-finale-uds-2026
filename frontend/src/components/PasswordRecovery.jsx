@@ -1,8 +1,10 @@
 // PasswordRecovery.jsx
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Mail, ArrowLeft, CheckCircle, AlertCircle, Key, Send, Lock } from 'lucide-react';
 
 export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, updateUserPassword }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -17,20 +19,20 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
     e.preventDefault();
     setError('');
     if (!email.trim()) {
-      setError('Veuillez saisir votre adresse email');
+      setError(t('passwordRecovery.errEmailRequired'));
       return;
     }
     // Vérifier si l'email existe dans les utilisateurs enregistrés
     const userExists = registeredUsers.some(u => u.email.toLowerCase() === email.toLowerCase());
     if (!userExists) {
-      setError('Aucun compte associé à cet email');
+      setError(t('passwordRecovery.errNoAccount'));
       return;
     }
     // Générer un code aléatoire à 5 chiffres
     const newCode = Math.floor(10000 + Math.random() * 90000).toString();
     setGeneratedCode(newCode);
     // Simuler l'envoi du code par email
-    alert(`Code de vérification envoyé à ${email} : ${newCode}`);
+    alert(t('passwordRecovery.codeSentAlert', { email, code: newCode }));
     setStep(2);
   };
 
@@ -38,11 +40,11 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
     e.preventDefault();
     setError('');
     if (!code.trim() || code.length < 5) {
-      setError('Veuillez saisir un code valide à 5 chiffres');
+      setError(t('passwordRecovery.errCodeInvalid'));
       return;
     }
     if (code !== generatedCode) {
-      setError('Code incorrect, veuillez réessayer');
+      setError(t('passwordRecovery.errCodeWrong'));
       return;
     }
     setStep(3);
@@ -52,11 +54,11 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
     e.preventDefault();
     setError('');
     if (newPassword.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
+      setError(t('passwordRecovery.errPasswordMin'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError(t('passwordRecovery.errPasswordMismatch'));
       return;
     }
     setLoading(true);
@@ -69,7 +71,7 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
         if (onSuccess) onSuccess();
       }, 2000);
     } else {
-      setError('Erreur lors de la mise à jour du mot de passe');
+      setError(t('passwordRecovery.errUpdateFailed'));
       setLoading(false);
     }
   };
@@ -85,21 +87,21 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
       <div style={styles.wrapper}>
         <div style={styles.card}>
           <button style={styles.backBtn} onClick={onBack}>
-            <ArrowLeft size={20} /> Retour
+            <ArrowLeft size={20} /> {t('passwordRecovery.back')}
           </button>
-          <h1 style={styles.title}>Mot de passe oublié</h1>
-          <p style={styles.subtitle}>Entrez votre adresse email pour recevoir un code de réinitialisation</p>
+          <h1 style={styles.title}>{t('passwordRecovery.step1Title')}</h1>
+          <p style={styles.subtitle}>{t('passwordRecovery.step1Subtitle')}</p>
           
           {error && <div style={styles.errorBox}><AlertCircle size={18} color="#e07a5f" /><span>{error}</span></div>}
           
           <form style={styles.form} onSubmit={handleEmailSubmit}>
             <div style={styles.field}>
-              <label style={styles.label}>Adresse email</label>
+              <label style={styles.label}>{t('passwordRecovery.emailLabel')}</label>
               <div style={styles.inputWrap}>
                 <Mail size={18} color="#6c757d" />
                 <input
                   type="email"
-                  placeholder="ex: elviradech237@gmail.com"
+                  placeholder={t('passwordRecovery.emailPlaceholder')}
                   style={styles.input}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -108,7 +110,7 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
               </div>
             </div>
             <button type="submit" style={styles.submitBtn}>
-              <Send size={18} /> Valider
+              <Send size={18} /> {t('passwordRecovery.validate')}
             </button>
           </form>
         </div>
@@ -122,16 +124,16 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
       <div style={styles.wrapper}>
         <div style={styles.card}>
           <button style={styles.backBtn} onClick={goBackStep}>
-            <ArrowLeft size={20} /> Retour
+            <ArrowLeft size={20} /> {t('passwordRecovery.back')}
           </button>
-          <h1 style={styles.title}>Vérification</h1>
-          <p style={styles.subtitle}>Un code de validation a été envoyé à votre adresse email</p>
+          <h1 style={styles.title}>{t('passwordRecovery.step2Title')}</h1>
+          <p style={styles.subtitle}>{t('passwordRecovery.step2Subtitle')}</p>
           
           {error && <div style={styles.errorBox}><AlertCircle size={18} color="#e07a5f" /><span>{error}</span></div>}
           
           <form style={styles.form} onSubmit={handleCodeSubmit}>
             <div style={styles.field}>
-              <label style={styles.label}>Code de validation</label>
+              <label style={styles.label}>{t('passwordRecovery.codeLabel')}</label>
               <div style={styles.inputWrap}>
                 <Key size={18} color="#6c757d" />
                 <input
@@ -146,7 +148,7 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
               </div>
             </div>
             <button type="submit" style={styles.submitBtn}>
-              <CheckCircle size={18} /> Valider
+              <CheckCircle size={18} /> {t('passwordRecovery.validate')}
             </button>
           </form>
         </div>
@@ -160,27 +162,27 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
       <div style={styles.wrapper}>
         <div style={styles.card}>
           <button style={styles.backBtn} onClick={goBackStep}>
-            <ArrowLeft size={20} /> Retour
+            <ArrowLeft size={20} /> {t('passwordRecovery.back')}
           </button>
-          <h1 style={styles.title}>Nouveau mot de passe</h1>
-          <p style={styles.subtitle}>Créez un nouveau mot de passe pour votre compte</p>
+          <h1 style={styles.title}>{t('passwordRecovery.step3Title')}</h1>
+          <p style={styles.subtitle}>{t('passwordRecovery.step3Subtitle')}</p>
           
           {error && <div style={styles.errorBox}><AlertCircle size={18} color="#e07a5f" /><span>{error}</span></div>}
           {success && (
             <div style={styles.successBox}>
               <CheckCircle size={18} color="#2d6a4f" />
-              <span>Mot de passe modifié avec succès !</span>
+              <span>{t('passwordRecovery.successMsg')}</span>
             </div>
           )}
           
           <form style={styles.form} onSubmit={handlePasswordSubmit}>
             <div style={styles.field}>
-              <label style={styles.label}>Nouveau mot de passe</label>
+              <label style={styles.label}>{t('passwordRecovery.newPasswordLabel')}</label>
               <div style={styles.inputWrap}>
                 <Lock size={18} color="#6c757d" />
                 <input
                   type="password"
-                  placeholder="Minimum 6 caractères"
+                  placeholder={t('passwordRecovery.newPasswordPlaceholder')}
                   style={styles.input}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -190,12 +192,12 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
               </div>
             </div>
             <div style={styles.field}>
-              <label style={styles.label}>Confirmer le mot de passe</label>
+              <label style={styles.label}>{t('passwordRecovery.confirmPasswordLabel')}</label>
               <div style={styles.inputWrap}>
                 <Lock size={18} color="#6c757d" />
                 <input
                   type="password"
-                  placeholder="Répétez votre mot de passe"
+                  placeholder={t('passwordRecovery.confirmPasswordPlaceholder')}
                   style={styles.input}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -204,7 +206,7 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
               </div>
             </div>
             <button type="submit" style={styles.submitBtn} disabled={loading}>
-              {loading ? 'En cours...' : 'Réinitialiser le mot de passe'}
+              {loading ? t('passwordRecovery.inProgress') : t('passwordRecovery.resetPassword')}
             </button>
           </form>
         </div>
