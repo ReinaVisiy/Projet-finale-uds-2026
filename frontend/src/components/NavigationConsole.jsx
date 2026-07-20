@@ -1,6 +1,6 @@
 // src/components/NavigationConsole.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingCart, User, LogOut, ChevronDown, ShieldCheck, Home, Package, LayoutGrid, Bell, Users, ShoppingBag, Menu, X, MessageCircle } from 'lucide-react';
+import { ShoppingCart, User, LogOut, ChevronDown, ShieldCheck, Home, Package, LayoutGrid, Bell, Users, ShoppingBag, Menu, X, MessageCircle, Search } from 'lucide-react';
 
 export default function NavigationConsole({
   currentScreen,
@@ -91,6 +91,9 @@ export default function NavigationConsole({
                   🌐 {lang === 'fr' ? 'EN' : 'FR'}
                 </button>
               )}
+              <button style={styles.notifBtn} onClick={() => { onNavigate('user-search'); setMobileMenuOpen(false); }}>
+                <Search size={20} />
+              </button>
               {!currentUser ? (
                 <div style={styles.authButtons}>
                   <button style={styles.loginBtn} onClick={() => { onNavigate('login-page'); setMobileMenuOpen(false); }}>Connexion</button>
@@ -119,6 +122,9 @@ export default function NavigationConsole({
 
         {/* Zone droite - Desktop */}
         <div style={styles.rightZone}>
+          <button style={styles.notifBtn} onClick={() => onNavigate('user-search')} title="Rechercher un utilisateur">
+            <Search size={19} />
+          </button>
           {onToggleLang && (
             <button style={styles.langBtn} onClick={onToggleLang}>
               🌐 {lang === 'fr' ? 'EN' : 'FR'}

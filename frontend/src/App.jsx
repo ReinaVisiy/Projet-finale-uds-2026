@@ -21,6 +21,8 @@ import CertificationRequest from './components/CertificationRequest';
 import SignalementModal from './components/SignalementModal';
 import VendorVerificationAdmin from './components/VendorVerificationAdmin';
 import ProducerProfile from './components/ProducerProfile';
+import ClientProfile from './components/ClientProfile';
+import UserSearchResults from './components/UserSearchResults';
 import ProductCatalog from './components/ProductCatalog';
 import AdminDashboard from './components/AdminDashboard';
 import EditProfile from './components/EditProfile';
@@ -46,6 +48,7 @@ export default function App() {
   const [previousScreen, setPreviousScreen] = useState('home');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedVendor, setSelectedVendor] = useState(null);
+  const [selectedProfileClient, setSelectedProfileClient] = useState(null);
 
   // ===== LANGUE =====
   const [lang, setLang] = useState('fr');
@@ -717,6 +720,16 @@ export default function App() {
   const goToProduct = (product) => { setSelectedProduct(product); setScreen('product-detail'); };
   const goToMessage = (vendor) => requireLogin(() => { setSelectedVendor(vendor); setScreen('message'); });
   const goToProducerProfile = (vendor) => { setSelectedVendor(vendor); setScreen('producer-profile'); };
+  // Choisit le bon écran de profil public selon le rôle de l'utilisateur trouvé.
+  const goToUserProfile = (utilisateur) => {
+    if (utilisateur.role === 'vendeur') {
+      setSelectedVendor({ id: utilisateur.id, prenom: utilisateur.prenom, nom: utilisateur.nom, photo: utilisateur.photo });
+      setScreen('producer-profile');
+    } else {
+      setSelectedProfileClient(utilisateur);
+      setScreen('client-profile');
+    }
+  };
 
   const clientOnlyScreens = ['cart', 'checkout-wizard', 'orders', 'purchases'];
   const vendeurOnlyScreens = ['add-product', 'edit-product', 'my-products', 'seller-dashboard', 'sales-history', 'stock-alerts', 'plans', 'certification', 'vendeur-orders'];
@@ -724,7 +737,7 @@ export default function App() {
 
   const navigate = (s) => {
     setPreviousScreen(screen);
-    const publicScreens = ['home', 'login-page', 'register', 'recovery', 'product-detail', 'faq', 'producer-profile', 'catalogue'];
+    const publicScreens = ['home', 'login-page', 'register', 'recovery', 'product-detail', 'faq', 'producer-profile', 'client-profile', 'user-search', 'catalogue'];
     if (!currentUser && !publicScreens.includes(s)) {
       requireLogin(() => setScreen(s));
       return;
@@ -1070,10 +1083,24 @@ export default function App() {
         return <ProducerProfile
           producteur={selectedVendor}
           currentUser={currentUser}
-          onBack={() => navigate('product-detail')}
+          onBack={() => navigate(previousScreen)}
           onContactVendor={goToMessage}
+          onNavigateToProduct={goToProduct}
           onNavigateToLogin={() => navigate('login-page')}
           onSignalerProducteur={(motif) => requireLogin(() => handleSignalerProducteur(selectedVendor, motif))}
+        />;
+      case 'client-profile':
+        return <ClientProfile
+          client={selectedProfileClient}
+          onBack={() => navigate(previousScreen)}
+          onContactVendor={goToMessage}
+          onNavigateToProduct={goToProduct}
+          onSignalerUtilisateur={(motif) => requireLogin(() => handleSignalerProducteur(selectedProfileClient, motif))}
+        />;
+      case 'user-search':
+        return <UserSearchResults
+          onBack={() => navigate(previousScreen)}
+          onSelectUser={goToUserProfile}
         />;
       case 'vendeur-orders':
         return <VendeurOrders

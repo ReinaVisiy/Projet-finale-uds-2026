@@ -13,6 +13,8 @@ public interface AvisRepository extends JpaRepository<Avis, Long> {
 
     List<Avis> findByProduitId(Long produitId);
 
+    List<Avis> findByClientIdOrderByDateDesc(Long clientId);
+
     Optional<Avis> findByClientIdAndProduitId(Long clientId, Long produitId);
 
     @Query("SELECT AVG(a.note) FROM Avis a WHERE a.produitId = :produitId")

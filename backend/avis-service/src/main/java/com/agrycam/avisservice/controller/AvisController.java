@@ -52,6 +52,13 @@ public class AvisController {
         return ResponseEntity.ok(avisService.getParProduit(produitId));
     }
 
+    // Public : consulté depuis le profil public d'un utilisateur (client
+    // ou producteur en mode client) pour lister les avis qu'il a laissés.
+    @GetMapping("/client/{clientId}")
+    public ResponseEntity<List<AvisResponse>> getParClient(@PathVariable Long clientId) {
+        return ResponseEntity.ok(avisService.getParClient(clientId));
+    }
+
     @GetMapping("/produit/{produitId}/stats")
     public ResponseEntity<AvisStatsResponse> getStats(@PathVariable Long produitId) {
         Double noteMoyenne = avisService.getNoteMoyenne(produitId);

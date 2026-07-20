@@ -22,3 +22,7 @@ export const getAvisParProduit = (produitId) =>
 /** Get aggregate stats (average rating, count) for a product. Public. */
 export const getAvisStats = (produitId) =>
   httpGet(BASE, `/api/avis/produit/${produitId}/stats`, { auth: false });
+
+/** Get all reviews authored by a given client (public profile "avis laissés"). Public. */
+export const getAvisParClient = (clientId) =>
+  httpGet(BASE, `/api/avis/client/${clientId}`, { auth: false });

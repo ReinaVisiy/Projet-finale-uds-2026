@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Star, MessageCircle, ShieldCheck, Edit3, Trash2, Flag } from 'lucide-react';
-import { produitApi, avisApi } from '../services/api';
+import { ArrowLeft, Star, MessageCircle, ShieldCheck, Edit3, Trash2, Flag, Package, ShoppingBag, MessageSquareText } from 'lucide-react';
+import { produitApi, avisApi, certificationApi } from '../services/api';
+import { mapProduitPourVitrine } from '../services/productMapping';
 
 // Un avis (backend AvisResponse) : { id, note, commentaire, date, clientId, clientNom, produitId }
 export default function ProducerProfile({
@@ -9,8 +10,15 @@ export default function ProducerProfile({
   onBack,
   onContactVendor,
   onNavigateToLogin,
+  onNavigateToProduct,
   onSignalerProducteur, // (motif) => void
 }) {
+  const [activeTab, setActiveTab] = useState('produits');
+  const [produits, setProduits] = useState([]);
+  const [certifie, setCertifie] = useState(false);
+  const [avisLaisses, setAvisLaisses] = useState([]);
+  const [chargementAvisLaisses, setChargementAvisLaisses] = useState(false);
+  const [avisLaissesCharges, setAvisLaissesCharges] = useState(false);
   const [showReportBox, setShowReportBox] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [note, setNote] = useState(0);
@@ -34,9 +42,10 @@ export default function ProducerProfile({
     setChargement(true);
     setChargeErreur(null);
     try {
-      const produits = await produitApi.getProduitsParProducteur(producteur.id);
+      const produitsBruts = await produitApi.getProduitsParProducteur(producteur.id);
+      setProduits((produitsBruts || []).map(mapProduitPourVitrine));
       const avisParProduit = await Promise.all(
-        (produits || []).map((p) => avisApi.getAvisParProduit(p.id).catch(() => []))
+        (produitsBruts || []).map((p) => avisApi.getAvisParProduit(p.id).catch(() => []))
       );
       setAvisList(avisParProduit.flat());
     } catch (e) {
@@ -49,6 +58,42 @@ export default function ProducerProfile({
   useEffect(() => {
     chargerAvis();
   }, [chargerAvis]);
+
+  useEffect(() => {
+    if (!producteur?.id) return;
+    certificationApi.estCertifieActif(producteur.id)
+      .then((actif) => setCertifie(!!actif))
+      .catch(() => setCertifie(false));
+  }, [producteur?.id]);
+
+  const chargerAvisLaisses = useCallback(async () => {
+    if (!producteur?.id || avisLaissesCharges) return;
+    setChargementAvisLaisses(true);
+    try {
+      const avisBruts = await avisApi.getAvisParClient(producteur.id);
+      const enrichis = await Promise.all(
+        (avisBruts || []).map(async (a) => {
+          try {
+            const produit = await produitApi.getProduitById(a.produitId);
+            return { ...a, produit: mapProduitPourVitrine(produit) };
+          } catch {
+            return { ...a, produit: null };
+          }
+        })
+      );
+      setAvisLaisses(enrichis);
+      setAvisLaissesCharges(true);
+    } catch {
+      setAvisLaisses([]);
+    } finally {
+      setChargementAvisLaisses(false);
+    }
+  }, [producteur?.id, avisLaissesCharges]);
+
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'avis-laisses') chargerAvisLaisses();
+  };
 
   const producteurAvis = avisList;
   const totalAvis = producteurAvis.length;
@@ -178,8 +223,8 @@ export default function ProducerProfile({
             <div>
               <div style={styles.nameRow}>
                 <h1 style={styles.name}>{producteur.prenom ? `${producteur.prenom} ${producteur.nom}` : producteur.nom}</h1>
-                {producteur.verificationStatus === 'approved' && (
-                  <span style={styles.verifiedBadge}><ShieldCheck size={14} /> Vérifié</span>
+                {certifie && (
+                  <span style={styles.verifiedBadge}><ShieldCheck size={14} /> Certifié</span>
                 )}
               </div>
               <div style={styles.ratingRow}>
@@ -222,6 +267,102 @@ export default function ProducerProfile({
 
         {chargeErreur && <div style={styles.errorBanner}>{chargeErreur}</div>}
 
+        {/* Onglets */}
+        <div style={styles.tabBar}>
+          <button
+            style={{ ...styles.tabBtn, ...(activeTab === 'produits' ? styles.tabBtnActive : {}) }}
+            onClick={() => handleTabClick('produits')}
+          >
+            <Package size={15} /> Produits ({produits.length})
+          </button>
+          <button
+            style={{ ...styles.tabBtn, ...(activeTab === 'avis-recus' ? styles.tabBtnActive : {}) }}
+            onClick={() => handleTabClick('avis-recus')}
+          >
+            <Star size={15} /> Avis reçus ({totalAvis})
+          </button>
+          <button
+            style={{ ...styles.tabBtn, ...(activeTab === 'avis-laisses' ? styles.tabBtnActive : {}) }}
+            onClick={() => handleTabClick('avis-laisses')}
+          >
+            <MessageSquareText size={15} /> Avis laissés
+          </button>
+        </div>
+
+        {activeTab === 'produits' && (
+          <div style={styles.listSection}>
+            {chargement ? (
+              <p style={styles.hint}>Chargement des produits...</p>
+            ) : produits.length === 0 ? (
+              <p style={styles.emptyText}>Ce producteur n'a pas encore publié de produit.</p>
+            ) : (
+              <div style={styles.produitsGrid}>
+                {produits.map((prod) => (
+                  <div
+                    key={prod.id}
+                    style={styles.produitCard}
+                    onClick={() => onNavigateToProduct && onNavigateToProduct(prod)}
+                  >
+                    <div style={styles.produitImageWrap}>
+                      <img
+                        src={prod.image}
+                        alt={prod.name}
+                        style={styles.produitImg}
+                        onError={(e) => { e.target.src = 'https://picsum.photos/seed/' + prod.id + '/300/300'; }}
+                      />
+                    </div>
+                    <div style={styles.produitInfo}>
+                      <h4 style={styles.produitName}>{prod.name}</h4>
+                      <span style={styles.produitPrice}>{prod.price.toLocaleString()} FCFA</span>
+                      <div style={styles.produitRatingRow}>
+                        <StarRow value={prod.rating} size={12} />
+                        <span style={styles.produitRatingCount}>({prod.reviews})</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'avis-laisses' && (
+          <div style={styles.listSection}>
+            <h3 style={styles.sectionTitle}>Avis laissés sur des produits</h3>
+            {chargementAvisLaisses ? (
+              <p style={styles.hint}>Chargement des avis...</p>
+            ) : avisLaisses.length === 0 ? (
+              <p style={styles.emptyText}>Aucun avis laissé pour l'instant.</p>
+            ) : (
+              <div style={styles.avisList}>
+                {avisLaisses.map((avis) => (
+                  <div key={avis.id} style={styles.avisItem}>
+                    <div style={styles.avisAvatar}>{avis.produit?.name?.[0]?.toUpperCase() || 'P'}</div>
+                    <div style={styles.avisBody}>
+                      <div style={styles.avisTopRow}>
+                        <button
+                          style={styles.avisProduitLink}
+                          onClick={() => avis.produit && onNavigateToProduct && onNavigateToProduct(avis.produit)}
+                          disabled={!avis.produit}
+                        >
+                          {avis.produit?.name || 'Produit indisponible'}
+                        </button>
+                        <span style={styles.avisDate}>
+                          {new Date(avis.date).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                      <StarRow value={avis.note} size={14} />
+                      <p style={styles.avisComment}>{avis.commentaire}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'avis-recus' && (
+        <>
         <div style={styles.grid}>
 
           {/* Répartition des notes */}
@@ -343,6 +484,8 @@ export default function ProducerProfile({
             </div>
           )}
         </div>
+        </>
+        )}
       </div>
     </div>
   );
@@ -370,6 +513,21 @@ const styles = {
   reportLink: { display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#adb5bd', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', padding: 0 },
   reportBox: { backgroundColor: '#fff5f2', borderRadius: '14px', padding: '16px', border: '1px solid #f5d4c8' },
   reportSubmitBtn: { padding: '12px 22px', backgroundColor: '#c0392b', color: '#ffffff', border: 'none', borderRadius: '12px', fontSize: '13.5px', fontWeight: '800', cursor: 'pointer' },
+
+  tabBar: { display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' },
+  tabBtn: { display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', backgroundColor: '#ffffff', border: '1px solid #e9ecef', borderRadius: '12px', fontSize: '13px', fontWeight: '700', color: '#6c757d', cursor: 'pointer' },
+  tabBtnActive: { backgroundColor: '#2d6a4f', color: '#ffffff', border: '1px solid #2d6a4f' },
+
+  produitsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' },
+  produitCard: { backgroundColor: '#ffffff', border: '1px solid #e9ecef', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer' },
+  produitImageWrap: { width: '100%', aspectRatio: '1', backgroundColor: '#f1f3f5' },
+  produitImg: { width: '100%', height: '100%', objectFit: 'cover' },
+  produitInfo: { padding: '12px' },
+  produitName: { fontSize: '13.5px', fontWeight: '800', color: '#212529', margin: '0 0 6px 0' },
+  produitPrice: { fontSize: '13px', fontWeight: '700', color: '#2d6a4f' },
+  produitRatingRow: { display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' },
+  produitRatingCount: { fontSize: '11px', color: '#adb5bd', fontWeight: '600' },
+  avisProduitLink: { background: 'none', border: 'none', padding: 0, fontSize: '13.5px', fontWeight: '800', color: '#2d6a4f', cursor: 'pointer', textAlign: 'left' },
 
   grid: { display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '20px', marginBottom: '24px', alignItems: 'start' },
   sectionTitle: { fontSize: '15px', fontWeight: '800', color: '#212529', margin: '0 0 16px 0' },

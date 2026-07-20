@@ -91,6 +91,15 @@ public class AvisService {
                 .collect(Collectors.toList());
     }
 
+    // Tous les avis publiés par un client donné, du plus récent au plus
+    // ancien : utilisé par le profil public (onglet "Avis laissés").
+    public List<AvisResponse> getParClient(Long clientId) {
+        return avisRepository.findByClientIdOrderByDateDesc(clientId)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     public Double getNoteMoyenne(Long produitId) {
         Double moyenne = avisRepository.getNoteMoyenne(produitId);
         return moyenne != null ? moyenne : 0.0;
