@@ -1,0 +1,17 @@
+# Maven build outputs
+target/
+*.releaseBackup
+
+# IDE & Editor files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
