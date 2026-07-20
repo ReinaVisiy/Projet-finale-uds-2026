@@ -504,5 +504,29 @@
         "a": "To become a seller, go to \"Become a partner\" from the main menu. Once your agricultural certification documents are submitted, our team will validate your profile within 48h."
       }
     ]
+  },
+  "myProducts": {
+    "unnamedProduct": "Unnamed product",
+    "generalCategory": "General",
+    "myProducts": "My products",
+    "addProduct": "Add a product",
+    "filter": "Filter:",
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "image": "Image",
+    "product": "Product",
+    "category": "Category",
+    "stock": "Stock",
+    "sales": "Sales",
+    "price": "Price",
+    "status": "Status",
+    "actions": "Actions",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "noProducts": "No products found",
+    "noProductsDesc": "You don't have a product matching the selected filter category.",
+    "createFirst": "Create my first product"
   }
 }

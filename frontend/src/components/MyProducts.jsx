@@ -1,75 +1,19 @@
 
 import React, { useState, useMemo } from 'react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 import ConfirmDialog from './ConfirmDialog';
 
-const translations = {
-  fr: {
-    unnamedProduct: 'Produit sans nom',
-    generalCategory: 'Général',
-    confirmDelete: (name) => `Êtes-vous sûr de vouloir supprimer le produit "${name}" ?`,
-    deletedToast: (name) => `Produit "${name}" supprimé avec succès !`,
-    duplicatedToast: (name) => `Produit "${name}" dupliqué !`,
-    myProducts: 'Mes produits',
-    addProduct: 'Ajouter un produit',
-    filter: 'Filtrer :',
-    all: 'Tous',
-    active: 'Actifs',
-    inactive: 'Inactifs',
-    image: 'Image',
-    product: 'Produit',
-    category: 'Catégorie',
-    stock: 'Stock',
-    sales: 'Ventes',
-    price: 'Prix',
-    status: 'Status',
-    actions: 'Actions',
-    edit: 'Éditer',
-    duplicate: 'Dupliquer',
-    delete: 'Supprimer',
-    noProducts: 'Aucun produit répertorié',
-    noProductsDesc: "Vous n'avez pas de produit correspondant à la catégorie de filtre sélectionnée.",
-    createFirst: 'Créer mon premier produit',
-  },
-  en: {
-    unnamedProduct: 'Unnamed product',
-    generalCategory: 'General',
-    confirmDelete: (name) => `Are you sure you want to delete the product "${name}"?`,
-    deletedToast: (name) => `Product "${name}" deleted successfully!`,
-    duplicatedToast: (name) => `Product "${name}" duplicated!`,
-    myProducts: 'My products',
-    addProduct: 'Add a product',
-    filter: 'Filter:',
-    all: 'All',
-    active: 'Active',
-    inactive: 'Inactive',
-    image: 'Image',
-    product: 'Product',
-    category: 'Category',
-    stock: 'Stock',
-    sales: 'Sales',
-    price: 'Price',
-    status: 'Status',
-    actions: 'Actions',
-    edit: 'Edit',
-    duplicate: 'Duplicate',
-    delete: 'Delete',
-    noProducts: 'No products found',
-    noProductsDesc: "You don't have a product matching the selected filter category.",
-    createFirst: 'Create my first product',
-  },
-};
 
 const PLACEHOLDER_IMG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 100 100" style="background:%23e2e8f0;"><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="24">🌱</text></svg>';
 
 export default function MyProducts({ products = [], onNavigateToAddProduct, onEditProduct, onDeleteProduct, onDuplicateProduct }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   // Normalise un produit vendeur (les champs peuvent varier selon AddProduct.jsx)
   // afin que l'affichage ne casse jamais, même avec des données minimales.
   const normalize = (p) => ({
     id: p.id,
-    name: p.name || t.unnamedProduct,
-    category: p.category || t.generalCategory,
+    name: p.name || t('myProducts.unnamedProduct'),
+    category: p.category || t('myProducts.generalCategory'),
     stock: p.stock ?? 0,
     unit: p.unit || 'kg',
     sales: p.sales ?? 0,
@@ -91,7 +35,7 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
   // Handle product duplication
   const handleDuplicate = (product) => {
     onDuplicateProduct && onDuplicateProduct(product);
-    showToast(t.duplicatedToast(product.name));
+    showToast(t('myProducts.duplicatedToast')(product.name));
   };
 
   // Toast notifier helper
@@ -127,46 +71,46 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
 
       <ConfirmDialog
         open={!!confirmDelete}
-        title={t.myProducts}
-        message={confirmDelete ? t.confirmDelete(confirmDelete.name) : ''}
+        title={t('myProducts.myProducts')}
+        message={confirmDelete ? t('myProducts.confirmDelete')(confirmDelete.name) : ''}
         onCancel={() => setConfirmDelete(null)}
         onConfirm={() => {
           onDeleteProduct && onDeleteProduct(confirmDelete.id);
-          showToast(t.deletedToast(confirmDelete.name));
+          showToast(t('myProducts.deletedToast')(confirmDelete.name));
           setConfirmDelete(null);
         }}
       />
 
       {/* Header */}
       <div style={styles.header}>
-        <h2 style={styles.title}>{t.myProducts}</h2>
+        <h2 style={styles.title}>{t('myProducts.myProducts')}</h2>
         <button onClick={onNavigateToAddProduct} style={styles.addBtn}>
           <span style={styles.addIcon}>+</span>
-          <span>{t.addProduct}</span>
+          <span>{t('myProducts.addProduct')}</span>
         </button>
       </div>
 
       {/* Filters Bar */}
       <div style={styles.filtersBar}>
-        <span style={styles.filterLabel}>{t.filter}</span>
+        <span style={styles.filterLabel}>{t('myProducts.filter')}</span>
         <div style={styles.tabsContainer}>
           <button 
             onClick={() => setFilterTab('Tous')}
             style={{...styles.tabBtn, ...(filterTab === 'Tous' ? styles.tabBtnActive : {})}}
           >
-            {t.all} ({counts.tous})
+            {t('myProducts.all')} ({counts.tous})
           </button>
           <button 
             onClick={() => setFilterTab('Actifs')}
             style={{...styles.tabBtn, ...(filterTab === 'Actifs' ? styles.tabBtnActive : {})}}
           >
-            {t.active} ({counts.actifs})
+            {t('myProducts.active')} ({counts.actifs})
           </button>
           <button 
             onClick={() => setFilterTab('Inactifs')}
             style={{...styles.tabBtn, ...(filterTab === 'Inactifs' ? styles.tabBtnActive : {})}}
           >
-            {t.inactive} ({counts.inactifs})
+            {t('myProducts.inactive')} ({counts.inactifs})
           </button>
         </div>
       </div>
@@ -178,14 +122,14 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={styles.th}>{t.image}</th>
-                  <th style={styles.th}>{t.product}</th>
-                  <th style={styles.th}>{t.category}</th>
-                  <th style={styles.th}>{t.stock}</th>
-                  <th style={styles.th}>{t.sales}</th>
-                  <th style={styles.th}>{t.price}</th>
-                  <th style={styles.th}>{t.status}</th>
-                  <th style={styles.th}>{t.actions}</th>
+                  <th style={styles.th}>{t('myProducts.image')}</th>
+                  <th style={styles.th}>{t('myProducts.product')}</th>
+                  <th style={styles.th}>{t('myProducts.category')}</th>
+                  <th style={styles.th}>{t('myProducts.stock')}</th>
+                  <th style={styles.th}>{t('myProducts.sales')}</th>
+                  <th style={styles.th}>{t('myProducts.price')}</th>
+                  <th style={styles.th}>{t('myProducts.status')}</th>
+                  <th style={styles.th}>{t('myProducts.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -232,21 +176,21 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
                         onClick={() => onEditProduct(prod)} 
                         style={styles.actionBtn}
                       >
-                        {t.edit}
+                        {t('myProducts.edit')}
                       </button>
                       <span style={styles.actionDivider}>|</span>
                       <button 
                         onClick={() => handleDuplicate(prod)} 
                         style={styles.actionBtn}
                       >
-                        {t.duplicate}
+                        {t('myProducts.duplicate')}
                       </button>
                       <span style={styles.actionDivider}>|</span>
                       <button 
                         onClick={() => handleDelete(prod.id, prod.name)} 
                         style={{...styles.actionBtn, ...styles.deleteBtn}}
                       >
-                        {t.delete}
+                        {t('myProducts.delete')}
                       </button>
                     </td>
                   </tr>
@@ -257,12 +201,12 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
         ) : (
           <div style={styles.emptyState}>
             <span style={styles.emptyIcon}>🌾</span>
-            <h4>{t.noProducts}</h4>
+            <h4>{t('myProducts.noProducts')}</h4>
             <p style={styles.emptyText}>
-              {t.noProductsDesc}
+              {t('myProducts.noProductsDesc')}
             </p>
             <button onClick={onNavigateToAddProduct} style={styles.createBtn}>
-              {t.createFirst}
+              {t('myProducts.createFirst')}
             </button>
           </div>
         )}

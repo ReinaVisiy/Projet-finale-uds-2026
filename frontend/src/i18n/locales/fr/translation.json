@@ -504,5 +504,29 @@
         "a": "Pour devenir vendeur, allez dans \"Devenir partenaire\" depuis le menu principal. Une fois vos documents de certification agricole soumis, notre équipe validera votre profil sous 48h."
       }
     ]
+  },
+  "myProducts": {
+    "unnamedProduct": "Produit sans nom",
+    "generalCategory": "Général",
+    "myProducts": "Mes produits",
+    "addProduct": "Ajouter un produit",
+    "filter": "Filtrer :",
+    "all": "Tous",
+    "active": "Actifs",
+    "inactive": "Inactifs",
+    "image": "Image",
+    "product": "Produit",
+    "category": "Catégorie",
+    "stock": "Stock",
+    "sales": "Ventes",
+    "price": "Prix",
+    "status": "Status",
+    "actions": "Actions",
+    "edit": "Éditer",
+    "duplicate": "Dupliquer",
+    "delete": "Supprimer",
+    "noProducts": "Aucun produit répertorié",
+    "noProductsDesc": "Vous n'avez pas de produit correspondant à la catégorie de filtre sélectionnée.",
+    "createFirst": "Créer mon premier produit"
   }
 }
