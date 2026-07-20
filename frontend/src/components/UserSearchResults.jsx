@@ -3,25 +3,13 @@ import React, { useState } from 'react';
 import { Search, ArrowLeft, User, ShieldCheck } from 'lucide-react';
 import { utilisateurApi } from '../services/api';
 import { mapProfileToFrontendUser } from '../services/userMapping';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
 // Recherche d'utilisateurs par nom : renvoie une liste de correspondances
 // (pas un seul résultat), chacune cliquable vers son profil public.
-const translations = {
-  fr: {
-    back: 'Retour', title: 'Rechercher un utilisateur', searchPlaceholder: "Nom d'un client ou d'un producteur...",
-    search: 'Rechercher', searchFailed: 'La recherche a échoué.', searching: 'Recherche en cours...',
-    noResults: 'Aucun utilisateur trouvé pour', producer: '🌾 Producteur', client: '🛒 Client',
-  },
-  en: {
-    back: 'Back', title: 'Search for a user', searchPlaceholder: "A client's or producer's name...",
-    search: 'Search', searchFailed: 'Search failed.', searching: 'Searching...',
-    noResults: 'No users found for', producer: '🌾 Producer', client: '🛒 Client',
-  },
-};
 
 export default function UserSearchResults({ onBack, onSelectUser }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(null);
   const [chargement, setChargement] = useState(false);
@@ -40,7 +28,7 @@ export default function UserSearchResults({ onBack, onSelectUser }) {
         .map((u) => mapProfileToFrontendUser(u));
       setResults(utilisateurs);
     } catch (err) {
-      setErreur(err?.message || t.searchFailed);
+      setErreur(err?.message || t('userSearch.searchFailed'));
       setResults([]);
     } finally {
       setChargement(false);
@@ -51,31 +39,31 @@ export default function UserSearchResults({ onBack, onSelectUser }) {
     <div style={styles.wrapper}>
       <div style={styles.container}>
         <button style={styles.backBtn} onClick={onBack}>
-          <ArrowLeft size={18} /> {t.back}
+          <ArrowLeft size={18} /> {t('userSearch.back')}
         </button>
 
-        <h1 style={styles.title}>{t.title}</h1>
+        <h1 style={styles.title}>{t('userSearch.title')}</h1>
 
         <form style={styles.searchWrap} onSubmit={lancerRecherche}>
           <Search size={20} color="#6c757d" style={styles.searchIcon} />
           <input
             type="text"
             style={styles.searchInput}
-            placeholder={t.searchPlaceholder}
+            placeholder={t('userSearch.searchPlaceholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoFocus
           />
-          <button type="submit" style={styles.searchBtn}>{t.search}</button>
+          <button type="submit" style={styles.searchBtn}>{t('userSearch.search')}</button>
         </form>
 
         {erreur && <div style={styles.errorBanner}>{erreur}</div>}
 
-        {chargement && <p style={styles.hint}>{t.searching}</p>}
+        {chargement && <p style={styles.hint}>{t('userSearch.searching')}</p>}
 
         {!chargement && results !== null && (
           results.length === 0 ? (
-            <p style={styles.emptyText}>{t.noResults} "{query}"</p>
+            <p style={styles.emptyText}>{t('userSearch.noResults')} "{query}"</p>
           ) : (
             <div style={styles.resultsList}>
               {results.map((u) => (
@@ -90,7 +78,7 @@ export default function UserSearchResults({ onBack, onSelectUser }) {
                   <div style={styles.resultInfo}>
                     <span style={styles.resultName}>{u.prenom} {u.nom}</span>
                     <span style={styles.roleTag}>
-                      {u.role === 'vendeur' ? t.producer : t.client}
+                      {u.role === 'vendeur' ? t('userSearch.producer') : t('userSearch.client')}
                     </span>
                   </div>
                 </button>

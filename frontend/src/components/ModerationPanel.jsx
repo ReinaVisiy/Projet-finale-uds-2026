@@ -1,23 +1,7 @@
 import React, { useState } from 'react';
 import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    resolved: '✅ Résolu', rejected: '❌ Rejeté', waiting: '⏳ En attente',
-    title: 'Modération des signalements', back: '← Retour',
-    all: 'Tous', pendingF: 'En attente', resolvedF: 'Résolus', rejectedF: 'Rejetés',
-    noSignalements: 'Aucun signalement dans cette catégorie', by: 'par',
-    resolve: 'Résoudre', reject: 'Rejeter',
-  },
-  en: {
-    resolved: '✅ Resolved', rejected: '❌ Rejected', waiting: '⏳ Pending',
-    title: 'Report moderation', back: '← Back',
-    all: 'All', pendingF: 'Pending', resolvedF: 'Resolved', rejectedF: 'Rejected',
-    noSignalements: 'No reports in this category', by: 'by',
-    resolve: 'Resolve', reject: 'Reject',
-  },
-};
 
 export default function ModerationPanel({
   signalements = [],  // ← VALEUR PAR DÉFAUT
@@ -25,7 +9,7 @@ export default function ModerationPanel({
   onReject,
   onBack,
 }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [filter, setFilter] = useState('all');
 
   const filtered = signalements.filter(s =>
@@ -33,16 +17,16 @@ export default function ModerationPanel({
   );
 
   const getStatusStyle = (status) => {
-    if (status === 'résolu' || status === 'resolved') return { color: '#2d6a4f', bg: '#e9f5ee', label: t.resolved };
-    if (status === 'rejeté' || status === 'rejected') return { color: '#e07a5f', bg: '#fdf1ed', label: t.rejected };
-    return { color: '#f5b041', bg: '#fffbea', label: t.waiting };
+    if (status === 'résolu' || status === 'resolved') return { color: '#2d6a4f', bg: '#e9f5ee', label: t('moderation.resolved') };
+    if (status === 'rejeté' || status === 'rejected') return { color: '#e07a5f', bg: '#fdf1ed', label: t('moderation.rejected') };
+    return { color: '#f5b041', bg: '#fffbea', label: t('moderation.waiting') };
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}><AlertTriangle size={24} /> {t.title}</h2>
-        <button style={styles.backBtn} onClick={onBack}>{t.back}</button>
+        <h2 style={styles.title}><AlertTriangle size={24} /> {t('moderation.title')}</h2>
+        <button style={styles.backBtn} onClick={onBack}>{t('moderation.back')}</button>
       </div>
 
       <div style={styles.filters}>
@@ -54,7 +38,7 @@ export default function ModerationPanel({
               style={{ ...styles.filterBtn, ...(filter === f ? styles.filterBtnActive : {}) }}
               onClick={() => setFilter(f)}
             >
-              {f === 'all' ? t.all : f === 'pending' ? t.pendingF : f === 'resolved' ? t.resolvedF : t.rejectedF}
+              {f === 'all' ? t('moderation.all') : f === 'pending' ? t('moderation.pendingF') : f === 'resolved' ? t('moderation.resolvedF') : t('moderation.rejectedF')}
               <span style={styles.filterCount}>{count}</span>
             </button>
           );
@@ -64,7 +48,7 @@ export default function ModerationPanel({
       {filtered.length === 0 ? (
         <div style={styles.emptyState}>
           <AlertTriangle size={40} color="#adb5bd" />
-          <p>{t.noSignalements}</p>
+          <p>{t('moderation.noSignalements')}</p>
         </div>
       ) : (
         <div style={styles.list}>
@@ -78,7 +62,7 @@ export default function ModerationPanel({
                     <p style={styles.cible}>{s.cible}</p>
                     <p style={styles.details}>
                       <span style={styles.motif}>{s.motif}</span>
-                      <span style={styles.auteur}>{t.by} {s.auteur}</span>
+                      <span style={styles.auteur}>{t('moderation.by')} {s.auteur}</span>
                       <span style={styles.date}>{new Date(s.date).toLocaleDateString('fr-FR')}</span>
                     </p>
                     {s.commentaire && <p style={styles.commentaire}>💬 {s.commentaire}</p>}
@@ -89,10 +73,10 @@ export default function ModerationPanel({
                   {s.status === 'pending' && (
                     <div style={styles.actions}>
                       <button style={styles.resolveBtn} onClick={() => onResolve(s.id)}>
-                        <CheckCircle size={14} /> {t.resolve}
+                        <CheckCircle size={14} /> {t('moderation.resolve')}
                       </button>
                       <button style={styles.rejectBtn} onClick={() => onReject(s.id)}>
-                        <XCircle size={14} /> {t.reject}
+                        <XCircle size={14} /> {t('moderation.reject')}
                       </button>
                     </div>
                   )}

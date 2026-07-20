@@ -136,5 +136,31 @@
     "commentPlaceholder": "Describe the problem precisely...",
     "cancel": "Cancel",
     "send": "Send report"
+  },
+  "userSearch": {
+    "back": "Back",
+    "title": "Search for a user",
+    "searchPlaceholder": "A client's or producer's name...",
+    "search": "Search",
+    "searchFailed": "Search failed.",
+    "searching": "Searching...",
+    "noResults": "No users found for",
+    "producer": "🌾 Producer",
+    "client": "🛒 Client"
+  },
+  "moderation": {
+    "resolved": "✅ Resolved",
+    "rejected": "❌ Rejected",
+    "waiting": "⏳ Pending",
+    "title": "Report moderation",
+    "back": "← Back",
+    "all": "All",
+    "pendingF": "Pending",
+    "resolvedF": "Resolved",
+    "rejectedF": "Rejected",
+    "noSignalements": "No reports in this category",
+    "by": "by",
+    "resolve": "Resolve",
+    "reject": "Reject"
   }
 }

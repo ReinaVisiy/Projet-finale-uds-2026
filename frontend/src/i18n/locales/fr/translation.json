@@ -136,5 +136,31 @@
     "commentPlaceholder": "Décrivez précisément le problème...",
     "cancel": "Annuler",
     "send": "Envoyer le signalement"
+  },
+  "userSearch": {
+    "back": "Retour",
+    "title": "Rechercher un utilisateur",
+    "searchPlaceholder": "Nom d'un client ou d'un producteur...",
+    "search": "Rechercher",
+    "searchFailed": "La recherche a échoué.",
+    "searching": "Recherche en cours...",
+    "noResults": "Aucun utilisateur trouvé pour",
+    "producer": "🌾 Producteur",
+    "client": "🛒 Client"
+  },
+  "moderation": {
+    "resolved": "✅ Résolu",
+    "rejected": "❌ Rejeté",
+    "waiting": "⏳ En attente",
+    "title": "Modération des signalements",
+    "back": "← Retour",
+    "all": "Tous",
+    "pendingF": "En attente",
+    "resolvedF": "Résolus",
+    "rejectedF": "Rejetés",
+    "noSignalements": "Aucun signalement dans cette catégorie",
+    "by": "par",
+    "resolve": "Résoudre",
+    "reject": "Rejeter"
   }
 }
