@@ -1,12 +1,13 @@
 # AGRYCAM — Backend Microservices
 
-Backend du projet **AGRYCAM**, une plateforme de mise en relation entre producteurs agricoles et consommateurs. Composé de **11 microservices** indépendants développés avec **Spring Boot** (10 services métier + un serveur de découverte Eureka), chacun avec sa propre base de données PostgreSQL (sauf `eureka-server`, sans état), gérés depuis un `pom.xml` parent (multi-module Maven).
+Backend du projet **AGRYCAM**, une plateforme de mise en relation entre producteurs agricoles et consommateurs. Composé de **12 microservices** indépendants développés avec **Spring Boot** (10 services métier + un serveur de découverte Eureka + une passerelle API), chacun avec sa propre base de données PostgreSQL (sauf `eureka-server` et `api-gateway`, sans état), gérés depuis un `pom.xml` parent (multi-module Maven).
 
 ## 🏗️ Architecture
 
 | Service | Port | Base de données | Rôle |
 |---|---|---|---|
 | `eureka-server` | 8761 | *(aucune, sans état)* | Serveur de découverte : tous les autres services s'y enregistrent au démarrage et l'utilisent pour se localiser entre eux. Console web sur `http://localhost:8761`. |
+| `api-gateway` | 8765 | *(aucune, sans état)* | **Point d'entrée unique du frontend.** Route chaque requête `/api/xxx/**` vers le bon microservice (résolu dynamiquement via `eureka-server`, plus besoin de connaître le port de chaque service). Gère aussi le CORS pour le navigateur — voir la section dédiée ci-dessous. |
 | `auth-service` | 8080 | *(aucune, sans état)* | Authentification, connexion, génération des tokens JWT. Vérifie les identifiants auprès de `utilisateur-service`. |
 | `utilisateur-service` | 8081 | `utilisateur_db` | Gestion des comptes (clients, producteurs, admins) — source de vérité pour les utilisateurs. |
 | `produit-service` | 8082 | `produit_db` | Catalogue des produits et catégories. |
@@ -20,9 +21,13 @@ Backend du projet **AGRYCAM**, une plateforme de mise en relation entre producte
 
 Tous les services valident les tokens JWT avec le **même secret partagé** (émis par `auth-service`), ce qui leur permet de faire confiance à l'identité de l'utilisateur (`uid`, rôles) sans se reparler entre eux à chaque requête.
 
-### Découverte de services (Eureka)
+### Découverte de services (Eureka) et passerelle API
 
-Chaque service métier embarque `spring-cloud-starter-netflix-eureka-client` et s'enregistre auprès d'`eureka-server` au démarrage (`eureka.client.service-url.defaultZone`, par défaut `http://localhost:8761/eureka/`, surchargeable via la variable d'environnement `EUREKA_URI`). Pour l'instant les appels inter-services listés ci-dessous continuent d'utiliser les URLs fixes habituelles (`RestTemplate` + `*.service.url`) ; Eureka sert avant tout à avoir une vue d'ensemble des services en vie (console `http://localhost:8761`) et prépare le terrain pour un appel par nom de service ou une passerelle API à l'avenir.
+Chaque service métier embarque `spring-cloud-starter-netflix-eureka-client` et s'enregistre auprès d'`eureka-server` au démarrage (`eureka.client.service-url.defaultZone`, par défaut `http://localhost:8761/eureka/`, surchargeable via la variable d'environnement `EUREKA_URI`).
+
+**Le frontend ne parle plus à chaque microservice sur son propre port.** Il appelle uniquement `api-gateway` (port 8765, variable `VITE_API_GATEWAY_URL`), qui route chaque préfixe `/api/xxx/**` vers le bon service via une route `lb://<nom-du-service>` résolue dynamiquement dans Eureka — voir `api-gateway/src/main/resources/application.properties` pour la liste des routes. C'est aussi la passerelle qui gère le CORS pour le navigateur maintenant (chaque service garde son `@CrossOrigin(origins = "*")` pour le débogage direct, mais ce n'est plus lui que le navigateur contacte en usage normal).
+
+Les appels **entre microservices** (ex. `avis-service` → `utilisateur-service` pour récupérer un nom d'utilisateur) continuent en revanche d'utiliser des URLs fixes habituelles (`RestTemplate` + `*.service.url`, voir la liste ci-dessous) plutôt que de passer par la passerelle ou par Eureka — ça reste la prochaine étape possible si besoin.
 
 ### Communications inter-services
 
@@ -82,7 +87,7 @@ CREATE DATABASE message_db;
 CREATE DATABASE signalement_db;
 CREATE DATABASE avis_db;
 CREATE DATABASE certification_db;
-CREATE DATABASE paiement_db;
+CREATE DATABASE paiement_simiz_db;
 CREATE DATABASE commande_db;
 CREATE DATABASE notification_db;
 ```
@@ -96,8 +101,10 @@ mvn clean install -DskipTests
 
 ### 3. Lancer chaque service
 
-Dans un terminal séparé pour chaque service (ordre conseillé : `utilisateur-service` et `auth-service` en premier, car les autres en dépendent) :
+Dans un terminal séparé pour chaque service. **`eureka-server` doit démarrer en premier** (les autres s'enregistrent auprès de lui), puis `api-gateway`, puis `utilisateur-service` et `auth-service` (les autres en dépendent) :
 ```bash
+cd eureka-server && mvn spring-boot:run
+cd api-gateway && mvn spring-boot:run
 cd utilisateur-service && mvn spring-boot:run
 cd auth-service && mvn spring-boot:run
 cd produit-service && mvn spring-boot:run
@@ -110,7 +117,11 @@ cd commande-service && mvn spring-boot:run
 cd notification-service && mvn spring-boot:run
 ```
 
+Ou plus simplement, `./start-all-services.ps1` depuis PowerShell, qui respecte déjà cet ordre.
+
 ## 📍 Points d'entrée principaux (préfixes)
+
+Le frontend appelle uniquement `api-gateway` (`http://localhost:8765`), qui route chaque préfixe vers le bon service :
 
 | Service | Préfixe des endpoints |
 |---|---|

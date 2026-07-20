@@ -3,10 +3,12 @@
 # À exécuter depuis la racine du projet backend (agrycam-backend/).
 
 # Ordre conseillé : eureka-server en tout premier (les autres services
-# s'enregistrent auprès de lui au démarrage), puis utilisateur-service et
-# auth-service, car plusieurs autres services en dépendent au démarrage.
+# s'enregistrent auprès de lui au démarrage), puis api-gateway (point
+# d'entrée unique du frontend), puis utilisateur-service et auth-service,
+# car plusieurs autres services en dépendent au démarrage.
 $Services = @(
     "eureka-server",
+    "api-gateway",
     "utilisateur-service",
     "auth-service",
     "produit-service",
