@@ -65,6 +65,12 @@ public class Transaction {
     @Column(name = "date_confirmation")
     private LocalDateTime dateConfirmation;
 
+    // Empeche une double liberation du sequestre si commande-service
+    // notifie LIVREE plusieurs fois (retry, appel manuel, etc.).
+    @Column(name = "fonds_liberes", nullable = false)
+    @Builder.Default
+    private boolean fondsLiberes = false;
+
     @PrePersist
     protected void onCreate() {
         this.dateCreation = LocalDateTime.now();

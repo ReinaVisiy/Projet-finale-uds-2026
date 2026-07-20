@@ -255,6 +255,47 @@ public class PaiementService {
     }
 
     /**
+     * Libere le sequestre d'une commande vers le solde disponible du vendeur.
+     * Declenche par commande-service lorsqu'une commande passe a LIVREE
+     * (confirmation client ou auto-confirmation apres 72h).
+     * Idempotent : si les fonds ont deja ete liberes pour cette commande,
+     * l'appel est ignore silencieusement (retry-safe).
+     */
+    @Transactional
+    public synchronized void libererFondsSequestre(Long commandeId) {
+        Transaction transaction = transactionRepository
+                .findByTypeReferenceAndReferenceId(TypeReference.COMMANDE, commandeId)
+                .orElseThrow(() -> new TransactionNotFoundException(
+                        "Aucune transaction de paiement trouvee pour la commande #" + commandeId));
+
+        if (transaction.getStatut() != StatutTransaction.PAYE) {
+            log.warn("Liberation de sequestre demandee pour la commande {} dont la transaction n'est pas PAYE (statut: {}). Ignoree.",
+                    commandeId, transaction.getStatut());
+            return;
+        }
+
+        if (transaction.isFondsLiberes()) {
+            log.info("Sequestre deja libere pour la commande {}. Appel ignore (idempotence).", commandeId);
+            return;
+        }
+
+        SoldeVendeur solde = soldeVendeurRepository.findByVendeurId(transaction.getVendeurId())
+                .orElseThrow(() -> new SoldeInsuffisantException(
+                        "Portefeuille introuvable pour le vendeur " + transaction.getVendeurId()));
+
+        BigDecimal montantNet = transaction.getMontantNet();
+        solde.setSoldeSequestre(solde.getSoldeSequestre().subtract(montantNet));
+        solde.setSoldeDisponible(solde.getSoldeDisponible().add(montantNet));
+        soldeVendeurRepository.save(solde);
+
+        transaction.setFondsLiberes(true);
+        transactionRepository.save(transaction);
+
+        log.info("Sequestre libere pour la commande {} : {} XAF transferes vers le solde disponible du vendeur {}",
+                commandeId, montantNet, transaction.getVendeurId());
+    }
+
+    /**
      * Traite le webhook passif envoye par Simiz.
      * Valide le paiement de maniere securisee en interrogeant l'API Simiz pour eviter tout spoofing de requete.
      */

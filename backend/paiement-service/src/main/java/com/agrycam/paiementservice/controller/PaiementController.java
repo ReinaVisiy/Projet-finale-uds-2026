@@ -81,6 +81,19 @@ public class PaiementController {
     }
 
     /**
+     * PUT /api/paiements/commandes/{commandeId}/liberer (rôle admin / service interne)
+     * Appele par commande-service lorsqu'une commande passe a LIVREE :
+     * transfere le montant net de la transaction du solde sequestre vers
+     * le solde disponible (retirable) du vendeur. Idempotent.
+     */
+    @PutMapping("/commandes/{commandeId}/liberer")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> libererFondsSequestre(@PathVariable Long commandeId) {
+        paiementService.libererFondsSequestre(commandeId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * POST /api/paiements/webhook/simiz (Public / Non protege par JWT)
      * Receptionne les notifications asynchrones de paiement de Simiz.
      */

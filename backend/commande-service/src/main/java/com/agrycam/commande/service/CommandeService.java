@@ -1,5 +1,6 @@
 package com.agrycam.commande.service;
 
+import com.agrycam.commande.client.PaiementServiceClient;
 import com.agrycam.commande.dto.ProduitInfoDTO;
 import com.agrycam.commande.dto.UtilisateurInfoDTO;
 import com.agrycam.commande.exception.AccesRefuseException;
@@ -35,6 +36,9 @@ public class CommandeService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private PaiementServiceClient paiementServiceClient;
 
     @Value("${produit.service.url}")
     private String produitServiceUrl;
@@ -201,7 +205,16 @@ public class CommandeService {
                 validerTransition(commande, nouveauStatut, uid, estProducteur);
             }
             commande.setStatut(nouveauStatut);
-            return commandeRepository.save(commande);
+            Commande sauvegardee = commandeRepository.save(commande);
+
+            // Declenche la liberation du sequestre vers le solde disponible
+            // du vendeur des que la livraison est confirmee (par le client
+            // ou par le job d'auto-confirmation apres 72h).
+            if (nouveauStatut == StatutCommande.LIVREE) {
+                paiementServiceClient.notifierLivraison(sauvegardee.getId());
+            }
+
+            return sauvegardee;
         });
     }
 

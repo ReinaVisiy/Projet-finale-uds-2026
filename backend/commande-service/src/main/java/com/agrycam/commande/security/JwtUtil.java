@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -58,5 +60,25 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    /**
+     * Genere un token JWT "de service" (courte duree de vie), identique
+     * dans son principe a celui de paiement-service : utilise par
+     * commande-service pour s'authentifier lui-meme lorsqu'il notifie
+     * paiement-service en arriere-plan (ex. liberation du sequestre a la
+     * livraison), sans requete utilisateur dont on pourrait propager le token.
+     */
+    public String genererTokenServiceInterne() {
+        long maintenant = System.currentTimeMillis();
+        long expiration = maintenant + 60_000; // 60 secondes : juste le temps de l'appel sortant
+
+        return Jwts.builder()
+                .claim("uid", 0L)
+                .claim("roles", Collections.singletonList("ADMIN"))
+                .setIssuedAt(new Date(maintenant))
+                .setExpiration(new Date(expiration))
+                .signWith(getSigningKey())
+                .compact();
     }
 }
