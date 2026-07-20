@@ -1,6 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { messageApi } from '../services/api';
+import { useDict } from '../context/LanguageContext';
+
+const translations = {
+  fr: {
+    user: 'Utilisateur', loadFailed: 'Impossible de charger vos messages.', myMessages: 'Mes messages',
+    loadingConvs: 'Chargement de vos conversations...', noConvs: 'Aucune conversation pour le moment.',
+  },
+  en: {
+    user: 'User', loadFailed: 'Unable to load your messages.', myMessages: 'My messages',
+    loadingConvs: 'Loading your conversations...', noConvs: 'No conversations yet.',
+  },
+};
 
 /**
  * Regroupe les messages plats renvoyés par /api/messages/mes-messages en
@@ -9,7 +21,7 @@ import { messageApi } from '../services/api';
  * mes-messages est déjà trié par date décroissante côté backend, donc le
  * premier message rencontré pour un interlocuteur donné est le plus récent.
  */
-function regrouperParConversation(messages, currentUserId) {
+function regrouperParConversation(messages, currentUserId, t) {
   const parInterlocuteur = new Map();
 
   for (const m of messages) {
@@ -20,7 +32,7 @@ function regrouperParConversation(messages, currentUserId) {
     if (!parInterlocuteur.has(autreId)) {
       parInterlocuteur.set(autreId, {
         id: autreId,
-        name: autreNom || 'Utilisateur',
+        name: autreNom || t.user,
         dernierMessage: m.contenu,
         dernierDate: m.dateEnvoi,
         nonLus: 0,
@@ -34,6 +46,7 @@ function regrouperParConversation(messages, currentUserId) {
 }
 
 export default function MessagesInbox({ currentUser, onOpenConversation, onBack }) {
+  const t = useDict(translations);
   const [conversations, setConversations] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
@@ -43,13 +56,13 @@ export default function MessagesInbox({ currentUser, onOpenConversation, onBack 
     setErreur(null);
     try {
       const data = await messageApi.getMesMessages();
-      setConversations(regrouperParConversation(data || [], currentUser?.id));
+      setConversations(regrouperParConversation(data || [], currentUser?.id, t));
     } catch (e) {
-      setErreur(e?.message || 'Impossible de charger vos messages.');
+      setErreur(e?.message || t.loadFailed);
     } finally {
       setChargement(false);
     }
-  }, [currentUser?.id]);
+  }, [currentUser?.id, t]);
 
   useEffect(() => { charger(); }, [charger]);
 
@@ -59,16 +72,16 @@ export default function MessagesInbox({ currentUser, onOpenConversation, onBack 
         <button style={styles.backBtn} onClick={onBack}>
           <ArrowLeft size={20} />
         </button>
-        <h2 style={styles.title}>Mes messages</h2>
+        <h2 style={styles.title}>{t.myMessages}</h2>
       </div>
 
-      {chargement && <p style={styles.hint}>Chargement de vos conversations...</p>}
+      {chargement && <p style={styles.hint}>{t.loadingConvs}</p>}
       {erreur && <div style={styles.errorBanner}>{erreur}</div>}
 
       {!chargement && !erreur && conversations.length === 0 && (
         <div style={styles.empty}>
           <MessageCircle size={40} color="#adb5bd" />
-          <p style={styles.hint}>Aucune conversation pour le moment.</p>
+          <p style={styles.hint}>{t.noConvs}</p>
         </div>
       )}
 

@@ -3,6 +3,26 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Star, MessageCircle, Flag, User } from 'lucide-react';
 import { avisApi, produitApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
+import { useDict } from '../context/LanguageContext';
+
+const translations = {
+  fr: {
+    loadFailed: 'Impossible de charger les avis.', noUserSelected: 'Aucun utilisateur sélectionné.',
+    back: 'Retour', client: 'Client', contact: 'Contacter', reportUser: 'Signaler cet utilisateur',
+    reportReason: 'Motif du signalement', reportPlaceholder: "Ex: comportement suspect, avis abusif, tentative d'arnaque...",
+    cancel: 'Annuler', sendReport: 'Envoyer le signalement', reviewsLeft: 'Avis laissés',
+    loadingReviews: 'Chargement des avis...', noReviews: "Cet utilisateur n'a pas encore laissé d'avis.",
+    unavailableProduct: 'Produit indisponible',
+  },
+  en: {
+    loadFailed: 'Unable to load reviews.', noUserSelected: 'No user selected.',
+    back: 'Back', client: 'Client', contact: 'Contact', reportUser: 'Report this user',
+    reportReason: 'Reason for report', reportPlaceholder: 'E.g. suspicious behavior, abusive review, scam attempt...',
+    cancel: 'Cancel', sendReport: 'Send report', reviewsLeft: 'Reviews left',
+    loadingReviews: 'Loading reviews...', noReviews: "This user hasn't left any reviews yet.",
+    unavailableProduct: 'Product unavailable',
+  },
+};
 
 // Profil public d'un client : ses infos, puis la liste de tous les avis
 // qu'il a laissés sur des produits (carte avis + lien vers le produit).
@@ -13,6 +33,7 @@ export default function ClientProfile({
   onNavigateToProduct,
   onSignalerUtilisateur, // (motif) => void
 }) {
+  const t = useDict(translations);
   const [showReportBox, setShowReportBox] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [avis, setAvis] = useState([]);
@@ -37,7 +58,7 @@ export default function ClientProfile({
       );
       setAvis(enrichis);
     } catch (e) {
-      setChargeErreur(e?.message || 'Impossible de charger les avis.');
+      setChargeErreur(e?.message || t.loadFailed);
     } finally {
       setChargement(false);
     }
@@ -64,8 +85,8 @@ export default function ClientProfile({
     return (
       <div style={styles.wrapper}>
         <div style={styles.emptyState}>
-          <p>Aucun utilisateur sélectionné.</p>
-          <button style={styles.backBtn} onClick={onBack}><ArrowLeft size={16} /> Retour</button>
+          <p>{t.noUserSelected}</p>
+          <button style={styles.backBtn} onClick={onBack}><ArrowLeft size={16} /> {t.back}</button>
         </div>
       </div>
     );
@@ -75,7 +96,7 @@ export default function ClientProfile({
     <div style={styles.wrapper}>
       <div style={styles.container}>
         <button style={styles.backBtn} onClick={onBack}>
-          <ArrowLeft size={18} /> Retour
+          <ArrowLeft size={18} /> {t.back}
         </button>
 
         {/* En-tête client */}
@@ -90,12 +111,12 @@ export default function ClientProfile({
             </div>
             <div>
               <h1 style={styles.name}>{client.prenom ? `${client.prenom} ${client.nom}` : client.nom}</h1>
-              <span style={styles.roleTag}>Client</span>
+              <span style={styles.roleTag}>{t.client}</span>
             </div>
           </div>
           {onContactVendor && (
             <button style={styles.contactBtn} onClick={() => onContactVendor({ id: client.id, name: client.nom })}>
-              <MessageCircle size={16} /> Contacter
+              <MessageCircle size={16} /> {t.contact}
             </button>
           )}
         </div>
@@ -104,21 +125,21 @@ export default function ClientProfile({
         <div style={styles.reportRow}>
           {!showReportBox ? (
             <button style={styles.reportLink} onClick={() => setShowReportBox(true)}>
-              <Flag size={13} /> Signaler cet utilisateur
+              <Flag size={13} /> {t.reportUser}
             </button>
           ) : (
             <div style={styles.reportBox}>
-              <label style={styles.label}>Motif du signalement</label>
+              <label style={styles.label}>{t.reportReason}</label>
               <textarea
                 style={styles.textarea}
                 rows="3"
-                placeholder="Ex: comportement suspect, avis abusif, tentative d'arnaque..."
+                placeholder={t.reportPlaceholder}
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
               />
               <div style={styles.formActions}>
-                <button style={styles.cancelBtn} onClick={() => { setShowReportBox(false); setReportReason(''); }}>Annuler</button>
-                <button style={styles.reportSubmitBtn} onClick={handleSubmitReport}>Envoyer le signalement</button>
+                <button style={styles.cancelBtn} onClick={() => { setShowReportBox(false); setReportReason(''); }}>{t.cancel}</button>
+                <button style={styles.reportSubmitBtn} onClick={handleSubmitReport}>{t.sendReport}</button>
               </div>
             </div>
           )}
@@ -128,11 +149,11 @@ export default function ClientProfile({
 
         {/* Liste des avis laissés */}
         <div style={styles.listSection}>
-          <h3 style={styles.sectionTitle}>Avis laissés ({avis.length})</h3>
+          <h3 style={styles.sectionTitle}>{t.reviewsLeft} ({avis.length})</h3>
           {chargement ? (
-            <p style={styles.hint}>Chargement des avis...</p>
+            <p style={styles.hint}>{t.loadingReviews}</p>
           ) : avis.length === 0 ? (
-            <p style={styles.emptyText}>Cet utilisateur n'a pas encore laissé d'avis.</p>
+            <p style={styles.emptyText}>{t.noReviews}</p>
           ) : (
             <div style={styles.avisList}>
               {avis.map((a) => (
@@ -145,7 +166,7 @@ export default function ClientProfile({
                         onClick={() => a.produit && onNavigateToProduct && onNavigateToProduct(a.produit)}
                         disabled={!a.produit}
                       >
-                        {a.produit?.name || 'Produit indisponible'}
+                        {a.produit?.name || t.unavailableProduct}
                       </button>
                       <span style={styles.avisDate}>{new Date(a.date).toLocaleDateString('fr-FR')}</span>
                     </div>
