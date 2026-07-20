@@ -1,12 +1,27 @@
 // src/components/OrderManagementAdmin.jsx
 import React from 'react';
 import { ArrowLeft, Eye } from 'lucide-react';
+import { useDict } from '../context/LanguageContext';
+
+const translations = {
+  fr: {
+    back: 'Retour', title: 'Gestion des commandes', totalOrders: 'commande(s) au total',
+    noOrders: 'Aucune commande enregistrée.', order: 'Commande', client: 'Client', amount: 'Montant',
+    status: 'Statut', date: 'Date', action: 'Action', pending: 'En attente', view: 'Voir',
+  },
+  en: {
+    back: 'Back', title: 'Order management', totalOrders: 'order(s) total',
+    noOrders: 'No orders recorded.', order: 'Order', client: 'Client', amount: 'Amount',
+    status: 'Status', date: 'Date', action: 'Action', pending: 'Pending', view: 'View',
+  },
+};
 
 export default function OrderManagementAdmin({
   ordersData = [],   // ← Valeur par défaut pour éviter l'erreur
   onViewOrder,
   onBack,
 }) {
+  const t = useDict(translations);
   // Vérification de sécurité supplémentaire
   const orders = Array.isArray(ordersData) ? ordersData : [];
 
@@ -14,27 +29,27 @@ export default function OrderManagementAdmin({
     <div style={styles.container}>
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={onBack}>
-          <ArrowLeft size={20} /> Retour
+          <ArrowLeft size={20} /> {t.back}
         </button>
-        <h1 style={styles.title}>Gestion des commandes</h1>
-        <p style={styles.subtitle}>{orders.length} commande(s) au total</p>
+        <h1 style={styles.title}>{t.title}</h1>
+        <p style={styles.subtitle}>{orders.length} {t.totalOrders}</p>
       </div>
 
       {orders.length === 0 ? (
         <div style={styles.emptyState}>
-          <p>Aucune commande enregistrée.</p>
+          <p>{t.noOrders}</p>
         </div>
       ) : (
         <div style={styles.tableWrapper}>
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>Commande</th>
-                <th style={styles.th}>Client</th>
-                <th style={styles.th}>Montant</th>
-                <th style={styles.th}>Statut</th>
-                <th style={styles.th}>Date</th>
-                <th style={styles.th}>Action</th>
+                <th style={styles.th}>{t.order}</th>
+                <th style={styles.th}>{t.client}</th>
+                <th style={styles.th}>{t.amount}</th>
+                <th style={styles.th}>{t.status}</th>
+                <th style={styles.th}>{t.date}</th>
+                <th style={styles.th}>{t.action}</th>
               </tr>
             </thead>
             <tbody>
@@ -49,7 +64,7 @@ export default function OrderManagementAdmin({
                       backgroundColor: order.status === 'Livrée' ? '#e9f5ee' : order.status === 'En livraison' ? '#fff3e0' : '#f1f3f5',
                       color: order.status === 'Livrée' ? '#2d6a4f' : order.status === 'En livraison' ? '#f5b041' : '#6c757d',
                     }}>
-                      {order.status || 'En attente'}
+                      {order.status || t.pending}
                     </span>
                   </td>
                   <td style={styles.td}>{order.date}</td>
@@ -58,7 +73,7 @@ export default function OrderManagementAdmin({
                       style={styles.viewBtn}
                       onClick={() => onViewOrder && onViewOrder(order.id)}
                     >
-                      <Eye size={16} /> Voir
+                      <Eye size={16} /> {t.view}
                     </button>
                   </td>
                 </tr>

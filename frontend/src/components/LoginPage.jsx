@@ -1,6 +1,28 @@
 // src/components/LoginPage.jsx
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
+import { useDict } from '../context/LanguageContext';
+
+const translations = {
+  fr: {
+    fillFields: 'Veuillez remplir tous les champs', wrongCreds: 'Email ou mot de passe incorrect.',
+    login: 'Connexion', accessSpace: 'Accédez à votre espace AgroMarket',
+    client: '🛒 Client', vendeur: '🌾 Vendeur', email: 'Adresse e-mail', emailPlaceholder: 'ex: raviel@email.com',
+    password: 'Mot de passe', passwordPlaceholder: 'Votre mot de passe', rememberMe: 'Se souvenir de moi',
+    forgotPassword: 'Mot de passe oublié ?', loggingIn: 'Connexion...', logIn: 'Se connecter',
+    notRegistered: 'Pas encore inscrit ?', createAccount: 'Créer un compte gratuit',
+    secure: '🔒 S.E. Sécurisé', gdpr: '📋 RGPD Contrôle', certified: '✅ Certifié Agri',
+  },
+  en: {
+    fillFields: 'Please fill in all fields', wrongCreds: 'Incorrect email or password.',
+    login: 'Login', accessSpace: 'Access your AgroMarket space',
+    client: '🛒 Client', vendeur: '🌾 Vendor', email: 'Email address', emailPlaceholder: 'e.g. raviel@email.com',
+    password: 'Password', passwordPlaceholder: 'Your password', rememberMe: 'Remember me',
+    forgotPassword: 'Forgot password?', loggingIn: 'Logging in...', logIn: 'Log in',
+    notRegistered: "Not registered yet?", createAccount: 'Create a free account',
+    secure: '🔒 SE Secured', gdpr: '📋 GDPR Compliant', certified: '✅ Agri Certified',
+  },
+};
 
 export default function LoginPage({
   onLoginSuccess,
@@ -9,6 +31,7 @@ export default function LoginPage({
   onNavigateToRecovery,
   onNavigateToRegister,
 }) {
+  const t = useDict(translations);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('client'); // 'client' ou 'vendeur'
@@ -23,7 +46,7 @@ export default function LoginPage({
     setLoading(true);
 
     if (!email.trim() || !password.trim()) {
-      setError('Veuillez remplir tous les champs');
+      setError(t.fillFields);
       setLoading(false);
       return;
     }
@@ -32,7 +55,7 @@ export default function LoginPage({
       const user = await onValidateLogin(email, password, role);
       onLoginSuccess(user);
     } catch (err) {
-      setError(err.message || 'Email ou mot de passe incorrect.');
+      setError(err.message || t.wrongCreds);
     } finally {
       setLoading(false);
     }
@@ -43,8 +66,8 @@ export default function LoginPage({
       <div style={styles.card}>
         <div style={styles.header}>
           <div style={styles.logo}>🌿</div>
-          <h1 style={styles.title}>Connexion</h1>
-          <p style={styles.subtitle}>Accédez à votre espace AgroMarket</p>
+          <h1 style={styles.title}>{t.login}</h1>
+          <p style={styles.subtitle}>{t.accessSpace}</p>
         </div>
 
         {infoMessage && (
@@ -64,27 +87,27 @@ export default function LoginPage({
         {/* Choix du rôle */}
         <div style={styles.roleRow}>
           <button type="button" style={{ ...styles.roleBtn, ...(role === 'client' ? styles.roleBtnActive : {}) }} onClick={() => setRole('client')}>
-            🛒 Client
+            {t.client}
           </button>
           <button type="button" style={{ ...styles.roleBtn, ...(role === 'vendeur' ? styles.roleBtnActiveGreen : {}) }} onClick={() => setRole('vendeur')}>
-            🌾 Vendeur
+            {t.vendeur}
           </button>
         </div>
 
         <form style={styles.form} onSubmit={handleSubmit}>
           <div style={styles.field}>
-            <label style={styles.label}>Adresse e-mail</label>
+            <label style={styles.label}>{t.email}</label>
             <div style={styles.inputWrap}>
               <Mail size={18} color="#6c757d" />
-              <input type="email" placeholder="ex: raviel@email.com" style={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input type="email" placeholder={t.emailPlaceholder} style={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
           </div>
 
           <div style={styles.field}>
-            <label style={styles.label}>Mot de passe</label>
+            <label style={styles.label}>{t.password}</label>
             <div style={styles.inputWrap}>
               <Lock size={18} color="#6c757d" />
-              <input type={showPassword ? 'text' : 'password'} placeholder="Votre mot de passe" style={styles.input} value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input type={showPassword ? 'text' : 'password'} placeholder={t.passwordPlaceholder} style={styles.input} value={password} onChange={(e) => setPassword(e.target.value)} required />
               <button type="button" style={styles.eyeBtn} onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <EyeOff size={18} color="#6c757d" /> : <Eye size={18} color="#6c757d" />}
               </button>
@@ -94,29 +117,29 @@ export default function LoginPage({
           <div style={styles.optionsRow}>
             <label style={styles.rememberLabel}>
               <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} style={styles.checkbox} />
-              Se souvenir de moi
+              {t.rememberMe}
             </label>
-            <button type="button" style={styles.forgotLink} onClick={onNavigateToRecovery}>Mot de passe oublié ?</button>
+            <button type="button" style={styles.forgotLink} onClick={onNavigateToRecovery}>{t.forgotPassword}</button>
           </div>
 
           <button type="submit" style={{ ...styles.submitBtn, opacity: loading ? 0.7 : 1 }} disabled={loading}>
-            {loading ? 'Connexion...' : 'Se connecter'} {!loading && <ArrowRight size={18} />}
+            {loading ? t.loggingIn : t.logIn} {!loading && <ArrowRight size={18} />}
           </button>
         </form>
 
         <div style={styles.registerRow}>
           <p style={styles.registerText}>
-            Pas encore inscrit ?{' '}
+            {t.notRegistered}{' '}
             <button style={styles.registerLink} onClick={onNavigateToRegister}>
-              Créer un compte gratuit
+              {t.createAccount}
             </button>
           </p>
         </div>
 
         <div style={styles.footer}>
-          <span style={styles.footerBadge}>🔒 S.E. Sécurisé</span>
-          <span style={styles.footerBadge}>📋 RGPD Contrôle</span>
-          <span style={styles.footerBadge}>✅ Certifié Agri</span>
+          <span style={styles.footerBadge}>{t.secure}</span>
+          <span style={styles.footerBadge}>{t.gdpr}</span>
+          <span style={styles.footerBadge}>{t.certified}</span>
         </div>
       </div>
     </div>
