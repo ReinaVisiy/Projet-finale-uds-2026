@@ -35,3 +35,8 @@ Ne jamais committer ces valeurs dans le dépôt (application.properties,
 docker-compose, etc.) : elles doivent uniquement exister dans
 l'environnement d'exécution (variables d'environnement, secrets du
 gestionnaire de déploiement, etc.).
+
+## Guides d'installation
+
+- Backend : voir [`backend/README.md`](./backend/README.md) (architecture, variables d'environnement, lancement, tests) et [`backend/.env.example`](./backend/.env.example).
+- Frontend : voir [`frontend/README.md`](./frontend/README.md) et [`frontend/.env.example`](./frontend/.env.example).
