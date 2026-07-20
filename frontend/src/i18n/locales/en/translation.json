@@ -609,5 +609,53 @@
     "loadingReviews": "Loading reviews...",
     "noReviews": "No reviews for this product yet.",
     "client": "Customer"
+  },
+  "salesHistory": {
+    "pageTitle": "Sales history",
+    "pageSubtitle": "Detailed analysis of your commercial performance",
+    "exportBtn": "Export CSV",
+    "exportToast": "📊 CSV export in progress...",
+    "periods": {
+      "7j": "7 days",
+      "30j": "30 days",
+      "3m": "3 months",
+      "1a": "1 year"
+    },
+    "statusAll": "All",
+    "statusPending": "Pending",
+    "statusValidated": "Validated",
+    "statusPreparing": "Preparing",
+    "statusShipping": "Shipping",
+    "statusDelivered": "Delivered",
+    "statusCancelled": "Cancelled",
+    "kpiTotalSales": "Total sales",
+    "kpiOrders": "Orders",
+    "kpiAvgBasket": "Average basket",
+    "kpiTopProduct": "Top product",
+    "kpiNoSales": "No sales yet",
+    "salesLabel": "Sales",
+    "last6Months": "Last 6 months",
+    "ordersLabel": "Orders",
+    "revenueSub": "Monthly revenue in FCFA",
+    "topCategoriesTitle": "Top categories",
+    "topCategoriesSub": "Breakdown by category",
+    "recentSalesTitle": "Recent sales",
+    "transactionCount_one": "{{count}} transaction",
+    "transactionCount_other": "{{count}} transactions",
+    "searchPlaceholder": "Search...",
+    "tableHeaders": [
+      "Date",
+      "Product",
+      "Quantity",
+      "Amount",
+      "Client",
+      "Status",
+      "Actions"
+    ],
+    "noTransactions": "No transaction found.",
+    "view": "View",
+    "detailToast": "📄 Sale detail — {{product}} for {{client}}",
+    "totalsLabel_one": "{{count}} sale · Total:",
+    "totalsLabel_other": "{{count}} sales · Total:"
   }
 }

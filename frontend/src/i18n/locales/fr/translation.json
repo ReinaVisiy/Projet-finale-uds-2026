@@ -609,5 +609,53 @@
     "loadingReviews": "Chargement des avis...",
     "noReviews": "Aucun avis pour ce produit pour le moment.",
     "client": "Client"
+  },
+  "salesHistory": {
+    "pageTitle": "Historique des ventes",
+    "pageSubtitle": "Analyse détaillée de vos performances commerciales",
+    "exportBtn": "Exporter CSV",
+    "exportToast": "📊 Export CSV en cours de génération...",
+    "periods": {
+      "7j": "7 jours",
+      "30j": "30 jours",
+      "3m": "3 mois",
+      "1a": "1 an"
+    },
+    "statusAll": "Toutes",
+    "statusPending": "En attente",
+    "statusValidated": "Validée",
+    "statusPreparing": "En préparation",
+    "statusShipping": "En livraison",
+    "statusDelivered": "Livrée",
+    "statusCancelled": "Annulée",
+    "kpiTotalSales": "Total des ventes",
+    "kpiOrders": "Commandes",
+    "kpiAvgBasket": "Panier moyen",
+    "kpiTopProduct": "Produit top",
+    "kpiNoSales": "Aucune vente",
+    "salesLabel": "Ventes",
+    "last6Months": "6 derniers mois",
+    "ordersLabel": "Commandes",
+    "revenueSub": "Chiffre d'affaires mensuel en FCFA",
+    "topCategoriesTitle": "Top catégories",
+    "topCategoriesSub": "Répartition par catégorie",
+    "recentSalesTitle": "Ventes récentes",
+    "transactionCount_one": "{{count}} transaction",
+    "transactionCount_other": "{{count}} transactions",
+    "searchPlaceholder": "Rechercher...",
+    "tableHeaders": [
+      "Date",
+      "Produit",
+      "Quantité",
+      "Montant",
+      "Client",
+      "Statut",
+      "Actions"
+    ],
+    "noTransactions": "Aucune transaction trouvée.",
+    "view": "Voir",
+    "detailToast": "📄 Détail vente — {{product}} pour {{client}}",
+    "totalsLabel_one": "{{count}} vente · Total :",
+    "totalsLabel_other": "{{count}} ventes · Total :"
   }
 }

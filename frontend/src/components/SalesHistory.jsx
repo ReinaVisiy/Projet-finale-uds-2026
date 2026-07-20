@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDict, useLanguage } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
 // Avant : toutes les données (mois, catégories, transactions, statuts,
 // KPIs) étaient des tableaux fictifs codés en dur (mêmes 6 "ventes" pour
@@ -40,64 +40,18 @@ const periodKeys = ['7j', '30j', '3m', '1a'];
 const PERIOD_DAYS = { '7j': 7, '30j': 30, '3m': 90, '1a': 365 };
 const statusKeys = ['toutes', ...STATUS_ORDER];
 
-const translations = {
-  fr: {
-    pageTitle: 'Historique des ventes',
-    pageSubtitle: 'Analyse détaillée de vos performances commerciales',
-    exportBtn: 'Exporter CSV',
-    exportToast: '📊 Export CSV en cours de génération...',
-    periods: { '7j': '7 jours', '30j': '30 jours', '3m': '3 mois', '1a': '1 an' },
-    statusLabels: { toutes: 'Toutes', ...Object.fromEntries(STATUS_ORDER.map(s => [s, s])) },
-    kpiLabels: {
-      totalSales: 'Total des ventes', orders: 'Commandes', avgBasket: 'Panier moyen', topProduct: 'Produit top',
-      noSales: 'Aucune vente', sales: (n) => `${n} vente${n > 1 ? 's' : ''}`,
-    },
-    salesLabel: 'Ventes',
-    last6Months: '6 derniers mois',
-    ordersLabel: 'Commandes',
-    revenueSub: "Chiffre d'affaires mensuel en FCFA",
-    topCategoriesTitle: 'Top catégories',
-    topCategoriesSub: 'Répartition par catégorie',
-    recentSalesTitle: 'Ventes récentes',
-    transactionCount: (n) => `${n} transaction(s)`,
-    searchPlaceholder: 'Rechercher...',
-    tableHeaders: ['Date', 'Produit', 'Quantité', 'Montant', 'Client', 'Statut', 'Actions'],
-    noTransactions: 'Aucune transaction trouvée.',
-    view: 'Voir',
-    detailToast: (product, client) => `📄 Détail vente — ${product} pour ${client}`,
-    totalsLabel: (n) => `${n} vente(s) · Total :`,
-  },
-  en: {
-    pageTitle: 'Sales history',
-    pageSubtitle: 'Detailed analysis of your commercial performance',
-    exportBtn: 'Export CSV',
-    exportToast: '📊 CSV export in progress...',
-    periods: { '7j': '7 days', '30j': '30 days', '3m': '3 months', '1a': '1 year' },
-    statusLabels: { toutes: 'All', ...Object.fromEntries(STATUS_ORDER.map(s => [s, STATUS_EN[s]])) },
-    kpiLabels: {
-      totalSales: 'Total sales', orders: 'Orders', avgBasket: 'Average basket', topProduct: 'Top product',
-      noSales: 'No sales yet', sales: (n) => `${n} sale${n > 1 ? 's' : ''}`,
-    },
-    salesLabel: 'Sales',
-    last6Months: 'Last 6 months',
-    ordersLabel: 'Orders',
-    revenueSub: 'Monthly revenue in FCFA',
-    topCategoriesTitle: 'Top categories',
-    topCategoriesSub: 'Breakdown by category',
-    recentSalesTitle: 'Recent sales',
-    transactionCount: (n) => `${n} transaction(s)`,
-    searchPlaceholder: 'Search...',
-    tableHeaders: ['Date', 'Product', 'Quantity', 'Amount', 'Client', 'Status', 'Actions'],
-    noTransactions: 'No transaction found.',
-    view: 'View',
-    detailToast: (product, client) => `📄 Sale detail — ${product} for ${client}`,
-    totalsLabel: (n) => `${n} sale(s) · Total:`,
-  },
-};
 
 export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts = [] }) {
-  const t = useDict(translations);
-  const { lang } = useLanguage();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
+  const STATUS_LABEL_KEYS = {
+    'En attente': 'statusPending', 'Validée': 'statusValidated', 'En préparation': 'statusPreparing',
+    'En livraison': 'statusShipping', 'Livrée': 'statusDelivered', 'Annulée': 'statusCancelled',
+  };
+  const statusLabels = {
+    toutes: t('salesHistory.statusAll'),
+    ...Object.fromEntries(STATUS_ORDER.map(s => [s, t(`salesHistory.${STATUS_LABEL_KEYS[s]}`)])),
+  };
   const [selectedPeriod, setSelectedPeriod] = useState('30j');
   const [hoveredBar, setHoveredBar] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -155,10 +109,10 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
   const topProductEntry = Object.entries(salesByProduct).sort((a, b) => b[1] - a[1])[0];
   const fmt = (n) => n.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR');
   const kpis = [
-    { label: t.kpiLabels.totalSales, value: fmt(totalSales), unit: 'FCFA', icon: '💰' },
-    { label: t.kpiLabels.orders, value: String(ordersInPeriod), unit: '', icon: '📦' },
-    { label: t.kpiLabels.avgBasket, value: fmt(avgBasket), unit: 'FCFA', icon: '🛒' },
-    { label: t.kpiLabels.topProduct, value: topProductEntry ? topProductEntry[0] : t.kpiLabels.noSales, unit: '', icon: '🏆' },
+    { label: t('salesHistory.kpiTotalSales'), value: fmt(totalSales), unit: 'FCFA', icon: '💰' },
+    { label: t('salesHistory.kpiOrders'), value: String(ordersInPeriod), unit: '', icon: '📦' },
+    { label: t('salesHistory.kpiAvgBasket'), value: fmt(avgBasket), unit: 'FCFA', icon: '🛒' },
+    { label: t('salesHistory.kpiTopProduct'), value: topProductEntry ? topProductEntry[0] : t('salesHistory.kpiNoSales'), unit: '', icon: '🏆' },
   ];
 
   // ===== Graphique : 6 derniers mois (dynamique, pas Jan-Jun figé) =====
@@ -208,8 +162,8 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
       {/* ── Header ── */}
       <div style={styles.pageHeader}>
         <div>
-          <h2 style={styles.pageTitle}>{t.pageTitle}</h2>
-          <p style={styles.pageSubtitle}>{t.pageSubtitle}</p>
+          <h2 style={styles.pageTitle}>{t('salesHistory.pageTitle')}</h2>
+          <p style={styles.pageSubtitle}>{t('salesHistory.pageSubtitle')}</p>
         </div>
         <div style={styles.headerRight}>
           {/* Period Selector */}
@@ -223,20 +177,20 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
                 }}
                 onClick={() => setSelectedPeriod(p)}
               >
-                {t.periods[p]}
+                {t('salesHistory.periods', { returnObjects: true })[p]}
               </button>
             ))}
           </div>
           <button
             style={styles.exportBtn}
-            onClick={() => showToast(t.exportToast)}
+            onClick={() => showToast(t('salesHistory.exportToast'))}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
               <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            {t.exportBtn}
+            {t('salesHistory.exportBtn')}
           </button>
         </div>
       </div>
@@ -266,17 +220,17 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
         <div style={styles.chartCard}>
           <div style={styles.cardHeader}>
             <div>
-              <h3 style={styles.cardTitle}>{t.salesLabel} — {t.last6Months}</h3>
-              <p style={styles.cardSub}>{t.revenueSub}</p>
+              <h3 style={styles.cardTitle}>{t('salesHistory.salesLabel')} — {t('salesHistory.last6Months')}</h3>
+              <p style={styles.cardSub}>{t('salesHistory.revenueSub')}</p>
             </div>
             <div style={styles.chartLegend}>
               <div style={styles.legendItem}>
                 <div style={{ ...styles.legendDot, backgroundColor: '#2d6a4f' }} />
-                <span style={styles.legendLabel}>{t.salesLabel}</span>
+                <span style={styles.legendLabel}>{t('salesHistory.salesLabel')}</span>
               </div>
               <div style={styles.legendItem}>
                 <div style={{ ...styles.legendDot, backgroundColor: '#e07a5f' }} />
-                <span style={styles.legendLabel}>{t.ordersLabel}</span>
+                <span style={styles.legendLabel}>{t('salesHistory.ordersLabel')}</span>
               </div>
             </div>
           </div>
@@ -295,11 +249,11 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
                     {isHov && (
                       <div style={styles.chartTooltip}>
                         <div style={styles.tooltipRow}>
-                          <span style={styles.tooltipLabel}>{t.salesLabel}</span>
+                          <span style={styles.tooltipLabel}>{t('salesHistory.salesLabel')}</span>
                           <strong style={{ color: '#2d6a4f' }}>{d.sales.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR')} FCFA</strong>
                         </div>
                         <div style={styles.tooltipRow}>
-                          <span style={styles.tooltipLabel}>{t.ordersLabel}</span>
+                          <span style={styles.tooltipLabel}>{t('salesHistory.ordersLabel')}</span>
                           <strong style={{ color: '#e07a5f' }}>{d.orders}</strong>
                         </div>
                       </div>
@@ -328,8 +282,8 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
         <div style={styles.donutCard}>
           <div style={styles.cardHeader}>
             <div>
-              <h3 style={styles.cardTitle}>{t.topCategoriesTitle}</h3>
-              <p style={styles.cardSub}>{t.topCategoriesSub}</p>
+              <h3 style={styles.cardTitle}>{t('salesHistory.topCategoriesTitle')}</h3>
+              <p style={styles.cardSub}>{t('salesHistory.topCategoriesSub')}</p>
             </div>
           </div>
 
@@ -374,7 +328,7 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
 
           <div style={styles.categoryList}>
             {categories.length === 0 ? (
-              <p style={{ fontSize: '13px', color: '#adb5bd', textAlign: 'center', padding: '12px 0' }}>{t.kpiLabels.noSales}</p>
+              <p style={{ fontSize: '13px', color: '#adb5bd', textAlign: 'center', padding: '12px 0' }}>{t('salesHistory.kpiNoSales')}</p>
             ) : categories.map((cat, i) => (
               <div key={i} style={styles.categoryItem}>
                 <div style={styles.catLeft}>
@@ -395,8 +349,8 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
       <div style={styles.tableCard}>
         <div style={styles.cardHeader}>
           <div>
-            <h3 style={styles.cardTitle}>{t.recentSalesTitle}</h3>
-            <p style={styles.cardSub}>{t.transactionCount(filtered.length)}</p>
+            <h3 style={styles.cardTitle}>{t('salesHistory.recentSalesTitle')}</h3>
+            <p style={styles.cardSub}>{t('salesHistory.transactionCount', { count: filtered.length })}</p>
           </div>
           <div style={styles.tableControls}>
             {/* Status filter */}
@@ -410,7 +364,7 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
                   }}
                   onClick={() => setStatusFilter(s)}
                 >
-                  {t.statusLabels[s]}
+                  {statusLabels[s]}
                 </button>
               ))}
             </div>
@@ -421,7 +375,7 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
               </svg>
               <input
                 type="text"
-                placeholder={t.searchPlaceholder}
+                placeholder={t('salesHistory.searchPlaceholder')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 style={styles.searchInput}
@@ -434,7 +388,7 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
           <table style={styles.table}>
             <thead>
               <tr>
-                {t.tableHeaders.map(h => (
+                {t('salesHistory.tableHeaders', { returnObjects: true }).map(h => (
                   <th key={h} style={styles.th}>{h}</th>
                 ))}
               </tr>
@@ -443,7 +397,7 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ ...styles.td, textAlign: 'center', padding: '32px', color: '#adb5bd' }}>
-                    {t.noTransactions}
+                    {t('salesHistory.noTransactions')}
                   </td>
                 </tr>
               ) : (
@@ -463,15 +417,15 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
                           color: statusStyles.color,
                           backgroundColor: statusStyles.bg,
                         }}>
-                          {t.statusLabels[row.status] || row.status}
+                          {statusLabels[row.status] || row.status}
                         </span>
                       </td>
                       <td style={styles.td}>
                         <button
                           style={styles.actionLink}
-                          onClick={() => showToast(t.detailToast(row.product, row.client))}
+                          onClick={() => showToast(t('salesHistory.detailToast', { product: row.product, client: row.client }))}
                         >
-                          {t.view}
+                          {t('salesHistory.view')}
                         </button>
                       </td>
                     </tr>
@@ -484,7 +438,7 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
 
         {/* Totals row */}
         <div style={styles.totalsRow}>
-          <span style={styles.totalsLabel}>{t.totalsLabel(filtered.length)}</span>
+          <span style={styles.totalsLabel}>{t('salesHistory.totalsLabel', { count: filtered.length })}</span>
           <span style={styles.totalsValue}>
             {filtered.reduce((acc, r) => acc + r.amount, 0).toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR')} FCFA
           </span>
