@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Star, MessageCircle, ShieldCheck, Edit3, Trash2, Flag, Package, ShoppingBag, MessageSquareText } from 'lucide-react';
 import { produitApi, avisApi, certificationApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
@@ -14,6 +15,7 @@ export default function ProducerProfile({
   onNavigateToProduct,
   onSignalerProducteur, // (motif) => void
 }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('produits');
   const [produits, setProduits] = useState([]);
   const [certifie, setCertifie] = useState(false);
@@ -129,10 +131,10 @@ export default function ProducerProfile({
   };
 
   const handleSubmit = async () => {
-    if (note === 0) { setError('Sélectionnez une note de 1 à 5 étoiles'); return; }
-    if (!commentaire.trim()) { setError('Le commentaire est requis'); return; }
+    if (note === 0) { setError(t('producerProfile.selectRating')); return; }
+    if (!commentaire.trim()) { setError(t('producerProfile.commentRequired')); return; }
     if (!producteur.produitId) {
-      setError("Impossible de déterminer le produit à noter : consultez un produit de ce producteur d'abord.");
+      setError(t('producerProfile.cannotDetermineProduct'));
       return;
     }
     setEnvoiEnCours(true);
@@ -148,7 +150,7 @@ export default function ProducerProfile({
       setEditing(false);
       await chargerAvis();
     } catch (e) {
-      setError(e?.message || "La publication de l'avis a échoué.");
+      setError(e?.message || t('producerProfile.publishFailed'));
     } finally {
       setEnvoiEnCours(false);
     }
@@ -167,7 +169,7 @@ export default function ProducerProfile({
       await avisApi.supprimerAvis(avisId);
       await chargerAvis();
     } catch (e) {
-      setError(e?.message || "La suppression de l'avis a échoué.");
+      setError(e?.message || t('producerProfile.deleteFailed'));
     } finally {
       setEnvoiEnCours(false);
     }
@@ -206,8 +208,8 @@ export default function ProducerProfile({
     return (
       <div style={styles.wrapper}>
         <div style={styles.emptyState}>
-          <p>Aucun producteur sélectionné.</p>
-          <button style={styles.backBtn} onClick={onBack}><ArrowLeft size={16} /> Retour</button>
+          <p>{t('producerProfile.noProducerSelected')}</p>
+          <button style={styles.backBtn} onClick={onBack}><ArrowLeft size={16} /> {t('producerProfile.back')}</button>
         </div>
       </div>
     );
@@ -219,14 +221,14 @@ export default function ProducerProfile({
 
         <ConfirmDialog
           open={!!confirmDeleteAvis}
-          title="Supprimer l'avis"
-          message="Supprimer votre avis ?"
+          title={t('producerProfile.deleteReviewTitle')}
+          message={t('producerProfile.deleteReviewMessage')}
           onCancel={() => setConfirmDeleteAvis(null)}
           onConfirm={handleDeleteConfirmed}
         />
 
         <button style={styles.backBtn} onClick={onBack}>
-          <ArrowLeft size={18} /> Retour
+          <ArrowLeft size={18} /> {t('producerProfile.back')}
         </button>
 
         {/* En-tête producteur */}
@@ -239,19 +241,19 @@ export default function ProducerProfile({
               <div style={styles.nameRow}>
                 <h1 style={styles.name}>{producteur.prenom ? `${producteur.prenom} ${producteur.nom}` : producteur.nom}</h1>
                 {certifie && (
-                  <span style={styles.verifiedBadge}><ShieldCheck size={14} /> Certifié</span>
+                  <span style={styles.verifiedBadge}><ShieldCheck size={14} /> {t('producerProfile.certifiedBadge')}</span>
                 )}
               </div>
               <div style={styles.ratingRow}>
                 <StarRow value={moyenne} size={18} />
                 <span style={styles.ratingNumber}>{moyenne > 0 ? moyenne.toFixed(1) : '—'}</span>
-                <span style={styles.ratingCount}>({totalAvis} avis)</span>
+                <span style={styles.ratingCount}>{t('producerProfile.reviewsCount', { count: totalAvis })}</span>
               </div>
             </div>
           </div>
           {onContactVendor && (
             <button style={styles.contactBtn} onClick={() => onContactVendor({ id: producteur.id, name: producteur.nom })}>
-              <MessageCircle size={16} /> Contacter
+              <MessageCircle size={16} /> {t('producerProfile.contact')}
             </button>
           )}
         </div>
@@ -260,21 +262,21 @@ export default function ProducerProfile({
         <div style={styles.reportRow}>
           {!showReportBox ? (
             <button style={styles.reportLink} onClick={() => setShowReportBox(true)}>
-              <Flag size={13} /> Signaler ce producteur
+              <Flag size={13} /> {t('producerProfile.reportThisProducer')}
             </button>
           ) : (
             <div style={styles.reportBox}>
-              <label style={styles.label}>Motif du signalement</label>
+              <label style={styles.label}>{t('producerProfile.reportReasonLabel')}</label>
               <textarea
                 style={styles.textarea}
                 rows="3"
-                placeholder="Ex: produit non conforme, comportement suspect, tentative d'arnaque..."
+                placeholder={t('producerProfile.reportPlaceholder')}
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
               />
               <div style={styles.formActions}>
-                <button style={styles.cancelBtn} onClick={() => { setShowReportBox(false); setReportReason(''); }}>Annuler</button>
-                <button style={styles.reportSubmitBtn} onClick={handleSubmitReport}>Envoyer le signalement</button>
+                <button style={styles.cancelBtn} onClick={() => { setShowReportBox(false); setReportReason(''); }}>{t('producerProfile.cancel')}</button>
+                <button style={styles.reportSubmitBtn} onClick={handleSubmitReport}>{t('producerProfile.sendReport')}</button>
               </div>
             </div>
           )}
@@ -288,28 +290,28 @@ export default function ProducerProfile({
             style={{ ...styles.tabBtn, ...(activeTab === 'produits' ? styles.tabBtnActive : {}) }}
             onClick={() => handleTabClick('produits')}
           >
-            <Package size={15} /> Produits ({produits.length})
+            <Package size={15} /> {t('producerProfile.productsTab', { count: produits.length })}
           </button>
           <button
             style={{ ...styles.tabBtn, ...(activeTab === 'avis-recus' ? styles.tabBtnActive : {}) }}
             onClick={() => handleTabClick('avis-recus')}
           >
-            <Star size={15} /> Avis reçus ({totalAvis})
+            <Star size={15} /> {t('producerProfile.reviewsReceivedTab', { count: totalAvis })}
           </button>
           <button
             style={{ ...styles.tabBtn, ...(activeTab === 'avis-laisses' ? styles.tabBtnActive : {}) }}
             onClick={() => handleTabClick('avis-laisses')}
           >
-            <MessageSquareText size={15} /> Avis laissés
+            <MessageSquareText size={15} /> {t('producerProfile.reviewsGivenTab')}
           </button>
         </div>
 
         {activeTab === 'produits' && (
           <div style={styles.listSection}>
             {chargement ? (
-              <p style={styles.hint}>Chargement des produits...</p>
+              <p style={styles.hint}>{t('producerProfile.loadingProducts')}</p>
             ) : produits.length === 0 ? (
-              <p style={styles.emptyText}>Ce producteur n'a pas encore publié de produit.</p>
+              <p style={styles.emptyText}>{t('producerProfile.noProducts')}</p>
             ) : (
               <div style={styles.produitsGrid}>
                 {produits.map((prod) => (
@@ -343,11 +345,11 @@ export default function ProducerProfile({
 
         {activeTab === 'avis-laisses' && (
           <div style={styles.listSection}>
-            <h3 style={styles.sectionTitle}>Avis laissés sur des produits</h3>
+            <h3 style={styles.sectionTitle}>{t('producerProfile.reviewsGivenTitle')}</h3>
             {chargementAvisLaisses ? (
-              <p style={styles.hint}>Chargement des avis...</p>
+              <p style={styles.hint}>{t('producerProfile.loadingReviews')}</p>
             ) : avisLaisses.length === 0 ? (
-              <p style={styles.emptyText}>Aucun avis laissé pour l'instant.</p>
+              <p style={styles.emptyText}>{t('producerProfile.noReviewsGiven')}</p>
             ) : (
               <div style={styles.avisList}>
                 {avisLaisses.map((avis) => (
@@ -360,7 +362,7 @@ export default function ProducerProfile({
                           onClick={() => avis.produit && onNavigateToProduct && onNavigateToProduct(avis.produit)}
                           disabled={!avis.produit}
                         >
-                          {avis.produit?.name || 'Produit indisponible'}
+                          {avis.produit?.name || t('producerProfile.productUnavailable')}
                         </button>
                         <span style={styles.avisDate}>
                           {new Date(avis.date).toLocaleDateString('fr-FR')}
@@ -382,11 +384,11 @@ export default function ProducerProfile({
 
           {/* Répartition des notes */}
           <div style={styles.distribCard}>
-            <h3 style={styles.sectionTitle}>Répartition des avis</h3>
+            <h3 style={styles.sectionTitle}>{t('producerProfile.ratingDistributionTitle')}</h3>
             {chargement ? (
-              <p style={styles.hint}>Chargement des avis...</p>
+              <p style={styles.hint}>{t('producerProfile.loadingReviews')}</p>
             ) : totalAvis === 0 ? (
-              <p style={styles.emptyText}>Pas encore d'avis pour ce producteur.</p>
+              <p style={styles.emptyText}>{t('producerProfile.noReviewsYet')}</p>
             ) : (
               <div style={styles.distribList}>
                 {distribution.map((d) => (
@@ -409,27 +411,27 @@ export default function ProducerProfile({
                 <Star size={22} color="#f5b041" fill="#f5b041" />
                 <p style={styles.hint}>
                   {currentUser?.role === 'vendeur'
-                    ? 'Seuls les clients peuvent laisser un avis sur un producteur.'
-                    : 'Connectez-vous en tant que client pour noter ce producteur.'}
+                    ? t('producerProfile.vendorCannotReview')
+                    : t('producerProfile.loginToReviewProducer')}
                 </p>
                 {currentUser?.role !== 'vendeur' && (
                   <button style={styles.loginBtn} onClick={onNavigateToLogin}>
-                    Se connecter pour laisser un avis
+                    {t('producerProfile.loginToReviewBtn')}
                   </button>
                 )}
               </div>
             ) : monAvis && !editing ? (
               <div>
-                <h3 style={styles.sectionTitle}>Votre avis</h3>
+                <h3 style={styles.sectionTitle}>{t('producerProfile.yourReview')}</h3>
                 <div style={styles.myAvisCard}>
                   <StarRow value={monAvis.note} size={16} />
                   <p style={styles.myAvisComment}>{monAvis.commentaire}</p>
                   <div style={styles.myAvisActions}>
                     <button style={styles.editBtn} onClick={() => startEdit(monAvis)} disabled={envoiEnCours}>
-                      <Edit3 size={14} /> Modifier
+                      <Edit3 size={14} /> {t('producerProfile.edit')}
                     </button>
                     <button style={styles.deleteBtn} onClick={() => handleDelete(monAvis.id)} disabled={envoiEnCours}>
-                      <Trash2 size={14} /> Supprimer
+                      <Trash2 size={14} /> {t('producerProfile.delete')}
                     </button>
                   </div>
                 </div>
@@ -437,13 +439,13 @@ export default function ProducerProfile({
             ) : !producteur.produitId ? (
               <div style={styles.loginPrompt}>
                 <p style={styles.hint}>
-                  Consultez un produit de ce producteur pour pouvoir laisser un avis.
+                  {t('producerProfile.visitProductFirst')}
                 </p>
               </div>
             ) : (
               <div>
                 <h3 style={styles.sectionTitle}>
-                  {editing ? 'Modifier votre avis' : 'Laisser un avis'}
+                  {editing ? t('producerProfile.editYourReview') : t('producerProfile.leaveAReview')}
                 </h3>
                 <div style={styles.starPicker}>
                   <StarRow value={note} size={28} interactive />
@@ -451,17 +453,17 @@ export default function ProducerProfile({
                 <textarea
                   style={styles.textarea}
                   rows="4"
-                  placeholder="Partagez votre expérience avec ce producteur..."
+                  placeholder={t('producerProfile.commentPlaceholder')}
                   value={commentaire}
                   onChange={(e) => { setCommentaire(e.target.value); setError(''); }}
                 />
                 {error && <span style={styles.error}>{error}</span>}
                 <div style={styles.formActions}>
                   {editing && (
-                    <button style={styles.cancelBtn} onClick={cancelEdit}>Annuler</button>
+                    <button style={styles.cancelBtn} onClick={cancelEdit}>{t('producerProfile.cancel')}</button>
                   )}
                   <button style={styles.submitBtn} onClick={handleSubmit} disabled={envoiEnCours}>
-                    {envoiEnCours ? 'Envoi...' : editing ? 'Mettre à jour' : 'Publier mon avis'}
+                    {envoiEnCours ? t('producerProfile.sending') : editing ? t('producerProfile.update') : t('producerProfile.publishReview')}
                   </button>
                 </div>
               </div>
@@ -471,11 +473,11 @@ export default function ProducerProfile({
 
         {/* Liste des avis */}
         <div style={styles.listSection}>
-          <h3 style={styles.sectionTitle}>Tous les avis ({totalAvis})</h3>
+          <h3 style={styles.sectionTitle}>{t('producerProfile.allReviews', { count: totalAvis })}</h3>
           {chargement ? (
-            <p style={styles.hint}>Chargement des avis...</p>
+            <p style={styles.hint}>{t('producerProfile.loadingReviews')}</p>
           ) : totalAvis === 0 ? (
-            <p style={styles.emptyText}>Soyez le premier à laisser un avis sur ce producteur.</p>
+            <p style={styles.emptyText}>{t('producerProfile.beFirstToReview')}</p>
           ) : (
             <div style={styles.avisList}>
               {producteurAvis
