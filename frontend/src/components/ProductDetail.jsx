@@ -7,25 +7,11 @@ import { useTranslation } from 'react-i18next';
 export default function ProductDetail({ onBack, onAddToCart, onContactVendor, onNavigateToProducerProfile, onSignaler, currentUser, product: propProduct }) {
   const { t } = useTranslation();
 
-  const defaultProduct = {
-    name: 'Banane Fraîche Premium',
-    category: 'Fruits',
-    rating: 4.8,
-    reviews: 245,
-    farm: 'Ferme Dschang',
-    price: 2500,
-    stock: 45,
-    image: '/images/banane.jpg',
-    description: [
-      'Produit frais provenant de notre ferme certifiée.',
-      'Biologique et sans pesticides',
-      'Récolté à la main',
-      'Livraison rapide',
-      'Garantie fraîcheur'
-    ]
-  };
-
-  const product = propProduct || defaultProduct;
+  // Avant : un faux "defaultProduct" (Banane Fraîche Premium) était affiché
+  // silencieusement si aucun produit n'était transmis (rafraîchissement,
+  // lien direct, navigation incohérente). On préfère maintenant afficher
+  // un état "produit introuvable" plutôt qu'un produit fictif.
+  const product = propProduct || null;
   const [quantity, setQuantity] = useState(1);
   const [isHoveringImg, setIsHoveringImg] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -107,7 +93,28 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
   };
 
   const handleDecrease = () => setQuantity(Math.max(1, quantity - 1));
-  const handleIncrease = () => setQuantity(Math.min(product.stock || 30, quantity + 1));
+  const handleIncrease = () => setQuantity(Math.min(product?.stock || 30, quantity + 1));
+
+  // Aucun produit transmis (rafraîchissement, lien direct, navigation
+  // incohérente) : on affiche un état "introuvable" plutôt qu'un faux
+  // produit par défaut affiché silencieusement.
+  if (!product) {
+    return (
+      <div style={styles.pageWrapper} className="fade-in">
+        <div style={{ ...styles.container, textAlign: 'center', padding: '80px 24px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#212529', marginBottom: '12px' }}>
+            {t('productDetail.notFoundTitle')}
+          </h2>
+          <p style={{ fontSize: '14px', color: '#6c757d', marginBottom: '24px' }}>
+            {t('productDetail.notFoundSubtitle')}
+          </p>
+          <button style={styles.backBtn} onClick={onBack}>
+            <ArrowLeft size={18} /> {t('productDetail.backToHome')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // producteurId vient de produit-service (ProduitResponse.producteurId), propagé
   // par productMapping.mapProduitPourVitrine. C'est le vrai id utilisateur du

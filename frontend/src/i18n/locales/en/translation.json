@@ -661,7 +661,10 @@
     "reviewsCount": "({{count}} reviews)",
     "available": "{{count}} kg available",
     "addedToCart": "Added: {{count}} kg",
-    "addToCart": "Add to cart • {{total}} FCFA"
+    "addToCart": "Add to cart • {{total}} FCFA",
+    "notFoundTitle": "Product not found",
+    "notFoundSubtitle": "This product is no longer available or the link you used is invalid.",
+    "backToHome": "Back to home"
   },
   "salesHistory": {
     "pageTitle": "Sales history",

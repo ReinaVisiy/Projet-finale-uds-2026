@@ -661,7 +661,10 @@
     "reviewsCount": "({{count}} avis)",
     "available": "{{count}} kg dispo",
     "addedToCart": "Ajouté : {{count}} kg",
-    "addToCart": "Ajouter au panier • {{total}} FCFA"
+    "addToCart": "Ajouter au panier • {{total}} FCFA",
+    "notFoundTitle": "Produit introuvable",
+    "notFoundSubtitle": "Ce produit n'est plus disponible ou le lien utilisé n'est pas valide.",
+    "backToHome": "Retour à l'accueil"
   },
   "salesHistory": {
     "pageTitle": "Historique des ventes",
