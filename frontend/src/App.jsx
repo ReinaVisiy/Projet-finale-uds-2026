@@ -1,5 +1,6 @@
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from './context/LanguageContext';
 import NavigationConsole from './components/NavigationConsole';
 import AgroMarketHome from './components/AgriconnectHome';
 import AddProduct from './components/AddProduct';
@@ -50,8 +51,11 @@ export default function App() {
   const [selectedProfileClient, setSelectedProfileClient] = useState(null);
 
   // ===== LANGUE =====
-  const [lang, setLang] = useState('fr');
-  const toggleLang = () => setLang(prev => (prev === 'fr' ? 'en' : 'fr'));
+  // La langue vient maintenant du LanguageContext global (voir
+  // src/context/LanguageContext.jsx) afin que TOUS les écrans (pas
+  // seulement l'accueil et la barre de navigation) puissent y accéder,
+  // sans prop-drilling.
+  const { lang, toggleLang } = useLanguage();
 
   // ===== UTILISATEUR CONNECTÉ =====
   const [currentUser, setCurrentUser] = useState(null);

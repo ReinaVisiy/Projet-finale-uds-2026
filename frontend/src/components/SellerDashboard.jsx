@@ -9,17 +9,67 @@ import {
 } from 'lucide-react';
 import VendeurOrders from './VendeurOrders';
 import { certificationApi } from '../services/api';
+import { useDict } from '../context/LanguageContext';
 
-const menuItems = [
-  { id: 'dashboard', label: 'Tableau de bord', icon: <LayoutDashboard size={18} /> },
-  { id: 'sales', label: 'Historique des ventes', icon: <BarChart3 size={18} /> },
-  { id: 'products', label: 'Mes produits', icon: <Package size={18} /> },
-  { id: 'stock', label: 'Alertes stock', icon: <AlertTriangle size={18} /> },
-  { id: 'orders', label: 'Mes commandes', icon: <ShoppingBag size={18} /> },
-  { id: 'certification', label: 'Ma certification', icon: <Shield size={18} /> },
-  { id: 'notifications', label: 'Notifications', icon: <Bell size={18} /> },
-  { id: 'profile', label: 'Mon profil', icon: <User size={18} /> },
-];
+const translations = {
+  fr: {
+    dashboard: 'Tableau de bord', salesHistory: 'Historique des ventes', myProducts: 'Mes produits',
+    stockAlerts: 'Alertes stock', myOrders: 'Mes commandes', myCertification: 'Ma certification',
+    notifications: 'Notifications', myProfile: 'Mon profil', logout: 'Déconnexion', myWorkspace: '🌿 Mon espace',
+    welcomeMsg: 'Bienvenue sur votre espace vendeur', certPendingBold: 'Votre demande de certification',
+    certPendingRest: "est en cours d'examen", certApproved: '✅ Votre compte est certifié',
+    certNoneBold: 'Obtenez votre certification', certNoneRest: 'pour gagner la confiance des clients',
+    start: 'Commencer →', products: 'Produits', orders: 'Commandes', totalRevenue: 'Revenu total',
+    criticalStock: 'Stock critique', monthlySales: 'Ventes mensuelles', recentOrders: 'Dernières commandes',
+    salesHistorySub: 'Suivi détaillé de vos transactions', order: 'Commande', client: 'Client',
+    amount: 'Montant', date: 'Date', status: 'Statut', noSales: 'Aucune vente',
+    productsOnline: 'produit(s) en ligne', addProduct: 'Ajouter un produit',
+    noProductsYet: "Vous n'avez pas encore de produits", addFirstProduct: 'Ajouter votre premier produit',
+    product: 'Produit', category: 'Catégorie', price: 'Prix', stock: 'Stock', actions: 'Actions',
+    notCategorized: 'Non catégorisé', available: '✅ Disponible', lowStock: '⚠️ Stock faible',
+    deleteConfirm: 'Supprimer', deletedSim: 'Produit supprimé (simulation)',
+    stockAlertsSub: 'produit(s) en stock critique', allStockOk: 'Tous vos produits ont un stock suffisant',
+    currentStock: 'Stock actuel', criticalThreshold: 'Seuil critique', action: 'Action',
+    restock: '{t.restock}', notifSub: "Restez informé de toute l'activité",
+    noRecentNotif: '{t.noRecentNotif}', myProfileSub: 'Gérez vos informations personnelles',
+    editProfile: '{t.editProfile}', changePassword: '{t.changePassword}',
+  },
+  en: {
+    dashboard: 'Dashboard', salesHistory: 'Sales history', myProducts: 'My products',
+    stockAlerts: 'Stock alerts', myOrders: 'My orders', myCertification: 'My certification',
+    notifications: 'Notifications', myProfile: 'My profile', logout: 'Log out', myWorkspace: '🌿 My space',
+    welcomeMsg: 'Welcome to your seller space', certPendingBold: 'Your certification request',
+    certPendingRest: 'is under review', certApproved: '✅ Your account is certified',
+    certNoneBold: 'Get certified', certNoneRest: "to earn your customers' trust",
+    start: 'Get started →', products: 'Products', orders: 'Orders', totalRevenue: 'Total revenue',
+    criticalStock: 'Critical stock', monthlySales: 'Monthly sales', recentOrders: 'Recent orders',
+    salesHistorySub: 'Detailed tracking of your transactions', order: 'Order', client: 'Client',
+    amount: 'Amount', date: 'Date', status: 'Status', noSales: 'No sales',
+    productsOnline: 'product(s) online', addProduct: 'Add a product',
+    noProductsYet: "You don't have any products yet", addFirstProduct: 'Add your first product',
+    product: 'Product', category: 'Category', price: 'Price', stock: 'Stock', actions: 'Actions',
+    notCategorized: 'Uncategorized', available: '✅ Available', lowStock: '⚠️ Low stock',
+    deleteConfirm: 'Delete', deletedSim: 'Product deleted (simulation)',
+    stockAlertsSub: 'product(s) with critical stock', allStockOk: 'All your products have sufficient stock',
+    currentStock: 'Current stock', criticalThreshold: 'Critical threshold', action: 'Action',
+    restock: 'Restock', notifSub: 'Stay informed of all activity',
+    noRecentNotif: 'No recent notifications', myProfileSub: 'Manage your personal information',
+    editProfile: 'Edit profile', changePassword: 'Change password',
+  },
+};
+
+function getMenuItems(t) {
+  return [
+    { id: 'dashboard', label: t.dashboard, icon: <LayoutDashboard size={18} /> },
+    { id: 'sales', label: t.salesHistory, icon: <BarChart3 size={18} /> },
+    { id: 'products', label: t.myProducts, icon: <Package size={18} /> },
+    { id: 'stock', label: t.stockAlerts, icon: <AlertTriangle size={18} /> },
+    { id: 'orders', label: t.myOrders, icon: <ShoppingBag size={18} /> },
+    { id: 'certification', label: t.myCertification, icon: <Shield size={18} /> },
+    { id: 'notifications', label: t.notifications, icon: <Bell size={18} /> },
+    { id: 'profile', label: t.myProfile, icon: <User size={18} /> },
+  ];
+}
 
 export default function SellerDashboard({
   onNavigate,
@@ -29,6 +79,8 @@ export default function SellerDashboard({
   adminOrders = [],
   onUpdateOrderStatus,
 }) {
+  const t = useDict(translations);
+  const menuItems = getMenuItems(t);
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -84,52 +136,52 @@ export default function SellerDashboard({
   const renderDashboard = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>Tableau de bord</h2>
-        <p style={styles.pageSubtitle}>Bienvenue sur votre espace vendeur</p>
+        <h2 style={styles.pageTitle}>{t.dashboard}</h2>
+        <p style={styles.pageSubtitle}>{t.welcomeMsg}</p>
       </div>
 
       {certificationStatus === 'pending' && (
         <div style={styles.alertBanner}>
           <Clock size={20} color="#f5b041" />
-          <span><strong>Votre demande de certification</strong> est en cours d'examen</span>
+          <span><strong>{t.certPendingBold}</strong> {t.certPendingRest}</span>
         </div>
       )}
       {certificationStatus === 'approved' && (
         <div style={{ ...styles.alertBanner, backgroundColor: '#e9f5ee', borderColor: '#b7e4c7' }}>
           <CheckCircle size={20} color="#2d6a4f" />
-          <span><strong>✅ Votre compte est certifié</strong></span>
+          <span><strong>{t.certApproved}</strong></span>
         </div>
       )}
       {certificationStatus === 'none' && (
         <div style={{ ...styles.alertBanner, backgroundColor: '#fffbea', borderColor: '#f5e4a0', cursor: 'pointer' }}
           onClick={() => onNavigate && onNavigate('certification')}>
           <Shield size={20} color="#f5b041" />
-          <span><strong>Obtenez votre certification</strong> pour gagner la confiance des clients</span>
-          <span style={styles.alertLink}>Commencer →</span>
+          <span><strong>{t.certNoneBold}</strong> {t.certNoneRest}</span>
+          <span style={styles.alertLink}>{t.start}</span>
         </div>
       )}
 
       <div style={styles.kpiGrid}>
         <div style={styles.kpiCard}>
           <div style={{ ...styles.kpiIcon, backgroundColor: '#e9f5ee' }}><Package size={20} color="#2d6a4f" /></div>
-          <div><p style={styles.kpiLabel}>Produits</p><p style={styles.kpiValue}>{totalProducts}</p></div>
+          <div><p style={styles.kpiLabel}>{t.products}</p><p style={styles.kpiValue}>{totalProducts}</p></div>
         </div>
         <div style={styles.kpiCard}>
           <div style={{ ...styles.kpiIcon, backgroundColor: '#e9f5ee' }}><ShoppingBag size={20} color="#2d6a4f" /></div>
-          <div><p style={styles.kpiLabel}>Commandes</p><p style={styles.kpiValue}>{totalOrders}</p></div>
+          <div><p style={styles.kpiLabel}>{t.orders}</p><p style={styles.kpiValue}>{totalOrders}</p></div>
         </div>
         <div style={styles.kpiCard}>
           <div style={{ ...styles.kpiIcon, backgroundColor: '#fff3e0' }}><DollarSign size={20} color="#f5b041" /></div>
-          <div><p style={styles.kpiLabel}>Revenu total</p><p style={styles.kpiValue}>{totalRevenue.toLocaleString()} FCFA</p></div>
+          <div><p style={styles.kpiLabel}>{t.totalRevenue}</p><p style={styles.kpiValue}>{totalRevenue.toLocaleString()} FCFA</p></div>
         </div>
         <div style={styles.kpiCard}>
           <div style={{ ...styles.kpiIcon, backgroundColor: '#fdf1ed' }}><AlertTriangle size={20} color="#e07a5f" /></div>
-          <div><p style={styles.kpiLabel}>Stock critique</p><p style={styles.kpiValue}>{lowStockItems.length}</p></div>
+          <div><p style={styles.kpiLabel}>{t.criticalStock}</p><p style={styles.kpiValue}>{lowStockItems.length}</p></div>
         </div>
       </div>
 
       <div style={styles.chartCard}>
-        <h3 style={styles.chartTitle}>Ventes mensuelles</h3>
+        <h3 style={styles.chartTitle}>{t.monthlySales}</h3>
         <div style={styles.chartArea}>
           {monthlyRevenue.map((val, i) => {
             const h = (val / maxRevenue) * 100;
@@ -144,7 +196,7 @@ export default function SellerDashboard({
       </div>
 
       <div style={styles.tableCard}>
-        <h3 style={styles.chartTitle}>Dernières commandes</h3>
+        <h3 style={styles.chartTitle}>{t.recentOrders}</h3>
         {adminOrders.slice(-3).reverse().map(order => (
           <div key={order.id} style={styles.orderRow}>
             <span style={styles.orderId}>#{order.id}</span>
@@ -164,23 +216,23 @@ export default function SellerDashboard({
   const renderSalesHistory = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>Historique des ventes</h2>
-        <p style={styles.pageSubtitle}>Suivi détaillé de vos transactions</p>
+        <h2 style={styles.pageTitle}>{t.salesHistory}</h2>
+        <p style={styles.pageSubtitle}>{t.salesHistorySub}</p>
       </div>
       <div style={styles.tableCard}>
         <table style={styles.table}>
           <thead>
             <tr>
-              <th style={styles.th}>Commande</th>
-              <th style={styles.th}>Client</th>
-              <th style={styles.th}>Montant</th>
-              <th style={styles.th}>Date</th>
-              <th style={styles.th}>Statut</th>
+              <th style={styles.th}>{t.order}</th>
+              <th style={styles.th}>{t.client}</th>
+              <th style={styles.th}>{t.amount}</th>
+              <th style={styles.th}>{t.date}</th>
+              <th style={styles.th}>{t.status}</th>
             </tr>
           </thead>
           <tbody>
             {adminOrders.length === 0 ? (
-              <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#adb5bd' }}>Aucune vente</td></tr>
+              <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#adb5bd' }}>{t.noSales}</td></tr>
             ) : (
               adminOrders.map(order => (
                 <tr key={order.id}>
@@ -207,38 +259,38 @@ export default function SellerDashboard({
   const renderProducts = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>Mes produits</h2>
-        <p style={styles.pageSubtitle}>{vendeurProducts.length} produit(s) en ligne</p>
+        <h2 style={styles.pageTitle}>{t.myProducts}</h2>
+        <p style={styles.pageSubtitle}>{vendeurProducts.length} {t.productsOnline}</p>
         <button style={styles.actionBtn} onClick={() => onNavigate && onNavigate('add-product')}>
-          <Plus size={16} /> Ajouter un produit
+          <Plus size={16} /> {t.addProduct}
         </button>
       </div>
       <div style={styles.tableCard}>
         {vendeurProducts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#adb5bd' }}>
             <Package size={48} color="#adb5bd" />
-            <p>Vous n'avez pas encore de produits</p>
+            <p>{t.noProductsYet}</p>
             <button style={styles.actionBtn} onClick={() => onNavigate && onNavigate('add-product')}>
-              Ajouter votre premier produit
+              {t.addFirstProduct}
             </button>
           </div>
         ) : (
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>Produit</th>
-                <th style={styles.th}>Catégorie</th>
-                <th style={styles.th}>Prix</th>
-                <th style={styles.th}>Stock</th>
-                <th style={styles.th}>Statut</th>
-                <th style={styles.th}>Actions</th>
+                <th style={styles.th}>{t.product}</th>
+                <th style={styles.th}>{t.category}</th>
+                <th style={styles.th}>{t.price}</th>
+                <th style={styles.th}>{t.stock}</th>
+                <th style={styles.th}>{t.status}</th>
+                <th style={styles.th}>{t.actions}</th>
               </tr>
             </thead>
             <tbody>
               {vendeurProducts.map(p => (
                 <tr key={p.id}>
                   <td style={styles.td}>{p.name}</td>
-                  <td style={styles.td}>{p.category || 'Non catégorisé'}</td>
+                  <td style={styles.td}>{p.category || t.notCategorized}</td>
                   <td style={styles.td}>{p.price.toLocaleString()} FCFA</td>
                   <td style={styles.td}>{p.stock}</td>
                   <td style={styles.td}>
@@ -247,7 +299,7 @@ export default function SellerDashboard({
                       backgroundColor: p.stock > 10 ? '#e9f5ee' : '#fdf1ed',
                       color: p.stock > 10 ? '#2d6a4f' : '#e07a5f',
                     }}>
-                      {p.stock > 10 ? '✅ Disponible' : '⚠️ Stock faible'}
+                      {p.stock > 10 ? t.available : t.lowStock}
                     </span>
                   </td>
                   <td style={styles.td}>
@@ -256,8 +308,8 @@ export default function SellerDashboard({
                         <Edit size={14} color="#2d6a4f" />
                       </button>
                       <button style={styles.iconBtn} onClick={() => {
-                        if (window.confirm(`Supprimer "${p.name}" ?`)) {
-                          alert('Produit supprimé (simulation)');
+                        if (window.confirm(`${t.deleteConfirm} "${p.name}" ?`)) {
+                          alert(t.deletedSim);
                         }
                       }}>
                         <Trash2 size={14} color="#e07a5f" />
@@ -276,23 +328,23 @@ export default function SellerDashboard({
   const renderStockAlerts = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>Alertes stock</h2>
-        <p style={styles.pageSubtitle}>{lowStockItems.length} produit(s) en stock critique</p>
+        <h2 style={styles.pageTitle}>{t.stockAlerts}</h2>
+        <p style={styles.pageSubtitle}>{lowStockItems.length} {t.stockAlertsSub}</p>
       </div>
       <div style={styles.tableCard}>
         {lowStockItems.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#2d6a4f' }}>
             <CheckCircle size={48} color="#2d6a4f" />
-            <p>Tous vos produits ont un stock suffisant</p>
+            <p>{t.allStockOk}</p>
           </div>
         ) : (
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>Produit</th>
-                <th style={styles.th}>Stock actuel</th>
-                <th style={styles.th}>Seuil critique</th>
-                <th style={styles.th}>Action</th>
+                <th style={styles.th}>{t.product}</th>
+                <th style={styles.th}>{t.currentStock}</th>
+                <th style={styles.th}>{t.criticalThreshold}</th>
+                <th style={styles.th}>{t.action}</th>
               </tr>
             </thead>
             <tbody>
@@ -303,7 +355,7 @@ export default function SellerDashboard({
                   <td style={styles.td}>10</td>
                   <td style={styles.td}>
                     <button style={styles.actionBtnSmall} onClick={() => onNavigate && onNavigate('add-product')}>
-                      Réapprovisionner
+                      {t.restock}
                     </button>
                   </td>
                 </tr>
@@ -326,11 +378,11 @@ export default function SellerDashboard({
   const renderNotifications = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>Notifications</h2>
-        <p style={styles.pageSubtitle}>Restez informé de toute l'activité</p>
+        <h2 style={styles.pageTitle}>{t.notifications}</h2>
+        <p style={styles.pageSubtitle}>{t.notifSub}</p>
       </div>
       <div style={styles.tableCard}>
-        <p style={{ color: '#adb5bd', textAlign: 'center', padding: '20px' }}>Aucune notification récente</p>
+        <p style={{ color: '#adb5bd', textAlign: 'center', padding: '20px' }}>{t.noRecentNotif}</p>
       </div>
     </>
   );
@@ -338,8 +390,8 @@ export default function SellerDashboard({
   const renderProfile = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>Mon profil</h2>
-        <p style={styles.pageSubtitle}>Gérez vos informations personnelles</p>
+        <h2 style={styles.pageTitle}>{t.myProfile}</h2>
+        <p style={styles.pageSubtitle}>{t.myProfileSub}</p>
       </div>
       <div style={styles.profileCard}>
         <div style={styles.profilePhoto}>
@@ -357,10 +409,10 @@ export default function SellerDashboard({
           <p>{currentUser?.telephone}</p>
           <div style={styles.profileActions}>
             <button style={styles.actionBtnSmall} onClick={() => onNavigate && onNavigate('edit-profile')}>
-              Modifier le profil
+              {t.editProfile}
             </button>
             <button style={styles.actionBtnSmall} onClick={() => onNavigate && onNavigate('change-password')}>
-              Changer le mot de passe
+              {t.changePassword}
             </button>
           </div>
         </div>
@@ -388,7 +440,7 @@ export default function SellerDashboard({
           <button style={styles.toggleBtn} onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          {sidebarOpen && <span style={styles.brand}>🌿 Mon espace</span>}
+          {sidebarOpen && <span style={styles.brand}>{t.myWorkspace}</span>}
         </div>
         <nav style={styles.nav}>
           {menuItems.map(item => (
@@ -405,7 +457,7 @@ export default function SellerDashboard({
         <div style={styles.sidebarFooter}>
           <button style={styles.navItem} onClick={() => onLogout && onLogout()}>
             <LogOut size={18} />
-            {sidebarOpen && <span>Déconnexion</span>}
+            {sidebarOpen && <span>{t.logout}</span>}
           </button>
         </div>
       </aside>
