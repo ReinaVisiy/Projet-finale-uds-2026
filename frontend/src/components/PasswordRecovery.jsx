@@ -138,7 +138,7 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
                 <Key size={18} color="#6c757d" />
                 <input
                   type="text"
-                  placeholder="11111"
+                  placeholder={t('passwordRecovery.codePlaceholder')}
                   style={styles.input}
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 5))}

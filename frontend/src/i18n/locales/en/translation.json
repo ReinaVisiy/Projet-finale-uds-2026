@@ -784,6 +784,7 @@
     "step2Title": "Verification",
     "step2Subtitle": "A validation code has been sent to your email address",
     "codeLabel": "Validation code",
+    "codePlaceholder": "11111",
     "step3Title": "New password",
     "step3Subtitle": "Create a new password for your account",
     "successMsg": "Password changed successfully!",
