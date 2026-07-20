@@ -4,63 +4,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { produitApi } from '../services/api';
 import { mapCategorie, mapProduitPourVendeur, construireProduitRequest } from '../services/productMapping';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    loadCategoriesFailed: 'Impossible de charger les catégories.',
-    selectImage: 'Veuillez sélectionner une image (JPG, PNG, WEBP)',
-    fillRequired: 'Veuillez remplir tous les champs obligatoires (*) et ajouter une image',
-    publishFailed: 'La publication du produit a échoué.',
-    title: 'Ajouter un produit',
-    productName: 'Nom du produit *',
-    productNamePlaceholder: 'Ex: Banane douce de Dschang',
-    category: 'Catégorie *',
-    loading: 'Chargement...',
-    availableQty: 'Quantité disponible *',
-    qtyPlaceholder: 'Ex: 50',
-    priceLabel: 'Prix (FCFA) *',
-    pricePlaceholder: 'Ex: 1500',
-    description: 'Description',
-    descPlaceholder: 'Décrivez votre produit : origine, qualité, mode de culture...',
-    publishing: '⏳ Publication...',
-    publish: '🚀 Publier le produit',
-    productPhoto: 'Photo du produit *',
-    clickToAdd: 'Cliquez pour ajouter une image',
-    fileHint: 'JPG, PNG, WEBP — Max 5 MB',
-    preview: 'Aperçu',
-    change: 'Changer',
-    remove: 'Supprimer',
-  },
-  en: {
-    loadCategoriesFailed: 'Unable to load categories.',
-    selectImage: 'Please select an image (JPG, PNG, WEBP)',
-    fillRequired: 'Please fill in all required fields (*) and add an image',
-    publishFailed: 'Failed to publish the product.',
-    title: 'Add a product',
-    productName: 'Product name *',
-    productNamePlaceholder: 'E.g: Sweet banana from Dschang',
-    category: 'Category *',
-    loading: 'Loading...',
-    availableQty: 'Available quantity *',
-    qtyPlaceholder: 'E.g: 50',
-    priceLabel: 'Price (FCFA) *',
-    pricePlaceholder: 'E.g: 1500',
-    description: 'Description',
-    descPlaceholder: 'Describe your product: origin, quality, growing method...',
-    publishing: '⏳ Publishing...',
-    publish: '🚀 Publish product',
-    productPhoto: 'Product photo *',
-    clickToAdd: 'Click to add an image',
-    fileHint: 'JPG, PNG, WEBP — Max 5 MB',
-    preview: 'Preview',
-    change: 'Change',
-    remove: 'Remove',
-  },
-};
 
 export default function AddProduct({ onProductAdded, onCancel }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState('');
@@ -81,13 +29,13 @@ export default function AddProduct({ onProductAdded, onCancel }) {
         setCategories(cats);
         if (cats.length > 0) setCategory(String(cats[0].id));
       })
-      .catch(() => setErreur(t.loadCategoriesFailed));
+      .catch(() => setErreur(t('addProduct.loadCategoriesFailed')));
   }, [t]);
 
   const handleImageChange = (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      alert(t.selectImage);
+      alert(t('addProduct.selectImage'));
       return;
     }
     setImageFile(file);
@@ -107,7 +55,7 @@ export default function AddProduct({ onProductAdded, onCancel }) {
     e.preventDefault();
     setErreur('');
     if (!name.trim() || !price || !quantity || !imagePreview) {
-      alert(t.fillRequired);
+      alert(t('addProduct.fillRequired'));
       return;
     }
     setIsSubmitting(true);
@@ -123,7 +71,7 @@ export default function AddProduct({ onProductAdded, onCancel }) {
       const produitCree = await produitApi.publierProduit(request);
       if (onProductAdded) onProductAdded(mapProduitPourVendeur(produitCree));
     } catch (err) {
-      const message = err?.message || t.publishFailed;
+      const message = err?.message || t('addProduct.publishFailed');
       setErreur(message);
       alert(message);
     } finally {
@@ -137,7 +85,7 @@ export default function AddProduct({ onProductAdded, onCancel }) {
         <button onClick={onCancel} style={styles.backBtn}>
           <ArrowLeft size={20} />
         </button>
-        <h2 style={styles.title}>{t.title}</h2>
+        <h2 style={styles.title}>{t('addProduct.title')}</h2>
       </div>
 
       <form style={styles.form} onSubmit={handleSubmit}>
@@ -145,10 +93,10 @@ export default function AddProduct({ onProductAdded, onCancel }) {
           {/* Colonne gauche : formulaire */}
           <div style={styles.formCard}>
             <div style={styles.field}>
-              <label style={styles.label}>{t.productName}</label>
+              <label style={styles.label}>{t('addProduct.productName')}</label>
               <input
                 type="text"
-                placeholder={t.productNamePlaceholder}
+                placeholder={t('addProduct.productNamePlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 style={styles.input}
@@ -158,19 +106,19 @@ export default function AddProduct({ onProductAdded, onCancel }) {
 
             <div style={styles.row2}>
               <div style={styles.field}>
-                <label style={styles.label}>{t.category}</label>
+                <label style={styles.label}>{t('addProduct.category')}</label>
                 <select value={category} onChange={(e) => setCategory(e.target.value)} style={styles.select}>
-                  {categories.length === 0 && <option value="">{t.loading}</option>}
+                  {categories.length === 0 && <option value="">{t('addProduct.loading')}</option>}
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
               </div>
               <div style={styles.field}>
-                <label style={styles.label}>{t.availableQty}</label>
+                <label style={styles.label}>{t('addProduct.availableQty')}</label>
                 <input
                   type="number"
-                  placeholder={t.qtyPlaceholder}
+                  placeholder={t('addProduct.qtyPlaceholder')}
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   style={styles.input}
@@ -181,10 +129,10 @@ export default function AddProduct({ onProductAdded, onCancel }) {
             </div>
 
             <div style={styles.field}>
-              <label style={styles.label}>{t.priceLabel}</label>
+              <label style={styles.label}>{t('addProduct.priceLabel')}</label>
               <input
                 type="number"
-                placeholder={t.pricePlaceholder}
+                placeholder={t('addProduct.pricePlaceholder')}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 style={styles.input}
@@ -194,9 +142,9 @@ export default function AddProduct({ onProductAdded, onCancel }) {
             </div>
 
             <div style={styles.field}>
-              <label style={styles.label}>{t.description}</label>
+              <label style={styles.label}>{t('addProduct.description')}</label>
               <textarea
-                placeholder={t.descPlaceholder}
+                placeholder={t('addProduct.descPlaceholder')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 style={styles.textarea}
@@ -209,13 +157,13 @@ export default function AddProduct({ onProductAdded, onCancel }) {
               style={{ ...styles.publishBtn, opacity: (isSubmitting || !category) ? 0.7 : 1 }}
               disabled={isSubmitting || !category}
             >
-              {isSubmitting ? t.publishing : t.publish}
+              {isSubmitting ? t('addProduct.publishing') : t('addProduct.publish')}
             </button>
           </div>
 
           {/* Colonne droite : photo */}
           <div style={styles.imageCard}>
-            <h3 style={styles.imageTitle}>{t.productPhoto}</h3>
+            <h3 style={styles.imageTitle}>{t('addProduct.productPhoto')}</h3>
 
             {!imagePreview ? (
               <div style={styles.dropZone} onClick={() => fileInputRef.current.click()}>
@@ -227,18 +175,18 @@ export default function AddProduct({ onProductAdded, onCancel }) {
                   onChange={handleFileInput}
                 />
                 <Upload size={48} color="#2d6a4f" />
-                <h4 style={styles.dropTitle}>{t.clickToAdd}</h4>
-                <p style={styles.dropSubtitle}>{t.fileHint}</p>
+                <h4 style={styles.dropTitle}>{t('addProduct.clickToAdd')}</h4>
+                <p style={styles.dropSubtitle}>{t('addProduct.fileHint')}</p>
               </div>
             ) : (
               <div style={styles.previewWrap}>
-                <img src={imagePreview} alt={t.preview} style={styles.previewImage} />
+                <img src={imagePreview} alt={t('addProduct.preview')} style={styles.previewImage} />
                 <div style={styles.previewActions}>
                   <button type="button" style={styles.changeBtn} onClick={() => fileInputRef.current.click()}>
-                    <Upload size={16} /> {t.change}
+                    <Upload size={16} /> {t('addProduct.change')}
                   </button>
                   <button type="button" style={styles.removeBtn} onClick={removeImage}>
-                    <X size={16} /> {t.remove}
+                    <X size={16} /> {t('addProduct.remove')}
                   </button>
                   <input
                     ref={fileInputRef}

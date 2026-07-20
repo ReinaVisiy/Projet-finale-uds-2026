@@ -405,5 +405,30 @@
     "adminBadge": "🛡️ Admin",
     "clientBadge": "🛒 Client",
     "clientOnlySection": "You are in client mode, this section is reserved for vendors."
+  },
+  "addProduct": {
+    "loadCategoriesFailed": "Unable to load categories.",
+    "selectImage": "Please select an image (JPG, PNG, WEBP)",
+    "fillRequired": "Please fill in all required fields (*) and add an image",
+    "publishFailed": "Failed to publish the product.",
+    "title": "Add a product",
+    "productName": "Product name *",
+    "productNamePlaceholder": "E.g: Sweet banana from Dschang",
+    "category": "Category *",
+    "loading": "Loading...",
+    "availableQty": "Available quantity *",
+    "qtyPlaceholder": "E.g: 50",
+    "priceLabel": "Price (FCFA) *",
+    "pricePlaceholder": "E.g: 1500",
+    "description": "Description",
+    "descPlaceholder": "Describe your product: origin, quality, growing method...",
+    "publishing": "⏳ Publishing...",
+    "publish": "🚀 Publish product",
+    "productPhoto": "Product photo *",
+    "clickToAdd": "Click to add an image",
+    "fileHint": "JPG, PNG, WEBP — Max 5 MB",
+    "preview": "Preview",
+    "change": "Change",
+    "remove": "Remove"
   }
 }
