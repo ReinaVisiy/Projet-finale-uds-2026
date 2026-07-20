@@ -295,5 +295,42 @@
     "createMyAccount": "Create my account",
     "alreadyAccount": "Already have an account?",
     "logIn": "Log in"
+  },
+  "editProfile": {
+    "back": "Back",
+    "addPhoto": "Add a photo",
+    "editMyProfile": "Edit my profile",
+    "lastName": "Last name",
+    "lastNamePlaceholder": "Your last name",
+    "firstName": "First name",
+    "firstNamePlaceholder": "Your first name",
+    "email": "Email",
+    "emailPlaceholder": "Your email",
+    "phone": "Phone",
+    "phonePlaceholder": "Your phone number",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "vendeurOrders": {
+    "receivedOrders": "Orders received",
+    "manageOrders": "Manage your customers' orders",
+    "noOrdersYet": "You haven't received any orders yet.",
+    "order": "Order",
+    "client": "Client",
+    "email": "Email",
+    "notProvided": "Not provided",
+    "date": "Date",
+    "totalAmount": "Total amount",
+    "orderedProducts": "Ordered products",
+    "product": "Product",
+    "quantity": "Quantity",
+    "unitPrice": "Unit price",
+    "total": "Total",
+    "changeStatus": "Change status:",
+    "statusPending": "Pending",
+    "statusPreparing": "Preparing",
+    "statusShipping": "Shipping",
+    "statusDelivered": "Delivered",
+    "statusCancelled": "Cancelled"
   }
 }

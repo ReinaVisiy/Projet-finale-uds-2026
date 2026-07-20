@@ -295,5 +295,42 @@
     "createMyAccount": "Créer mon compte",
     "alreadyAccount": "Déjà un compte ?",
     "logIn": "Se connecter"
+  },
+  "editProfile": {
+    "back": "Retour",
+    "addPhoto": "Ajouter une photo",
+    "editMyProfile": "Modifier mon profil",
+    "lastName": "Nom",
+    "lastNamePlaceholder": "Votre nom",
+    "firstName": "Prénom",
+    "firstNamePlaceholder": "Votre prénom",
+    "email": "Email",
+    "emailPlaceholder": "Votre email",
+    "phone": "Téléphone",
+    "phonePlaceholder": "Votre téléphone",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "vendeurOrders": {
+    "receivedOrders": "Mes commandes reçues",
+    "manageOrders": "Gérez les commandes des clients",
+    "noOrdersYet": "Vous n'avez reçu aucune commande pour le moment.",
+    "order": "Commande",
+    "client": "Client",
+    "email": "Email",
+    "notProvided": "Non renseigné",
+    "date": "Date",
+    "totalAmount": "Montant total",
+    "orderedProducts": "Produits commandés",
+    "product": "Produit",
+    "quantity": "Quantité",
+    "unitPrice": "Prix unit.",
+    "total": "Total",
+    "changeStatus": "Changer le statut :",
+    "statusPending": "En attente",
+    "statusPreparing": "En préparation",
+    "statusShipping": "En livraison",
+    "statusDelivered": "Livrée",
+    "statusCancelled": "Annulée"
   }
 }

@@ -1,25 +1,11 @@
 // src/components/EditProfile.jsx
 import React, { useState, useRef } from 'react';
 import { Camera, Save, X, User, Mail, Phone, ArrowLeft } from 'lucide-react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    back: 'Retour', addPhoto: 'Ajouter une photo', editMyProfile: 'Modifier mon profil',
-    lastName: 'Nom', lastNamePlaceholder: 'Votre nom', firstName: 'Prénom', firstNamePlaceholder: 'Votre prénom',
-    email: 'Email', emailPlaceholder: 'Votre email', phone: 'Téléphone', phonePlaceholder: 'Votre téléphone',
-    cancel: 'Annuler', save: 'Enregistrer',
-  },
-  en: {
-    back: 'Back', addPhoto: 'Add a photo', editMyProfile: 'Edit my profile',
-    lastName: 'Last name', lastNamePlaceholder: 'Your last name', firstName: 'First name', firstNamePlaceholder: 'Your first name',
-    email: 'Email', emailPlaceholder: 'Your email', phone: 'Phone', phonePlaceholder: 'Your phone number',
-    cancel: 'Cancel', save: 'Save',
-  },
-};
 
 export default function EditProfile({ onBack, onSave, currentUser }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     nom: currentUser?.nom || '',
     prenom: currentUser?.prenom || '',
@@ -63,7 +49,7 @@ export default function EditProfile({ onBack, onSave, currentUser }) {
       <div style={styles.card}>
         {/* Bouton Retour */}
         <button style={styles.backBtn} onClick={onBack}>
-          <ArrowLeft size={20} /> {t.back}
+          <ArrowLeft size={20} /> {t('editProfile.back')}
         </button>
 
         {/* Photo de profil centrée */}
@@ -82,7 +68,7 @@ export default function EditProfile({ onBack, onSave, currentUser }) {
             ) : (
               <div style={styles.photoPlaceholder}>
                 <Camera size={32} color={isHoveringPhoto ? '#2d6a4f' : '#adb5bd'} />
-                <span style={styles.photoPlaceholderText}>{t.addPhoto}</span>
+                <span style={styles.photoPlaceholderText}>{t('editProfile.addPhoto')}</span>
               </div>
             )}
             <input
@@ -95,36 +81,36 @@ export default function EditProfile({ onBack, onSave, currentUser }) {
           </div>
         </div>
 
-        <h1 style={styles.title}>{t.editMyProfile}</h1>
+        <h1 style={styles.title}>{t('editProfile.editMyProfile')}</h1>
 
         <form style={styles.form} onSubmit={handleSubmit}>
           <div style={styles.field}>
-            <label style={styles.label}>{t.lastName}</label>
+            <label style={styles.label}>{t('editProfile.lastName')}</label>
             <input
               type="text"
               name="nom"
               value={formData.nom}
               onChange={handleChange}
               style={styles.input}
-              placeholder={t.lastNamePlaceholder}
+              placeholder={t('editProfile.lastNamePlaceholder')}
             />
           </div>
 
           <div style={styles.field}>
-            <label style={styles.label}>{t.firstName}</label>
+            <label style={styles.label}>{t('editProfile.firstName')}</label>
             <input
               type="text"
               name="prenom"
               value={formData.prenom}
               onChange={handleChange}
               style={styles.input}
-              placeholder={t.firstNamePlaceholder}
+              placeholder={t('editProfile.firstNamePlaceholder')}
             />
           </div>
 
           <div style={styles.field}>
             <label style={styles.label}>
-              <Mail size={14} /> {t.email}
+              <Mail size={14} /> {t('editProfile.email')}
             </label>
             <input
               type="email"
@@ -132,13 +118,13 @@ export default function EditProfile({ onBack, onSave, currentUser }) {
               value={formData.email}
               onChange={handleChange}
               style={styles.input}
-              placeholder={t.emailPlaceholder}
+              placeholder={t('editProfile.emailPlaceholder')}
             />
           </div>
 
           <div style={styles.field}>
             <label style={styles.label}>
-              <Phone size={14} /> {t.phone}
+              <Phone size={14} /> {t('editProfile.phone')}
             </label>
             <input
               type="tel"
@@ -146,16 +132,16 @@ export default function EditProfile({ onBack, onSave, currentUser }) {
               value={formData.telephone}
               onChange={handleChange}
               style={styles.input}
-              placeholder={t.phonePlaceholder}
+              placeholder={t('editProfile.phonePlaceholder')}
             />
           </div>
 
           <div style={styles.actionRow}>
             <button type="button" style={styles.cancelBtn} onClick={onBack}>
-              <X size={18} /> {t.cancel}
+              <X size={18} /> {t('editProfile.cancel')}
             </button>
             <button type="submit" style={styles.saveBtn}>
-              <Save size={18} /> {t.save}
+              <Save size={18} /> {t('editProfile.save')}
             </button>
           </div>
         </form>
