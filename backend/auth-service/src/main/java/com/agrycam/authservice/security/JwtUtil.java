@@ -26,8 +26,9 @@ public class JwtUtil {
         @Value("${jwt.expiration-ms}") long expirationMs
     ) {
         // Build the SecretKey using HMAC-SHA key generator from UTF-8 bytes.
-        // The secret is "AgryCamSecuriseCleJWT2026UniversiteDschang" which is 41 characters (328 bits),
-        // meeting the requirement for HS256 (minimum 256 bits).
+        // jwt.secret comes from the JWT_SECRET environment variable (no default —
+        // see README). It must be at least 32 bytes (256 bits) to meet the HS256
+        // minimum key length requirement.
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
     }

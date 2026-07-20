@@ -11,3 +11,27 @@ d'origine avant validation.
 Une fois les corrections validées ici, elles seront reportées vers les
 dépôts d'origine (ou ce dépôt deviendra la référence, selon décision de
 l'équipe).
+
+## Variables d'environnement obligatoires (backend)
+
+Les microservices ne définissent plus de valeur par défaut pour les
+secrets : il faut désormais exporter ces variables d'environnement
+avant de lancer chaque service (local, CI ou production), sinon le
+démarrage échouera.
+
+- `JWT_SECRET` — requis par tous les microservices (auth, utilisateur,
+  produit, commande, paiement, certification, signalement,
+  notification, message, avis).
+- `INTERNAL_SERVICE_SECRET` — requis par `auth-service` et
+  `utilisateur-service` (doit être la même valeur dans les deux).
+
+Générer une valeur aléatoire suffisamment longue, par exemple :
+
+```bash
+openssl rand -base64 48
+```
+
+Ne jamais committer ces valeurs dans le dépôt (application.properties,
+docker-compose, etc.) : elles doivent uniquement exister dans
+l'environnement d'exécution (variables d'environnement, secrets du
+gestionnaire de déploiement, etc.).

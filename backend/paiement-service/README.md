@@ -26,7 +26,7 @@ Les configurations sensibles et les URL d'intégration inter-services doivent ê
 | `DATABASE_URL` | URL JDBC complète de la base PostgreSQL (harmonisé avec les autres microservices AgryCam) | `jdbc:postgresql://localhost:5432/paiement_db` |
 | `DATABASE_USERNAME` | Nom d'utilisateur de la base de données | `postgres` |
 | `DATABASE_PASSWORD` | Mot de passe de la base de données | `2026` |
-| `JWT_SECRET` | Clé secrète partagée d'authentification JWT d'AgryCam — **doit être identique dans tous les microservices**, sinon ce service rejette silencieusement les tokens valides émis par `auth-service` | `AgryCamSecuriseCleJWT2026UniversiteDschang` |
+| `JWT_SECRET` | Clé secrète partagée d'authentification JWT d'AgryCam — **doit être identique dans tous les microservices**, sinon ce service rejette silencieusement les tokens valides émis par `auth-service`. **Obligatoire, aucune valeur par défaut** | *(à générer, ex. `openssl rand -base64 48`)* |
 | `SIMIZ_SECRET_KEY` | Clé secrète d'API Simiz Sandbox — optionnelle en local (le service bascule sur une simulation si absente ou si l'appel échoue), **obligatoire** pour de vrais paiements | *Vide par défaut* |
 | `SIMIZ_PUBLIC_KEY` | Clé publique d'API Simiz Sandbox | *Vide par défaut* |
 | `FRONTEND_URL` | URL du frontend AgryCam (pas de ce service) — sert à construire les URLs de retour Simiz (`successUrl`/`cancelUrl`) vers lesquelles le client est redirigé après paiement | `http://localhost:3000` |

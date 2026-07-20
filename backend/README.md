@@ -60,7 +60,7 @@ Chaque service lit sa configuration depuis `application.properties`, avec des va
 | `DATABASE_URL` | URL JDBC de la base PostgreSQL du service | `jdbc:postgresql://localhost:5432/<nom>_db` |
 | `DATABASE_USERNAME` | Utilisateur PostgreSQL | `postgres` |
 | `DATABASE_PASSWORD` | Mot de passe PostgreSQL | `2026` |
-| `JWT_SECRET` | Secret partagé pour signer/valider les tokens JWT | `AgryCamSecuriseCleJWT2026UniversiteDschang` |
+| `JWT_SECRET` | Secret partagé pour signer/valider les tokens JWT (**obligatoire, aucune valeur par défaut** — voir README racine) | *(à générer, ex. `openssl rand -base64 48`)* |
 | `JWT_EXPIRATION` / `JWT_EXPIRATION_MS` | Durée de validité du token (ms) | `86400000` |
 | `UTILISATEUR_SERVICE_URL` | URL de `utilisateur-service` | `http://localhost:8081` |
 | `PRODUIT_SERVICE_URL` | URL de `produit-service` | `http://localhost:8082` |
