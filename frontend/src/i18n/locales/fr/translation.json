@@ -117,5 +117,24 @@
     "client": "Client",
     "date": "Date",
     "amount": "Montant"
+  },
+  "signalement": {
+    "motifs": [
+      "Produit non conforme",
+      "Arnaque / Fausse description",
+      "Comportement inapproprié",
+      "Retard de livraison",
+      "Autre"
+    ],
+    "selectMotif": "Veuillez sélectionner un motif",
+    "unknownProduct": "Produit inconnu",
+    "reportProblem": "Signaler un problème",
+    "product": "Produit",
+    "motifLabel": "Motif *",
+    "selectPlaceholder": "-- Sélectionnez --",
+    "comment": "Commentaire (optionnel)",
+    "commentPlaceholder": "Décrivez précisément le problème...",
+    "cancel": "Annuler",
+    "send": "Envoyer le signalement"
   }
 }

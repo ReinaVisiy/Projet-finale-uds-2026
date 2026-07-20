@@ -117,5 +117,24 @@
     "client": "Client",
     "date": "Date",
     "amount": "Amount"
+  },
+  "signalement": {
+    "motifs": [
+      "Non-compliant product",
+      "Scam / False description",
+      "Inappropriate behavior",
+      "Late delivery",
+      "Other"
+    ],
+    "selectMotif": "Please select a reason",
+    "unknownProduct": "Unknown product",
+    "reportProblem": "Report a problem",
+    "product": "Product",
+    "motifLabel": "Reason *",
+    "selectPlaceholder": "-- Select --",
+    "comment": "Comment (optional)",
+    "commentPlaceholder": "Describe the problem precisely...",
+    "cancel": "Cancel",
+    "send": "Send report"
   }
 }

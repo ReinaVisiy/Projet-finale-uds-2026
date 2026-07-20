@@ -1,37 +1,21 @@
 // src/components/SignalementModal.jsx
 import React, { useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    motifs: ['Produit non conforme', 'Arnaque / Fausse description', 'Comportement inapproprié', 'Retard de livraison', 'Autre'],
-    selectMotif: 'Veuillez sélectionner un motif', unknownProduct: 'Produit inconnu',
-    reportProblem: 'Signaler un problème', product: 'Produit', motifLabel: 'Motif *',
-    selectPlaceholder: '-- Sélectionnez --', comment: 'Commentaire (optionnel)',
-    commentPlaceholder: 'Décrivez précisément le problème...', cancel: 'Annuler', send: 'Envoyer le signalement',
-  },
-  en: {
-    motifs: ['Non-compliant product', 'Scam / False description', 'Inappropriate behavior', 'Late delivery', 'Other'],
-    selectMotif: 'Please select a reason', unknownProduct: 'Unknown product',
-    reportProblem: 'Report a problem', product: 'Product', motifLabel: 'Reason *',
-    selectPlaceholder: '-- Select --', comment: 'Comment (optional)',
-    commentPlaceholder: 'Describe the problem precisely...', cancel: 'Cancel', send: 'Send report',
-  },
-};
 
 export default function SignalementModal({ product, onClose, onSubmit }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [motif, setMotif] = useState('');
   const [commentaire, setCommentaire] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!motif) { alert(t.selectMotif); return; }
+    if (!motif) { alert(t('signalement.selectMotif')); return; }
     if (onSubmit) {
       onSubmit({
         type: 'produit',
-        cible: product?.name || product?.nom || t.unknownProduct,
+        cible: product?.name || product?.nom || t('signalement.unknownProduct'),
         motif,
         commentaire,
         date: new Date().toISOString(),
@@ -46,32 +30,32 @@ export default function SignalementModal({ product, onClose, onSubmit }) {
       <div style={styles.modal} onClick={e => e.stopPropagation()}>
         <div style={styles.header}>
           <h3 style={styles.title}>
-            <AlertTriangle size={20} color="#e07a5f" /> {t.reportProblem}
+            <AlertTriangle size={20} color="#e07a5f" /> {t('signalement.reportProblem')}
           </h3>
           <button style={styles.closeBtn} onClick={onClose}><X size={18} /></button>
         </div>
-        <p style={styles.subtitle}>{t.product} : <strong>{product?.name || product?.nom}</strong></p>
+        <p style={styles.subtitle}>{t('signalement.product')} : <strong>{product?.name || product?.nom}</strong></p>
         <form onSubmit={handleSubmit}>
           <div style={styles.field}>
-            <label style={styles.label}>{t.motifLabel}</label>
+            <label style={styles.label}>{t('signalement.motifLabel')}</label>
             <select value={motif} onChange={(e) => setMotif(e.target.value)} style={styles.select}>
-              <option value="">{t.selectPlaceholder}</option>
-              {t.motifs.map(m => <option key={m} value={m}>{m}</option>)}
+              <option value="">{t('signalement.selectPlaceholder')}</option>
+              {t('signalement.motifs', { returnObjects: true }).map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
           <div style={styles.field}>
-            <label style={styles.label}>{t.comment}</label>
+            <label style={styles.label}>{t('signalement.comment')}</label>
             <textarea
               style={styles.textarea}
               rows="3"
-              placeholder={t.commentPlaceholder}
+              placeholder={t('signalement.commentPlaceholder')}
               value={commentaire}
               onChange={(e) => setCommentaire(e.target.value)}
             />
           </div>
           <div style={styles.actions}>
-            <button type="button" style={styles.cancelBtn} onClick={onClose}>{t.cancel}</button>
-            <button type="submit" style={styles.submitBtn}>{t.send}</button>
+            <button type="button" style={styles.cancelBtn} onClick={onClose}>{t('signalement.cancel')}</button>
+            <button type="submit" style={styles.submitBtn}>{t('signalement.send')}</button>
           </div>
         </form>
       </div>
