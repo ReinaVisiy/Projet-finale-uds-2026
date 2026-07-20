@@ -32,6 +32,10 @@ public class Commande {
 
     private LocalDateTime dateCommande;
 
+    // Renseignee lorsque le statut passe a EXPEDIEE : sert de point de
+    // depart au minuteur d'auto-confirmation de 72h (cf. LivraisonScheduler).
+    private LocalDateTime dateExpedition;
+
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LigneCommande> lignesCommande = new ArrayList<>();
 
@@ -85,6 +89,14 @@ public class Commande {
 
     public void setDateCommande(LocalDateTime dateCommande) {
         this.dateCommande = dateCommande;
+    }
+
+    public LocalDateTime getDateExpedition() {
+        return dateExpedition;
+    }
+
+    public void setDateExpedition(LocalDateTime dateExpedition) {
+        this.dateExpedition = dateExpedition;
     }
 
     public List<LigneCommande> getLignesCommande() {

@@ -5,6 +5,7 @@ import com.agrycam.commande.model.StatutCommande;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -18,4 +19,8 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
     List<Commande> findByProducteurId(Long producteurId);
 
     long countByStatut(StatutCommande statut);
+
+    // Commandes expediees depuis plus de 72h, encore en attente de
+    // confirmation client : cibles du job d'auto-confirmation.
+    List<Commande> findByStatutAndDateExpeditionBefore(StatutCommande statut, LocalDateTime seuil);
 }

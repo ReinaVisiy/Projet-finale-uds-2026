@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -205,6 +206,9 @@ public class CommandeService {
                 validerTransition(commande, nouveauStatut, uid, estProducteur);
             }
             commande.setStatut(nouveauStatut);
+            if (nouveauStatut == StatutCommande.EXPEDIEE) {
+                commande.setDateExpedition(java.time.LocalDateTime.now());
+            }
             Commande sauvegardee = commandeRepository.save(commande);
 
             // Declenche la liberation du sequestre vers le solde disponible
@@ -263,6 +267,31 @@ public class CommandeService {
     @Transactional
     public boolean annulerCommande(Long id, Long uid, boolean estAdmin) {
         return updateStatutCommande(id, StatutCommande.ANNULEE, uid, estAdmin, false).isPresent();
+    }
+
+    /**
+     * Auto-confirme la livraison des commandes EXPEDIEE depuis plus de 72h
+     * et pour lesquelles le client n'a pas confirme manuellement. Appelee
+     * periodiquement par LivraisonScheduler.
+     * Reutilise updateStatutCommande en mode admin (uid=null, estAdmin=true)
+     * pour beneficier du meme court-circuit systeme que paiement-service
+     * (et donc du meme declenchement de liberation du sequestre).
+     * NOTE : ne verifie pas encore l'absence de litige ouvert (l'entite
+     * Litige n'existe pas encore, cf. etape suivante du plan) ; a
+     * completer des qu'elle sera disponible.
+     * @return le nombre de commandes auto-confirmees.
+     */
+    @Transactional
+    public int autoConfirmerLivraisonsExpirees() {
+        LocalDateTime seuil = LocalDateTime.now().minusHours(72);
+        List<Commande> commandesExpirees = commandeRepository.findByStatutAndDateExpeditionBefore(StatutCommande.EXPEDIEE, seuil);
+
+        int compteur = 0;
+        for (Commande commande : commandesExpirees) {
+            updateStatutCommande(commande.getId(), StatutCommande.LIVREE, null, true, false);
+            compteur++;
+        }
+        return compteur;
     }
 
     /**
