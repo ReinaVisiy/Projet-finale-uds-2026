@@ -162,5 +162,40 @@
     "by": "by",
     "resolve": "Resolve",
     "reject": "Reject"
+  },
+  "orderManagementAdmin": {
+    "back": "Back",
+    "title": "Order management",
+    "totalOrders": "order(s) total",
+    "noOrders": "No orders recorded.",
+    "order": "Order",
+    "client": "Client",
+    "amount": "Amount",
+    "status": "Status",
+    "date": "Date",
+    "action": "Action",
+    "pending": "Pending",
+    "view": "View"
+  },
+  "login": {
+    "fillFields": "Please fill in all fields",
+    "wrongCreds": "Incorrect email or password.",
+    "login": "Login",
+    "accessSpace": "Access your AgroMarket space",
+    "client": "🛒 Client",
+    "vendeur": "🌾 Vendor",
+    "email": "Email address",
+    "emailPlaceholder": "e.g. raviel@email.com",
+    "password": "Password",
+    "passwordPlaceholder": "Your password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "loggingIn": "Logging in...",
+    "logIn": "Log in",
+    "notRegistered": "Not registered yet?",
+    "createAccount": "Create a free account",
+    "secure": "🔒 SE Secured",
+    "gdpr": "📋 GDPR Compliant",
+    "certified": "✅ Agri Certified"
   }
 }

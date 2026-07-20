@@ -1,28 +1,8 @@
 // src/components/LoginPage.jsx
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    fillFields: 'Veuillez remplir tous les champs', wrongCreds: 'Email ou mot de passe incorrect.',
-    login: 'Connexion', accessSpace: 'Accédez à votre espace AgroMarket',
-    client: '🛒 Client', vendeur: '🌾 Vendeur', email: 'Adresse e-mail', emailPlaceholder: 'ex: raviel@email.com',
-    password: 'Mot de passe', passwordPlaceholder: 'Votre mot de passe', rememberMe: 'Se souvenir de moi',
-    forgotPassword: 'Mot de passe oublié ?', loggingIn: 'Connexion...', logIn: 'Se connecter',
-    notRegistered: 'Pas encore inscrit ?', createAccount: 'Créer un compte gratuit',
-    secure: '🔒 S.E. Sécurisé', gdpr: '📋 RGPD Contrôle', certified: '✅ Certifié Agri',
-  },
-  en: {
-    fillFields: 'Please fill in all fields', wrongCreds: 'Incorrect email or password.',
-    login: 'Login', accessSpace: 'Access your AgroMarket space',
-    client: '🛒 Client', vendeur: '🌾 Vendor', email: 'Email address', emailPlaceholder: 'e.g. raviel@email.com',
-    password: 'Password', passwordPlaceholder: 'Your password', rememberMe: 'Remember me',
-    forgotPassword: 'Forgot password?', loggingIn: 'Logging in...', logIn: 'Log in',
-    notRegistered: "Not registered yet?", createAccount: 'Create a free account',
-    secure: '🔒 SE Secured', gdpr: '📋 GDPR Compliant', certified: '✅ Agri Certified',
-  },
-};
 
 export default function LoginPage({
   onLoginSuccess,
@@ -31,7 +11,7 @@ export default function LoginPage({
   onNavigateToRecovery,
   onNavigateToRegister,
 }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('client'); // 'client' ou 'vendeur'
@@ -46,7 +26,7 @@ export default function LoginPage({
     setLoading(true);
 
     if (!email.trim() || !password.trim()) {
-      setError(t.fillFields);
+      setError(t('login.fillFields'));
       setLoading(false);
       return;
     }
@@ -55,7 +35,7 @@ export default function LoginPage({
       const user = await onValidateLogin(email, password, role);
       onLoginSuccess(user);
     } catch (err) {
-      setError(err.message || t.wrongCreds);
+      setError(err.message || t('login.wrongCreds'));
     } finally {
       setLoading(false);
     }
@@ -66,8 +46,8 @@ export default function LoginPage({
       <div style={styles.card}>
         <div style={styles.header}>
           <div style={styles.logo}>🌿</div>
-          <h1 style={styles.title}>{t.login}</h1>
-          <p style={styles.subtitle}>{t.accessSpace}</p>
+          <h1 style={styles.title}>{t('login.login')}</h1>
+          <p style={styles.subtitle}>{t('login.accessSpace')}</p>
         </div>
 
         {infoMessage && (
@@ -87,27 +67,27 @@ export default function LoginPage({
         {/* Choix du rôle */}
         <div style={styles.roleRow}>
           <button type="button" style={{ ...styles.roleBtn, ...(role === 'client' ? styles.roleBtnActive : {}) }} onClick={() => setRole('client')}>
-            {t.client}
+            {t('login.client')}
           </button>
           <button type="button" style={{ ...styles.roleBtn, ...(role === 'vendeur' ? styles.roleBtnActiveGreen : {}) }} onClick={() => setRole('vendeur')}>
-            {t.vendeur}
+            {t('login.vendeur')}
           </button>
         </div>
 
         <form style={styles.form} onSubmit={handleSubmit}>
           <div style={styles.field}>
-            <label style={styles.label}>{t.email}</label>
+            <label style={styles.label}>{t('login.email')}</label>
             <div style={styles.inputWrap}>
               <Mail size={18} color="#6c757d" />
-              <input type="email" placeholder={t.emailPlaceholder} style={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input type="email" placeholder={t('login.emailPlaceholder')} style={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
           </div>
 
           <div style={styles.field}>
-            <label style={styles.label}>{t.password}</label>
+            <label style={styles.label}>{t('login.password')}</label>
             <div style={styles.inputWrap}>
               <Lock size={18} color="#6c757d" />
-              <input type={showPassword ? 'text' : 'password'} placeholder={t.passwordPlaceholder} style={styles.input} value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input type={showPassword ? 'text' : 'password'} placeholder={t('login.passwordPlaceholder')} style={styles.input} value={password} onChange={(e) => setPassword(e.target.value)} required />
               <button type="button" style={styles.eyeBtn} onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <EyeOff size={18} color="#6c757d" /> : <Eye size={18} color="#6c757d" />}
               </button>
@@ -117,29 +97,29 @@ export default function LoginPage({
           <div style={styles.optionsRow}>
             <label style={styles.rememberLabel}>
               <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} style={styles.checkbox} />
-              {t.rememberMe}
+              {t('login.rememberMe')}
             </label>
-            <button type="button" style={styles.forgotLink} onClick={onNavigateToRecovery}>{t.forgotPassword}</button>
+            <button type="button" style={styles.forgotLink} onClick={onNavigateToRecovery}>{t('login.forgotPassword')}</button>
           </div>
 
           <button type="submit" style={{ ...styles.submitBtn, opacity: loading ? 0.7 : 1 }} disabled={loading}>
-            {loading ? t.loggingIn : t.logIn} {!loading && <ArrowRight size={18} />}
+            {loading ? t('login.loggingIn') : t('login.logIn')} {!loading && <ArrowRight size={18} />}
           </button>
         </form>
 
         <div style={styles.registerRow}>
           <p style={styles.registerText}>
-            {t.notRegistered}{' '}
+            {t('login.notRegistered')}{' '}
             <button style={styles.registerLink} onClick={onNavigateToRegister}>
-              {t.createAccount}
+              {t('login.createAccount')}
             </button>
           </p>
         </div>
 
         <div style={styles.footer}>
-          <span style={styles.footerBadge}>{t.secure}</span>
-          <span style={styles.footerBadge}>{t.gdpr}</span>
-          <span style={styles.footerBadge}>{t.certified}</span>
+          <span style={styles.footerBadge}>{t('login.secure')}</span>
+          <span style={styles.footerBadge}>{t('login.gdpr')}</span>
+          <span style={styles.footerBadge}>{t('login.certified')}</span>
         </div>
       </div>
     </div>

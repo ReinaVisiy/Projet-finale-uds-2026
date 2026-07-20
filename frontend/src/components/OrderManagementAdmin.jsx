@@ -1,27 +1,15 @@
 // src/components/OrderManagementAdmin.jsx
 import React from 'react';
 import { ArrowLeft, Eye } from 'lucide-react';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    back: 'Retour', title: 'Gestion des commandes', totalOrders: 'commande(s) au total',
-    noOrders: 'Aucune commande enregistrée.', order: 'Commande', client: 'Client', amount: 'Montant',
-    status: 'Statut', date: 'Date', action: 'Action', pending: 'En attente', view: 'Voir',
-  },
-  en: {
-    back: 'Back', title: 'Order management', totalOrders: 'order(s) total',
-    noOrders: 'No orders recorded.', order: 'Order', client: 'Client', amount: 'Amount',
-    status: 'Status', date: 'Date', action: 'Action', pending: 'Pending', view: 'View',
-  },
-};
 
 export default function OrderManagementAdmin({
   ordersData = [],   // ← Valeur par défaut pour éviter l'erreur
   onViewOrder,
   onBack,
 }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   // Vérification de sécurité supplémentaire
   const orders = Array.isArray(ordersData) ? ordersData : [];
 
@@ -29,27 +17,27 @@ export default function OrderManagementAdmin({
     <div style={styles.container}>
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={onBack}>
-          <ArrowLeft size={20} /> {t.back}
+          <ArrowLeft size={20} /> {t('orderManagementAdmin.back')}
         </button>
-        <h1 style={styles.title}>{t.title}</h1>
-        <p style={styles.subtitle}>{orders.length} {t.totalOrders}</p>
+        <h1 style={styles.title}>{t('orderManagementAdmin.title')}</h1>
+        <p style={styles.subtitle}>{orders.length} {t('orderManagementAdmin.totalOrders')}</p>
       </div>
 
       {orders.length === 0 ? (
         <div style={styles.emptyState}>
-          <p>{t.noOrders}</p>
+          <p>{t('orderManagementAdmin.noOrders')}</p>
         </div>
       ) : (
         <div style={styles.tableWrapper}>
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>{t.order}</th>
-                <th style={styles.th}>{t.client}</th>
-                <th style={styles.th}>{t.amount}</th>
-                <th style={styles.th}>{t.status}</th>
-                <th style={styles.th}>{t.date}</th>
-                <th style={styles.th}>{t.action}</th>
+                <th style={styles.th}>{t('orderManagementAdmin.order')}</th>
+                <th style={styles.th}>{t('orderManagementAdmin.client')}</th>
+                <th style={styles.th}>{t('orderManagementAdmin.amount')}</th>
+                <th style={styles.th}>{t('orderManagementAdmin.status')}</th>
+                <th style={styles.th}>{t('orderManagementAdmin.date')}</th>
+                <th style={styles.th}>{t('orderManagementAdmin.action')}</th>
               </tr>
             </thead>
             <tbody>
@@ -64,7 +52,7 @@ export default function OrderManagementAdmin({
                       backgroundColor: order.status === 'Livrée' ? '#e9f5ee' : order.status === 'En livraison' ? '#fff3e0' : '#f1f3f5',
                       color: order.status === 'Livrée' ? '#2d6a4f' : order.status === 'En livraison' ? '#f5b041' : '#6c757d',
                     }}>
-                      {order.status || t.pending}
+                      {order.status || t('orderManagementAdmin.pending')}
                     </span>
                   </td>
                   <td style={styles.td}>{order.date}</td>
@@ -73,7 +61,7 @@ export default function OrderManagementAdmin({
                       style={styles.viewBtn}
                       onClick={() => onViewOrder && onViewOrder(order.id)}
                     >
-                      <Eye size={16} /> {t.view}
+                      <Eye size={16} /> {t('orderManagementAdmin.view')}
                     </button>
                   </td>
                 </tr>
