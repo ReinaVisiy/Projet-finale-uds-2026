@@ -277,7 +277,16 @@
     "product": "Product",
     "qty": "Qty",
     "unitPrice": "Unit price",
-    "total": "Total"
+    "total": "Total",
+    "confirmReception": "Confirm reception",
+    "confirmReceptionInProgress": "Confirming...",
+    "confirmReceptionError": "Failed to confirm reception.",
+    "cancelOrder": "Cancel order",
+    "cancelOrderInProgress": "Cancelling...",
+    "cancelOrderError": "Failed to cancel the order.",
+    "cancelConfirmTitle": "Cancel order",
+    "cancelConfirmMsg": "Are you sure you want to cancel order",
+    "cancelConfirmBtn": "Yes, cancel"
   },
   "register": {
     "firstNameRequired": "First name is required",

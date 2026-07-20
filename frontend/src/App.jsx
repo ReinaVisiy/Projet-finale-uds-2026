@@ -919,6 +919,14 @@ export default function App() {
         return <ClientOrders
           orders={mesCommandes}
           onBackHome={() => navigate('home')}
+          onConfirmReception={async (orderId) => {
+            await commandeApi.updateStatutCommande(orderId, 'LIVREE');
+            await chargerMesCommandes();
+          }}
+          onCancelOrder={async (orderId) => {
+            await commandeApi.annulerCommande(orderId);
+            await chargerMesCommandes();
+          }}
         />;
       case 'purchases':
         return <ClientPurchases

@@ -1,12 +1,47 @@
  // src/components/ClientOrders.jsx
 import React, { useState } from 'react';
-import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp, ThumbsUp, Ban } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import ConfirmDialog from './ConfirmDialog';
 
+// Statuts pour lesquels le client peut encore annuler (avant EXPEDIEE,
+// cf. section 2 du cahier des charges — le backend refait de toute façon
+// cette vérification, ceci ne fait que masquer le bouton au bon moment).
+const STATUTS_ANNULABLES = ['En attente', 'Validée', 'En préparation'];
 
-export default function ClientOrders({ orders, onBackHome }) {
+export default function ClientOrders({ orders, onBackHome, onConfirmReception, onCancelOrder }) {
   const { t } = useTranslation();
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [confirmingOrderId, setConfirmingOrderId] = useState(null);
+  const [cancelingOrderId, setCancelingOrderId] = useState(null);
+  const [orderToCancel, setOrderToCancel] = useState(null); // order | null
+  const [actionError, setActionError] = useState('');
+
+  const handleConfirmReception = async (order) => {
+    setActionError('');
+    setConfirmingOrderId(order.id);
+    try {
+      await onConfirmReception(order.id);
+    } catch (err) {
+      setActionError(err?.message || t('clientOrders.confirmReceptionError'));
+    } finally {
+      setConfirmingOrderId(null);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!orderToCancel) return;
+    setActionError('');
+    setCancelingOrderId(orderToCancel.id);
+    try {
+      await onCancelOrder(orderToCancel.id);
+    } catch (err) {
+      setActionError(err?.message || t('clientOrders.cancelOrderError'));
+    } finally {
+      setCancelingOrderId(null);
+      setOrderToCancel(null);
+    }
+  };
 
   const getStatusStyle = (status) => {
     if (status === 'Livrée') return { color: '#2d6a4f', bg: '#e9f5ee', icon: <CheckCircle size={16} color="#2d6a4f" /> };
@@ -23,6 +58,14 @@ export default function ClientOrders({ orders, onBackHome }) {
 
   return (
     <div style={styles.container}>
+      <ConfirmDialog
+        open={!!orderToCancel}
+        title={t('clientOrders.cancelConfirmTitle')}
+        message={orderToCancel ? `${t('clientOrders.cancelConfirmMsg')} #${orderToCancel.id} ?` : ''}
+        confirmLabel={t('clientOrders.cancelConfirmBtn')}
+        onCancel={() => setOrderToCancel(null)}
+        onConfirm={handleCancelOrder}
+      />
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={onBackHome}>
           <ArrowLeft size={20} /> {t('clientOrders.back')}
@@ -31,6 +74,7 @@ export default function ClientOrders({ orders, onBackHome }) {
           <Package size={28} color="#2d6a4f" /> {t('clientOrders.myOrders')}
         </h1>
         <p style={styles.subtitle}>{orders.length} {t('clientOrders.ordersPlaced')}</p>
+        {actionError && <p style={styles.actionErrorBanner}>{actionError}</p>}
       </div>
 
       {orders.length === 0 ? (
@@ -111,6 +155,35 @@ export default function ClientOrders({ orders, onBackHome }) {
                             ))}
                           </tbody>
                         </table>
+                      </div>
+                    )}
+
+                    {(order.status === 'En livraison' || STATUTS_ANNULABLES.includes(order.status)) && (
+                      <div style={styles.orderActions}>
+                        {order.status === 'En livraison' && (
+                          <button
+                            style={styles.confirmBtn}
+                            disabled={confirmingOrderId === order.id}
+                            onClick={() => handleConfirmReception(order)}
+                          >
+                            <ThumbsUp size={16} />
+                            {confirmingOrderId === order.id
+                              ? t('clientOrders.confirmReceptionInProgress')
+                              : t('clientOrders.confirmReception')}
+                          </button>
+                        )}
+                        {STATUTS_ANNULABLES.includes(order.status) && (
+                          <button
+                            style={styles.cancelBtn}
+                            disabled={cancelingOrderId === order.id}
+                            onClick={() => setOrderToCancel(order)}
+                          >
+                            <Ban size={16} />
+                            {cancelingOrderId === order.id
+                              ? t('clientOrders.cancelOrderInProgress')
+                              : t('clientOrders.cancelOrder')}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -220,4 +293,25 @@ const styles = {
   },
   td: { padding: '8px 8px', borderBottom: '1px solid #f8f9fa', color: '#495057' },
   tr: { ':last-child td': { borderBottom: 'none' } },
+  actionErrorBanner: {
+    marginTop: '12px',
+    padding: '10px 14px',
+    backgroundColor: '#fdecea',
+    border: '1px solid #f5c2c7',
+    borderRadius: '10px',
+    color: '#b3261e',
+    fontSize: '13px',
+    fontWeight: '600',
+  },
+  orderActions: { display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' },
+  confirmBtn: {
+    display: 'flex', alignItems: 'center', gap: '8px',
+    padding: '10px 20px', backgroundColor: '#2d6a4f', color: '#ffffff',
+    border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer',
+  },
+  cancelBtn: {
+    display: 'flex', alignItems: 'center', gap: '8px',
+    padding: '10px 20px', backgroundColor: '#fdecea', color: '#b3261e',
+    border: '1px solid #f5c2c7', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer',
+  },
 };
