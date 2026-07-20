@@ -3,6 +3,29 @@
 # + api-gateway), chacun dans sa propre fenêtre PowerShell.
 # À exécuter depuis la racine du projet backend (agrycam-backend/).
 
+# IMPORTANT : Spring Boot ne charge JAMAIS automatiquement un fichier .env
+# (aucune dépendance dotenv dans les pom.xml). Le fichier .env n'est donc
+# qu'un modèle tant que ses variables ne sont pas explicitement exportées
+# dans l'environnement. On les charge ici, dans le process courant, avant
+# de lancer les microservices : chaque "Start-Process powershell" plus bas
+# hérite de l'environnement du process parent, donc JWT_SECRET,
+# INTERNAL_SERVICE_SECRET, DATABASE_PASSWORD, etc. seront bien visibles
+# par tous les services enfants.
+$EnvFile = Join-Path (Get-Location) ".env"
+if (Test-Path $EnvFile) {
+    Write-Host "Chargement des variables d'environnement depuis .env..." -ForegroundColor Yellow
+    Get-Content $EnvFile | ForEach-Object {
+        if ($_ -match '^\s*([^#][^=]*)=(.*)$') {
+            $nom = $Matches[1].Trim()
+            $valeur = $Matches[2].Trim()
+            [System.Environment]::SetEnvironmentVariable($nom, $valeur, "Process")
+        }
+    }
+} else {
+    Write-Host "ATTENTION : aucun fichier .env trouvé dans $((Get-Location).Path)." -ForegroundColor Red
+    Write-Host "Copiez .env.example vers .env et renseignez vos secrets avant de continuer." -ForegroundColor Red
+}
+
 # Ordre conseillé : eureka-server en tout premier (les autres services
 # s'enregistrent auprès de lui au démarrage), puis api-gateway (point
 # d'entrée unique du frontend), puis utilisateur-service et auth-service,
