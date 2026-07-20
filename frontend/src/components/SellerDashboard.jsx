@@ -10,65 +10,19 @@ import {
 import VendeurOrders from './VendeurOrders';
 import ConfirmDialog from './ConfirmDialog';
 import { certificationApi } from '../services/api';
-import { useDict } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const translations = {
-  fr: {
-    dashboard: 'Tableau de bord', salesHistory: 'Historique des ventes', myProducts: 'Mes produits',
-    stockAlerts: 'Alertes stock', myOrders: 'Mes commandes', myCertification: 'Ma certification',
-    notifications: 'Notifications', myProfile: 'Mon profil', logout: 'Déconnexion', myWorkspace: '🌿 Mon espace',
-    welcomeMsg: 'Bienvenue sur votre espace vendeur', certPendingBold: 'Votre demande de certification',
-    certPendingRest: "est en cours d'examen", certApproved: '✅ Votre compte est certifié',
-    certNoneBold: 'Obtenez votre certification', certNoneRest: 'pour gagner la confiance des clients',
-    start: 'Commencer →', products: 'Produits', orders: 'Commandes', totalRevenue: 'Revenu total',
-    criticalStock: 'Stock critique', monthlySales: 'Ventes mensuelles', recentOrders: 'Dernières commandes',
-    salesHistorySub: 'Suivi détaillé de vos transactions', order: 'Commande', client: 'Client',
-    amount: 'Montant', date: 'Date', status: 'Statut', noSales: 'Aucune vente',
-    productsOnline: 'produit(s) en ligne', addProduct: 'Ajouter un produit',
-    noProductsYet: "Vous n'avez pas encore de produits", addFirstProduct: 'Ajouter votre premier produit',
-    product: 'Produit', category: 'Catégorie', price: 'Prix', stock: 'Stock', actions: 'Actions',
-    notCategorized: 'Non catégorisé', available: '✅ Disponible', lowStock: '⚠️ Stock faible',
-    deleteConfirm: 'Supprimer', deletedSim: 'Produit supprimé (simulation)',
-    stockAlertsSub: 'produit(s) en stock critique', allStockOk: 'Tous vos produits ont un stock suffisant',
-    currentStock: 'Stock actuel', criticalThreshold: 'Seuil critique', action: 'Action',
-    restock: '{t.restock}', notifSub: "Restez informé de toute l'activité",
-    noRecentNotif: '{t.noRecentNotif}', myProfileSub: 'Gérez vos informations personnelles',
-    editProfile: '{t.editProfile}', changePassword: '{t.changePassword}',
-  },
-  en: {
-    dashboard: 'Dashboard', salesHistory: 'Sales history', myProducts: 'My products',
-    stockAlerts: 'Stock alerts', myOrders: 'My orders', myCertification: 'My certification',
-    notifications: 'Notifications', myProfile: 'My profile', logout: 'Log out', myWorkspace: '🌿 My space',
-    welcomeMsg: 'Welcome to your seller space', certPendingBold: 'Your certification request',
-    certPendingRest: 'is under review', certApproved: '✅ Your account is certified',
-    certNoneBold: 'Get certified', certNoneRest: "to earn your customers' trust",
-    start: 'Get started →', products: 'Products', orders: 'Orders', totalRevenue: 'Total revenue',
-    criticalStock: 'Critical stock', monthlySales: 'Monthly sales', recentOrders: 'Recent orders',
-    salesHistorySub: 'Detailed tracking of your transactions', order: 'Order', client: 'Client',
-    amount: 'Amount', date: 'Date', status: 'Status', noSales: 'No sales',
-    productsOnline: 'product(s) online', addProduct: 'Add a product',
-    noProductsYet: "You don't have any products yet", addFirstProduct: 'Add your first product',
-    product: 'Product', category: 'Category', price: 'Price', stock: 'Stock', actions: 'Actions',
-    notCategorized: 'Uncategorized', available: '✅ Available', lowStock: '⚠️ Low stock',
-    deleteConfirm: 'Delete', deletedSim: 'Product deleted (simulation)',
-    stockAlertsSub: 'product(s) with critical stock', allStockOk: 'All your products have sufficient stock',
-    currentStock: 'Current stock', criticalThreshold: 'Critical threshold', action: 'Action',
-    restock: 'Restock', notifSub: 'Stay informed of all activity',
-    noRecentNotif: 'No recent notifications', myProfileSub: 'Manage your personal information',
-    editProfile: 'Edit profile', changePassword: 'Change password',
-  },
-};
 
 function getMenuItems(t) {
   return [
-    { id: 'dashboard', label: t.dashboard, icon: <LayoutDashboard size={18} /> },
-    { id: 'sales', label: t.salesHistory, icon: <BarChart3 size={18} /> },
-    { id: 'products', label: t.myProducts, icon: <Package size={18} /> },
-    { id: 'stock', label: t.stockAlerts, icon: <AlertTriangle size={18} /> },
-    { id: 'orders', label: t.myOrders, icon: <ShoppingBag size={18} /> },
-    { id: 'certification', label: t.myCertification, icon: <Shield size={18} /> },
-    { id: 'notifications', label: t.notifications, icon: <Bell size={18} /> },
-    { id: 'profile', label: t.myProfile, icon: <User size={18} /> },
+    { id: 'dashboard', label: t('sellerDashboard.dashboard'), icon: <LayoutDashboard size={18} /> },
+    { id: 'sales', label: t('sellerDashboard.salesHistory'), icon: <BarChart3 size={18} /> },
+    { id: 'products', label: t('sellerDashboard.myProducts'), icon: <Package size={18} /> },
+    { id: 'stock', label: t('sellerDashboard.stockAlerts'), icon: <AlertTriangle size={18} /> },
+    { id: 'orders', label: t('sellerDashboard.myOrders'), icon: <ShoppingBag size={18} /> },
+    { id: 'certification', label: t('sellerDashboard.myCertification'), icon: <Shield size={18} /> },
+    { id: 'notifications', label: t('sellerDashboard.notifications'), icon: <Bell size={18} /> },
+    { id: 'profile', label: t('sellerDashboard.myProfile'), icon: <User size={18} /> },
   ];
 }
 
@@ -80,7 +34,7 @@ export default function SellerDashboard({
   adminOrders = [],
   onUpdateOrderStatus,
 }) {
-  const t = useDict(translations);
+  const { t } = useTranslation();
   const menuItems = getMenuItems(t);
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -138,52 +92,52 @@ export default function SellerDashboard({
   const renderDashboard = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>{t.dashboard}</h2>
-        <p style={styles.pageSubtitle}>{t.welcomeMsg}</p>
+        <h2 style={styles.pageTitle}>{t('sellerDashboard.dashboard')}</h2>
+        <p style={styles.pageSubtitle}>{t('sellerDashboard.welcomeMsg')}</p>
       </div>
 
       {certificationStatus === 'pending' && (
         <div style={styles.alertBanner}>
           <Clock size={20} color="#f5b041" />
-          <span><strong>{t.certPendingBold}</strong> {t.certPendingRest}</span>
+          <span><strong>{t('sellerDashboard.certPendingBold')}</strong> {t('sellerDashboard.certPendingRest')}</span>
         </div>
       )}
       {certificationStatus === 'approved' && (
         <div style={{ ...styles.alertBanner, backgroundColor: '#e9f5ee', borderColor: '#b7e4c7' }}>
           <CheckCircle size={20} color="#2d6a4f" />
-          <span><strong>{t.certApproved}</strong></span>
+          <span><strong>{t('sellerDashboard.certApproved')}</strong></span>
         </div>
       )}
       {certificationStatus === 'none' && (
         <div style={{ ...styles.alertBanner, backgroundColor: '#fffbea', borderColor: '#f5e4a0', cursor: 'pointer' }}
           onClick={() => onNavigate && onNavigate('certification')}>
           <Shield size={20} color="#f5b041" />
-          <span><strong>{t.certNoneBold}</strong> {t.certNoneRest}</span>
-          <span style={styles.alertLink}>{t.start}</span>
+          <span><strong>{t('sellerDashboard.certNoneBold')}</strong> {t('sellerDashboard.certNoneRest')}</span>
+          <span style={styles.alertLink}>{t('sellerDashboard.start')}</span>
         </div>
       )}
 
       <div style={styles.kpiGrid}>
         <div style={styles.kpiCard}>
           <div style={{ ...styles.kpiIcon, backgroundColor: '#e9f5ee' }}><Package size={20} color="#2d6a4f" /></div>
-          <div><p style={styles.kpiLabel}>{t.products}</p><p style={styles.kpiValue}>{totalProducts}</p></div>
+          <div><p style={styles.kpiLabel}>{t('sellerDashboard.products')}</p><p style={styles.kpiValue}>{totalProducts}</p></div>
         </div>
         <div style={styles.kpiCard}>
           <div style={{ ...styles.kpiIcon, backgroundColor: '#e9f5ee' }}><ShoppingBag size={20} color="#2d6a4f" /></div>
-          <div><p style={styles.kpiLabel}>{t.orders}</p><p style={styles.kpiValue}>{totalOrders}</p></div>
+          <div><p style={styles.kpiLabel}>{t('sellerDashboard.orders')}</p><p style={styles.kpiValue}>{totalOrders}</p></div>
         </div>
         <div style={styles.kpiCard}>
           <div style={{ ...styles.kpiIcon, backgroundColor: '#fff3e0' }}><DollarSign size={20} color="#f5b041" /></div>
-          <div><p style={styles.kpiLabel}>{t.totalRevenue}</p><p style={styles.kpiValue}>{totalRevenue.toLocaleString()} FCFA</p></div>
+          <div><p style={styles.kpiLabel}>{t('sellerDashboard.totalRevenue')}</p><p style={styles.kpiValue}>{totalRevenue.toLocaleString()} FCFA</p></div>
         </div>
         <div style={styles.kpiCard}>
           <div style={{ ...styles.kpiIcon, backgroundColor: '#fdf1ed' }}><AlertTriangle size={20} color="#e07a5f" /></div>
-          <div><p style={styles.kpiLabel}>{t.criticalStock}</p><p style={styles.kpiValue}>{lowStockItems.length}</p></div>
+          <div><p style={styles.kpiLabel}>{t('sellerDashboard.criticalStock')}</p><p style={styles.kpiValue}>{lowStockItems.length}</p></div>
         </div>
       </div>
 
       <div style={styles.chartCard}>
-        <h3 style={styles.chartTitle}>{t.monthlySales}</h3>
+        <h3 style={styles.chartTitle}>{t('sellerDashboard.monthlySales')}</h3>
         <div style={styles.chartArea}>
           {monthlyRevenue.map((val, i) => {
             const h = (val / maxRevenue) * 100;
@@ -198,7 +152,7 @@ export default function SellerDashboard({
       </div>
 
       <div style={styles.tableCard}>
-        <h3 style={styles.chartTitle}>{t.recentOrders}</h3>
+        <h3 style={styles.chartTitle}>{t('sellerDashboard.recentOrders')}</h3>
         {adminOrders.slice(-3).reverse().map(order => (
           <div key={order.id} style={styles.orderRow}>
             <span style={styles.orderId}>#{order.id}</span>
@@ -218,23 +172,23 @@ export default function SellerDashboard({
   const renderSalesHistory = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>{t.salesHistory}</h2>
-        <p style={styles.pageSubtitle}>{t.salesHistorySub}</p>
+        <h2 style={styles.pageTitle}>{t('sellerDashboard.salesHistory')}</h2>
+        <p style={styles.pageSubtitle}>{t('sellerDashboard.salesHistorySub')}</p>
       </div>
       <div style={styles.tableCard}>
         <table style={styles.table}>
           <thead>
             <tr>
-              <th style={styles.th}>{t.order}</th>
-              <th style={styles.th}>{t.client}</th>
-              <th style={styles.th}>{t.amount}</th>
-              <th style={styles.th}>{t.date}</th>
-              <th style={styles.th}>{t.status}</th>
+              <th style={styles.th}>{t('sellerDashboard.order')}</th>
+              <th style={styles.th}>{t('sellerDashboard.client')}</th>
+              <th style={styles.th}>{t('sellerDashboard.amount')}</th>
+              <th style={styles.th}>{t('sellerDashboard.date')}</th>
+              <th style={styles.th}>{t('sellerDashboard.status')}</th>
             </tr>
           </thead>
           <tbody>
             {adminOrders.length === 0 ? (
-              <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#adb5bd' }}>{t.noSales}</td></tr>
+              <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#adb5bd' }}>{t('sellerDashboard.noSales')}</td></tr>
             ) : (
               adminOrders.map(order => (
                 <tr key={order.id}>
@@ -261,38 +215,38 @@ export default function SellerDashboard({
   const renderProducts = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>{t.myProducts}</h2>
-        <p style={styles.pageSubtitle}>{vendeurProducts.length} {t.productsOnline}</p>
+        <h2 style={styles.pageTitle}>{t('sellerDashboard.myProducts')}</h2>
+        <p style={styles.pageSubtitle}>{vendeurProducts.length} {t('sellerDashboard.productsOnline')}</p>
         <button style={styles.actionBtn} onClick={() => onNavigate && onNavigate('add-product')}>
-          <Plus size={16} /> {t.addProduct}
+          <Plus size={16} /> {t('sellerDashboard.addProduct')}
         </button>
       </div>
       <div style={styles.tableCard}>
         {vendeurProducts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#adb5bd' }}>
             <Package size={48} color="#adb5bd" />
-            <p>{t.noProductsYet}</p>
+            <p>{t('sellerDashboard.noProductsYet')}</p>
             <button style={styles.actionBtn} onClick={() => onNavigate && onNavigate('add-product')}>
-              {t.addFirstProduct}
+              {t('sellerDashboard.addFirstProduct')}
             </button>
           </div>
         ) : (
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>{t.product}</th>
-                <th style={styles.th}>{t.category}</th>
-                <th style={styles.th}>{t.price}</th>
-                <th style={styles.th}>{t.stock}</th>
-                <th style={styles.th}>{t.status}</th>
-                <th style={styles.th}>{t.actions}</th>
+                <th style={styles.th}>{t('sellerDashboard.product')}</th>
+                <th style={styles.th}>{t('sellerDashboard.category')}</th>
+                <th style={styles.th}>{t('sellerDashboard.price')}</th>
+                <th style={styles.th}>{t('sellerDashboard.stock')}</th>
+                <th style={styles.th}>{t('sellerDashboard.status')}</th>
+                <th style={styles.th}>{t('sellerDashboard.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {vendeurProducts.map(p => (
                 <tr key={p.id}>
                   <td style={styles.td}>{p.name}</td>
-                  <td style={styles.td}>{p.category || t.notCategorized}</td>
+                  <td style={styles.td}>{p.category || t('sellerDashboard.notCategorized')}</td>
                   <td style={styles.td}>{p.price.toLocaleString()} FCFA</td>
                   <td style={styles.td}>{p.stock}</td>
                   <td style={styles.td}>
@@ -301,7 +255,7 @@ export default function SellerDashboard({
                       backgroundColor: p.stock > 10 ? '#e9f5ee' : '#fdf1ed',
                       color: p.stock > 10 ? '#2d6a4f' : '#e07a5f',
                     }}>
-                      {p.stock > 10 ? t.available : t.lowStock}
+                      {p.stock > 10 ? t('sellerDashboard.available') : t('sellerDashboard.lowStock')}
                     </span>
                   </td>
                   <td style={styles.td}>
@@ -326,23 +280,23 @@ export default function SellerDashboard({
   const renderStockAlerts = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>{t.stockAlerts}</h2>
-        <p style={styles.pageSubtitle}>{lowStockItems.length} {t.stockAlertsSub}</p>
+        <h2 style={styles.pageTitle}>{t('sellerDashboard.stockAlerts')}</h2>
+        <p style={styles.pageSubtitle}>{lowStockItems.length} {t('sellerDashboard.stockAlertsSub')}</p>
       </div>
       <div style={styles.tableCard}>
         {lowStockItems.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#2d6a4f' }}>
             <CheckCircle size={48} color="#2d6a4f" />
-            <p>{t.allStockOk}</p>
+            <p>{t('sellerDashboard.allStockOk')}</p>
           </div>
         ) : (
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>{t.product}</th>
-                <th style={styles.th}>{t.currentStock}</th>
-                <th style={styles.th}>{t.criticalThreshold}</th>
-                <th style={styles.th}>{t.action}</th>
+                <th style={styles.th}>{t('sellerDashboard.product')}</th>
+                <th style={styles.th}>{t('sellerDashboard.currentStock')}</th>
+                <th style={styles.th}>{t('sellerDashboard.criticalThreshold')}</th>
+                <th style={styles.th}>{t('sellerDashboard.action')}</th>
               </tr>
             </thead>
             <tbody>
@@ -353,7 +307,7 @@ export default function SellerDashboard({
                   <td style={styles.td}>10</td>
                   <td style={styles.td}>
                     <button style={styles.actionBtnSmall} onClick={() => onNavigate && onNavigate('add-product')}>
-                      {t.restock}
+                      {t('sellerDashboard.restock')}
                     </button>
                   </td>
                 </tr>
@@ -376,11 +330,11 @@ export default function SellerDashboard({
   const renderNotifications = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>{t.notifications}</h2>
-        <p style={styles.pageSubtitle}>{t.notifSub}</p>
+        <h2 style={styles.pageTitle}>{t('sellerDashboard.notifications')}</h2>
+        <p style={styles.pageSubtitle}>{t('sellerDashboard.notifSub')}</p>
       </div>
       <div style={styles.tableCard}>
-        <p style={{ color: '#adb5bd', textAlign: 'center', padding: '20px' }}>{t.noRecentNotif}</p>
+        <p style={{ color: '#adb5bd', textAlign: 'center', padding: '20px' }}>{t('sellerDashboard.noRecentNotif')}</p>
       </div>
     </>
   );
@@ -388,8 +342,8 @@ export default function SellerDashboard({
   const renderProfile = () => (
     <>
       <div style={styles.pageHeader}>
-        <h2 style={styles.pageTitle}>{t.myProfile}</h2>
-        <p style={styles.pageSubtitle}>{t.myProfileSub}</p>
+        <h2 style={styles.pageTitle}>{t('sellerDashboard.myProfile')}</h2>
+        <p style={styles.pageSubtitle}>{t('sellerDashboard.myProfileSub')}</p>
       </div>
       <div style={styles.profileCard}>
         <div style={styles.profilePhoto}>
@@ -407,10 +361,10 @@ export default function SellerDashboard({
           <p>{currentUser?.telephone}</p>
           <div style={styles.profileActions}>
             <button style={styles.actionBtnSmall} onClick={() => onNavigate && onNavigate('edit-profile')}>
-              {t.editProfile}
+              {t('sellerDashboard.editProfile')}
             </button>
             <button style={styles.actionBtnSmall} onClick={() => onNavigate && onNavigate('change-password')}>
-              {t.changePassword}
+              {t('sellerDashboard.changePassword')}
             </button>
           </div>
         </div>
@@ -435,12 +389,12 @@ export default function SellerDashboard({
     <div style={styles.wrapper}>
       <ConfirmDialog
         open={!!confirmDeleteProduct}
-        title={t.myWorkspace}
-        message={confirmDeleteProduct ? `${t.deleteConfirm} "${confirmDeleteProduct.name}" ?` : ''}
+        title={t('sellerDashboard.myWorkspace')}
+        message={confirmDeleteProduct ? `${t('sellerDashboard.deleteConfirm')} "${confirmDeleteProduct.name}" ?` : ''}
         onCancel={() => setConfirmDeleteProduct(null)}
         onConfirm={() => {
           setConfirmDeleteProduct(null);
-          alert(t.deletedSim);
+          alert(t('sellerDashboard.deletedSim'));
         }}
       />
       <aside style={{ ...styles.sidebar, width: sidebarOpen ? '250px' : '72px' }}>
@@ -448,7 +402,7 @@ export default function SellerDashboard({
           <button style={styles.toggleBtn} onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          {sidebarOpen && <span style={styles.brand}>{t.myWorkspace}</span>}
+          {sidebarOpen && <span style={styles.brand}>{t('sellerDashboard.myWorkspace')}</span>}
         </div>
         <nav style={styles.nav}>
           {menuItems.map(item => (
@@ -465,7 +419,7 @@ export default function SellerDashboard({
         <div style={styles.sidebarFooter}>
           <button style={styles.navItem} onClick={() => onLogout && onLogout()}>
             <LogOut size={18} />
-            {sidebarOpen && <span>{t.logout}</span>}
+            {sidebarOpen && <span>{t('sellerDashboard.logout')}</span>}
           </button>
         </div>
       </aside>

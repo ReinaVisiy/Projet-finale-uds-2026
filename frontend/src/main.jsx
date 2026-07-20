@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';  // <-- IMPORTANT
 import App from './App';
 import { LanguageProvider } from './context/LanguageContext';
+import './i18n';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
