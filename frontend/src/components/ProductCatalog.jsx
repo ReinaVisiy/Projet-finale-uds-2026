@@ -2,12 +2,48 @@
 import React, { useState, useMemo } from 'react';
 import { Search, ShoppingBag, Star, ArrowLeft } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
+import { correspondRecherche } from '../utils/produceSearch';
+import { useDict } from '../context/LanguageContext';
+
+const translations = {
+  fr: {
+    back: 'Retour',
+    title: 'Catalogue des produits',
+    subtitle: (n) => `${n} produits disponibles`,
+    searchPlaceholder: 'Rechercher un produit, une ferme ou une catégorie...',
+    reset: '✕ Réinitialiser',
+    all: 'Tous',
+    loading: 'Chargement des produits...',
+    loadError: (e) => `Impossible de charger le catalogue : ${e}`,
+    noResults: 'Aucun produit trouvé pour cette recherche',
+    seeAll: 'Voir tous les produits',
+    inStock: 'En stock',
+    lowStock: 'Stock faible',
+    addToCart: 'Ajouter au panier',
+  },
+  en: {
+    back: 'Back',
+    title: 'Product catalogue',
+    subtitle: (n) => `${n} products available`,
+    searchPlaceholder: 'Search for a product, a farm or a category...',
+    reset: '✕ Reset',
+    all: 'All',
+    loading: 'Loading products...',
+    loadError: (e) => `Unable to load the catalogue: ${e}`,
+    noResults: 'No product found for this search',
+    seeAll: 'See all products',
+    inStock: 'In stock',
+    lowStock: 'Low stock',
+    addToCart: 'Add to cart',
+  },
+};
 
 export default function ProductCatalog({
   onBack,
   onNavigateToProduct,
   onAddToCart,
 }) {
+  const t = useDict(translations);
   const { produits, categories, chargement, erreur } = useProduits();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,11 +58,12 @@ export default function ProductCatalog({
     }
 
     if (query.trim() !== '') {
-      const q = query.toLowerCase().trim();
+      // correspondRecherche() reconnaît aussi les équivalents FR/EN d'un
+      // même produit, donc la recherche fonctionne pareil dans les 2 langues.
       filtered = filtered.filter(p => {
-        if (p.name.toLowerCase().includes(q)) return true;
-        if (p.farm.toLowerCase().includes(q)) return true;
-        if (p.category.toLowerCase().includes(q)) return true;
+        if (correspondRecherche(p.name, query)) return true;
+        if (correspondRecherche(p.farm, query)) return true;
+        if (correspondRecherche(p.category, query)) return true;
         return false;
       });
     }
@@ -64,7 +101,7 @@ export default function ProductCatalog({
   if (chargement) {
     return (
       <div style={styles.container}>
-        <p style={styles.subtitle}>Chargement des produits...</p>
+        <p style={styles.subtitle}>{t.loading}</p>
       </div>
     );
   }
@@ -73,8 +110,8 @@ export default function ProductCatalog({
     return (
       <div style={styles.container}>
         <div style={styles.emptyState}>
-          <p style={styles.emptyText}>Impossible de charger le catalogue : {erreur}</p>
-          <button style={styles.emptyBtn} onClick={onBack}>Retour</button>
+          <p style={styles.emptyText}>{t.loadError(erreur)}</p>
+          <button style={styles.emptyBtn} onClick={onBack}>{t.back}</button>
         </div>
       </div>
     );
@@ -84,10 +121,10 @@ export default function ProductCatalog({
     <div style={styles.container}>
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={onBack}>
-          <ArrowLeft size={20} /> Retour
+          <ArrowLeft size={20} /> {t.back}
         </button>
-        <h1 style={styles.title}>Catalogue des produits</h1>
-        <p style={styles.subtitle}>{produits.length} produits disponibles</p>
+        <h1 style={styles.title}>{t.title}</h1>
+        <p style={styles.subtitle}>{t.subtitle(produits.length)}</p>
       </div>
 
       <div style={styles.searchWrapper}>
@@ -95,13 +132,13 @@ export default function ProductCatalog({
           <Search size={20} color="#6c757d" />
           <input
             type="text"
-            placeholder="Rechercher un produit, une ferme ou une catégorie..."
+            placeholder={t.searchPlaceholder}
             style={styles.searchInput}
             value={searchQuery}
             onChange={handleSearchChange}
           />
         </div>
-        <button style={styles.resetBtn} onClick={handleReset}>✕ Réinitialiser</button>
+        <button style={styles.resetBtn} onClick={handleReset}>{t.reset}</button>
       </div>
 
       <div style={styles.categoryFilters}>
@@ -112,7 +149,7 @@ export default function ProductCatalog({
           }}
           onClick={() => handleCategoryClick('all')}
         >
-          Tous ({counts.all})
+          {t.all} ({counts.all})
         </button>
         {categories.map(cat => (
           <button
@@ -130,8 +167,8 @@ export default function ProductCatalog({
 
       {displayedProducts.length === 0 ? (
         <div style={styles.emptyState}>
-          <p style={styles.emptyText}>Aucun produit trouvé pour cette recherche</p>
-          <button style={styles.emptyBtn} onClick={handleReset}>Voir tous les produits</button>
+          <p style={styles.emptyText}>{t.noResults}</p>
+          <button style={styles.emptyBtn} onClick={handleReset}>{t.seeAll}</button>
         </div>
       ) : (
         <div style={styles.productGrid}>
@@ -149,21 +186,35 @@ export default function ProductCatalog({
                 <p style={styles.prodFarm}>{prod.farm}</p>
                 <div style={styles.prodFooter}>
                   <div style={styles.stars}>
-                    {[1,2,3,4,5].map(i => <Star key={i} size={12} fill="#f5b041" color="#f5b041" />)}
+                    {[1,2,3,4,5].map(i => {
+                      // Reflète la vraie note moyenne (0 étoile remplie si le
+                      // produit n'a encore aucun avis), au lieu de 5 étoiles
+                      // factices toujours pleines.
+                      const note = prod.reviews > 0 ? Math.round(prod.rating || 0) : 0;
+                      const rempli = i <= note;
+                      return (
+                        <Star
+                          key={i}
+                          size={12}
+                          fill={rempli ? '#f5b041' : '#d9d9d9'}
+                          color={rempli ? '#f5b041' : '#d9d9d9'}
+                        />
+                      );
+                    })}
                   </div>
                   <span style={{
                     ...styles.stockBadge,
                     color: prod.stock ? '#2d6a4f' : '#e07a5f',
                     backgroundColor: prod.stock ? '#e9f5ee' : '#fdf1ed',
                   }}>
-                    {prod.stock ? 'En stock' : 'Stock faible'}
+                    {prod.stock ? t.inStock : t.lowStock}
                   </span>
                 </div>
                 <button
                   style={styles.addToCartBtn}
                   onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(prod); }}
                 >
-                  <ShoppingBag size={14} /> Ajouter au panier
+                  <ShoppingBag size={14} /> {t.addToCart}
                 </button>
               </div>
             </div>

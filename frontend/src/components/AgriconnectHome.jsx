@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ShoppingBag, Leaf, ShieldCheck, Truck, Star, ArrowRight, UserPlus, PackageSearch } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
+import { correspondRecherche } from '../utils/produceSearch';
 import { getStatsPubliques as getStatsUtilisateurs } from '../services/api/utilisateurApi';
 import { getStatsPubliques as getStatsCertifications } from '../services/api/certificationApi';
 import { getStatsPubliques as getStatsCommandes } from '../services/api/commandeApi';
@@ -193,14 +194,14 @@ export default function AgroMarketHome({
       setFilteredProducts(null);
       return;
     }
-    const q = query.toLowerCase().trim();
     const results = allProducts.filter(p => {
-      // Recherche par nom du produit
-      if (p.name.toLowerCase().includes(q)) return true;
-      // Recherche par nom de la ferme
-      if (p.farm.toLowerCase().includes(q)) return true;
-      // Recherche par nom complet de la catégorie
-      if (p.category.toLowerCase().includes(q)) return true;
+      // Recherche par nom du produit, nom de la ferme ou catégorie —
+      // correspondRecherche() reconnaît aussi les équivalents FR/EN
+      // (ex. "watermelon" retrouve un produit nommé "pastèque"), donc la
+      // recherche fonctionne pareil quelle que soit la langue de l'appli.
+      if (correspondRecherche(p.name, query)) return true;
+      if (correspondRecherche(p.farm, query)) return true;
+      if (correspondRecherche(p.category, query)) return true;
       return false;
     });
     setFilteredProducts(results);
