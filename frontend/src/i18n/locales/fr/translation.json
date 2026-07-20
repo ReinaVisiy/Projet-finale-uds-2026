@@ -949,5 +949,17 @@
     "orderImmediately": "Commander immédiatement",
     "orderToast": "✅ Commande d'urgence passée pour {{product}} ! Livraison sous 48h.",
     "orderAllToast": "🚀 {{count}} commandes d'urgence passées pour les stocks CRITIQUES !"
+  },
+  "paymentReturn": {
+    "pendingTitle": "Vérification du paiement en cours…",
+    "pendingText": "Nous confirmons votre paiement auprès de Simiz. Merci de patienter quelques instants.",
+    "successTitle": "Paiement confirmé !",
+    "successText": "Votre paiement a été validé avec succès. Merci pour votre confiance.",
+    "failedTitle": "Paiement non abouti",
+    "failedText": "Le paiement n'a pas pu être confirmé (échec ou session expirée). Vous pouvez réessayer depuis vos commandes.",
+    "errorTitle": "Erreur de vérification",
+    "errorGeneric": "Impossible de vérifier ce paiement pour le moment.",
+    "errorMissingId": "Identifiant de transaction manquant.",
+    "backToOrders": "Retour à mes commandes"
   }
 }

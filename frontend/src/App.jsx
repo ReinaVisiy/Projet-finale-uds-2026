@@ -34,6 +34,7 @@ import MyProducts from './components/MyProducts';
 import NotificationsCenter from './components/NotificationsCenter';
 import OrderDetailAdmin from './components/OrderDetailAdmin';
 import ChangePassword from './components/ChangePassword';
+import PaymentReturn from './components/PaymentReturn';
 import { authApi, utilisateurApi, produitApi, signalementApi, commandeApi, paiementApi, certificationApi, notificationApi, getSession } from './services/api';
 import { ROLE_FRONTEND_TO_BACKEND, joinNomComplet, splitNomComplet, mapProfileToFrontendUser } from './services/userMapping';
 import { mapCertificationPourAdmin } from './services/certificationMapping';
@@ -43,11 +44,37 @@ import { mapCommandePourAffichage, STATUT_FRANCAIS_TO_BACKEND } from './services
 import { mapNotificationPourAffichage, construireNotificationRequest } from './services/notificationMapping';
 
 export default function App() {
-  const [screen, setScreen] = useState('home');
+  // Détection du retour de paiement Simiz (successUrl/cancelUrl construits
+  // par paiement-service sur /pay/success ou /pay/cancel avec
+  // ?transactionId=..., cf. PaiementService#initierPaiement). Le serveur de
+  // dev Vite (et la config de déploiement SPA) redirige ces chemins vers
+  // index.html, donc App.jsx doit lire l'URL lui-même au montage.
+  const detecterEcranInitial = () => {
+    if (typeof window === 'undefined') return 'home';
+    const chemin = window.location.pathname;
+    return (chemin === '/pay/success' || chemin === '/pay/cancel') ? 'payment-return' : 'home';
+  };
+  const lireTransactionIdDepuisUrl = () => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('transactionId');
+  };
+
+  const [screen, setScreen] = useState(detecterEcranInitial);
+  const [paymentTransactionId] = useState(lireTransactionIdDepuisUrl);
   const [previousScreen, setPreviousScreen] = useState('home');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [selectedProfileClient, setSelectedProfileClient] = useState(null);
+
+  // Nettoie l'URL (chemin + query string) une fois le transactionId lu,
+  // pour qu'un rafraîchissement de page ne rejoue pas l'écran de retour.
+  useEffect(() => {
+    if (screen === 'payment-return' && typeof window !== 'undefined') {
+      window.history.replaceState({}, '', '/');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   // La langue est désormais gérée globalement par react-i18next (voir
   // src/i18n) — plus besoin d'état local ici ; chaque écran lit la langue
@@ -415,6 +442,7 @@ export default function App() {
           id: product.id,
           name: product.name,
           farm: product.farm || 'Producteur local',
+          producteurId: product.producteurId,
           price: product.price,
           image: product.image,
           quantity,
@@ -440,11 +468,14 @@ export default function App() {
   };
 
   // ===== VALIDATION DE COMMANDE (commande-service + paiement-service) =====
-  // Crée la vraie commande, puis le vrai paiement si le moyen choisi est
-  // supporté par paiement-service (ORANGE_MONEY / MOBILE_MONEY uniquement :
-  // il n'existe pas de valeur 'CARTE' côté backend, l'option carte a donc
-  // été retirée de ShoppingCart.jsx plutôt que d'envoyer un appel voué à
-  // échouer).
+  // Crée la vraie commande, puis initie un vrai paiement Simiz si le moyen
+  // choisi est supporté (ORANGE_MONEY / MOBILE_MONEY uniquement : il
+  // n'existe pas de valeur 'CARTE' côté backend, l'option carte a donc été
+  // retirée de ShoppingCart.jsx plutôt que d'envoyer un appel voué à échouer).
+  // Le vendeurId transmis à paiement-service est celui du premier article
+  // du panier : le modèle de données actuel (Commande/LigneCommande) ne
+  // permet pas encore de scinder une commande multi-producteurs en
+  // plusieurs paiements distincts.
   const handleCheckout = async ({ paymentMethod, paymentData } = {}) => {
     try {
       const lignesCommande = cartItems.map(item => ({
@@ -462,13 +493,26 @@ export default function App() {
         : null;
 
       if (methode) {
-        await paiementApi.creerPaiement({
-          commandeId: commande.id,
-          consommateurId: currentUser.id,
+        const vendeurId = cartItems[0]?.producteurId;
+        if (!vendeurId) {
+          throw new Error("Impossible d'identifier le vendeur pour ce paiement.");
+        }
+
+        const transaction = await paiementApi.initierPaiement({
+          typeReference: 'COMMANDE',
+          referenceId: commande.id,
+          vendeurId,
           montant: commande.montantTotal,
-          methode,
-          numeroPaiement: paymentData,
         });
+
+        setCartItems([]);
+
+        if (transaction?.simizCheckoutUrl) {
+          // Redirection vers la page de paiement Simiz : le client revient
+          // ensuite sur /pay/success ou /pay/cancel (cf. PaymentReturn).
+          window.location.href = transaction.simizCheckoutUrl;
+          return;
+        }
       }
 
       notifierAdmins('info', `Nouvelle commande #${commande.id} de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client'}`, '/admin/order-management-admin');
@@ -822,6 +866,11 @@ export default function App() {
           onDeleteProduct={handleDeleteProduct}
           onDuplicateProduct={handleDuplicateProduct}
           onBack={() => navigate('seller-dashboard')}
+        />;
+      case 'payment-return':
+        return <PaymentReturn
+          transactionId={paymentTransactionId}
+          onTermine={() => navigate(currentUser?.role === 'client' ? 'orders' : 'home')}
         />;
       case 'cart':
         return <ShoppingCart

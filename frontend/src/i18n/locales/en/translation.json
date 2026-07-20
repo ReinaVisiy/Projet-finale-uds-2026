@@ -949,5 +949,17 @@
     "orderImmediately": "Order immediately",
     "orderToast": "✅ Emergency order placed for {{product}}! Delivery within 48h.",
     "orderAllToast": "🚀 {{count}} emergency orders placed for CRITICAL stock!"
+  },
+  "paymentReturn": {
+    "pendingTitle": "Verifying payment…",
+    "pendingText": "We're confirming your payment with Simiz. Please wait a moment.",
+    "successTitle": "Payment confirmed!",
+    "successText": "Your payment was successfully validated. Thank you for your trust.",
+    "failedTitle": "Payment not completed",
+    "failedText": "The payment could not be confirmed (failed or expired session). You can try again from your orders.",
+    "errorTitle": "Verification error",
+    "errorGeneric": "Unable to verify this payment right now.",
+    "errorMissingId": "Missing transaction ID.",
+    "backToOrders": "Back to my orders"
   }
 }
