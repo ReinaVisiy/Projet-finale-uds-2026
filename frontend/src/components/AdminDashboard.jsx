@@ -95,8 +95,8 @@ export default function AdminDashboard({
       onNavigateToVendorVerification && onNavigateToVendorVerification();
     } else if (item.id === 'signalements') {
       onNavigateToModeration && onNavigateToModeration();
-    } else if (item.id === 'users') {
-      // reste sur le dashboard : affiche l'onglet Utilisateurs ci-dessous
+    } else if (item.id === 'users' || item.id === 'sales') {
+      // reste sur le dashboard : affiche l'onglet Utilisateurs/Ventes ci-dessous
     } else if (item.id !== 'home') {
       showToast(`Navigation → ${item.label}`);
     }
@@ -357,7 +357,6 @@ export default function AdminDashboard({
                             {u.role === 'vendeur' && u.verificationStatus && (
                               <> · Vérification : {u.verificationStatus === 'approved' ? '✅ approuvée' : u.verificationStatus === 'rejected' ? '❌ rejetée' : '⏳ en attente'}</>
                             )}
-                            {u.plan && u.role === 'vendeur' && <> · Plan : {u.plan}</>}
                           </p>
                         </div>
                       </div>
@@ -381,6 +380,46 @@ export default function AdminDashboard({
                   ))}
                 </div>
               )}
+            </>
+          )}
+
+          {/* ===== VUE VENTES ===== */}
+          {activeNav === 'sales' && (
+            <>
+              <div style={styles.pageTitle}>
+                <h2 style={styles.pageTitleText}>Ventes</h2>
+                <p style={styles.pageTitleSub}>{totalOrders} vente(s) · {totalRevenue.toLocaleString('fr-FR')} FCFA de revenu total</p>
+              </div>
+              <div style={styles.salesTableCard}>
+                {adminOrders.length === 0 ? (
+                  <div style={styles.emptyState}><ShieldCheck size={40} color="#adb5bd" /><p>Aucune vente pour le moment</p></div>
+                ) : (
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>Commande</th>
+                        <th style={styles.th}>Client</th>
+                        <th style={styles.th}>Date</th>
+                        <th style={styles.th}>Montant</th>
+                        <th style={styles.th}>Statut</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...adminOrders].reverse().map((o) => (
+                        <tr key={o.id} style={styles.tr}>
+                          <td style={styles.td}>#{o.id}</td>
+                          <td style={styles.td}>{o.client}</td>
+                          <td style={styles.td}>{o.dateISO ? new Date(o.dateISO).toLocaleDateString('fr-FR') : (o.date || '—')}</td>
+                          <td style={styles.td}>{(o.amount || 0).toLocaleString('fr-FR')} FCFA</td>
+                          <td style={styles.td}>
+                            <span style={{ ...styles.statusBadge, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{o.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </>
           )}
 

@@ -15,7 +15,6 @@ import SalesHistory from './components/SalesHistory';
 import SellerDashboard from './components/SellerDashboard';
 import ShoppingCart from './components/ShoppingCart';
 import StockAlerts from './components/StockAlerts';
-import SubscriptionPlans from './components/SubscriptionPlans';
 import UserProfile from './components/UserProfile';
 import CertificationRequest from './components/CertificationRequest';
 import SignalementModal from './components/SignalementModal';
@@ -151,7 +150,6 @@ export default function App() {
   // ===== AUTRES ÉTATS =====
   const [showSignalement, setShowSignalement] = useState(false);
   const [signalementProduct, setSignalementProduct] = useState(null);
-  const [activePlan, setActivePlan] = useState('gratuit');
   const [vendeurProducts, setVendeurProducts] = useState([]);
   const [vendorVerifications, setVendorVerifications] = useState([]);
   const [cartItems, setCartItems] = useState([]);
@@ -169,8 +167,6 @@ export default function App() {
   useEffect(() => {
     const savedCart = localStorage.getItem('cartItems');
     if (savedCart) { try { setCartItems(JSON.parse(savedCart)); } catch {} }
-    const savedPlan = localStorage.getItem('activePlan');
-    if (savedPlan) { setActivePlan(savedPlan); }
     const savedClientMode = localStorage.getItem('isClientMode');
     if (savedClientMode) { setIsClientMode(JSON.parse(savedClientMode)); }
 
@@ -194,15 +190,7 @@ export default function App() {
 
   // ===== SAUVEGARDE =====
   useEffect(() => { localStorage.setItem('cartItems', JSON.stringify(cartItems)); }, [cartItems]);
-  useEffect(() => { localStorage.setItem('activePlan', activePlan); }, [activePlan]);
   useEffect(() => { localStorage.setItem('isClientMode', JSON.stringify(isClientMode)); }, [isClientMode]);
-
-  // ===== INITIALISER activePlan =====
-  useEffect(() => {
-    if (currentUser?.role === 'vendeur') {
-      setActivePlan(currentUser.plan || 'gratuit');
-    }
-  }, [currentUser]);
 
   // ===== PRODUITS DU VENDEUR CONNECTÉ =====
   // Remplace l'ancien stockage local : on va chercher les vrais produits
@@ -500,27 +488,6 @@ export default function App() {
     });
   };
 
-  // ===== GESTION DES ABONNEMENTS =====
-  const handleSelectPlan = (plan) => {
-    if (!currentUser || currentUser.role !== 'vendeur') {
-      alert('Seuls les vendeurs peuvent souscrire à un abonnement.');
-      return;
-    }
-    if (plan.price > 0) {
-      if (!window.confirm(`Passer à l'abonnement ${plan.name} (${plan.price.toLocaleString()} FCFA/mois) ?`)) {
-        return;
-      }
-    }
-    const updatedUser = { ...currentUser, plan: plan.id };
-    setCurrentUser(updatedUser);
-    setRegisteredUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
-    setActivePlan(plan.id);
-    notifierAdmins('info', `${currentUser.prenom} ${currentUser.nom} a changé pour le plan ${plan.name}`, '/admin/dashboard');
-    addNotification(currentUser.id, 'success', `Votre abonnement ${plan.name} est désormais actif !`, '/seller-dashboard');
-    alert(`✅ Abonnement ${plan.name} activé avec succès !`);
-    navigate('seller-dashboard');
-  };
-
   // ===== CONNEXION =====
   // Appelle le vrai backend (auth-service + utilisateur-service).
   // Retourne l'utilisateur (au format frontend) en cas de succès,
@@ -732,7 +699,7 @@ export default function App() {
   };
 
   const clientOnlyScreens = ['cart', 'checkout-wizard', 'orders', 'purchases'];
-  const vendeurOnlyScreens = ['add-product', 'edit-product', 'my-products', 'seller-dashboard', 'sales-history', 'stock-alerts', 'plans', 'certification', 'vendeur-orders'];
+  const vendeurOnlyScreens = ['add-product', 'edit-product', 'my-products', 'seller-dashboard', 'sales-history', 'stock-alerts', 'certification', 'vendeur-orders'];
   const adminOnlyScreens = ['admin-dashboard', 'order-management-admin', 'order-detail-admin', 'moderation-panel', 'vendor-verification'];
 
   const navigate = (s) => {
@@ -984,16 +951,6 @@ export default function App() {
           currentUser={currentUser}
           vendeurProducts={vendeurProducts}
           adminOrders={toutesLesCommandes}
-          activePlan={activePlan}
-          onSelectPlan={(plan) => {
-            const updatedUser = { ...currentUser, plan: plan.id };
-            setCurrentUser(updatedUser);
-            setRegisteredUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
-            setActivePlan(plan.id);
-            notifierAdmins('info', `${currentUser.prenom} ${currentUser.nom} a changé pour le plan ${plan.name}`, '/admin/dashboard');
-            addNotification(currentUser.id, 'success', `Votre abonnement ${plan.name} est désormais actif !`, '/seller-dashboard');
-            alert(`✅ Abonnement ${plan.name} activé avec succès !`);
-          }}
           onUpdateOrderStatus={async (orderId, newStatus) => {
             try {
               const statutBackend = STATUT_FRANCAIS_TO_BACKEND[newStatus] || newStatus;
@@ -1009,12 +966,6 @@ export default function App() {
         return <SalesHistory onBack={() => navigate('seller-dashboard')} />;
       case 'stock-alerts':
         return <StockAlerts onBack={() => navigate('seller-dashboard')} />;
-      case 'plans':
-        return <SubscriptionPlans
-          onBack={() => navigate('seller-dashboard')}
-          currentPlan={activePlan}
-          onSelectPlan={handleSelectPlan}
-        />;
       case 'certification':
         return <CertificationRequest
           onBack={() => navigate('seller-dashboard')}
@@ -1124,7 +1075,6 @@ export default function App() {
           onNavigateToCart={() => navigate('cart')}
           onAddToCart={addToCart}
           cartCount={cartItems.length}
-          activePlan={activePlan}
           onSignaler={openSignalement}
           currentUser={currentUser}
           onNavigateToProfile={() => navigate('user-profile')}
