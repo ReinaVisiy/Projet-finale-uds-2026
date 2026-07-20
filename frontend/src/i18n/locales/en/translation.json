@@ -769,5 +769,10 @@
     "emptyText": "No notifications in this category",
     "navigateAlert": "Navigating to: {{link}}",
     "seeMore": "See more →"
+  },
+  "common": {
+    "confirmationTitle": "Confirmation",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   }
 }

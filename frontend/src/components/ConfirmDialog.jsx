@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Remplace window.confirm(), qui affiche la popup native du navigateur
 // (ex. "localhost:3000 dit...") au lieu d'une fenêtre cohérente avec le
@@ -19,28 +20,29 @@ import React from 'react';
 //   />
 export default function ConfirmDialog({
   open,
-  title = 'Confirmation',
+  title,
   message,
-  confirmLabel = 'Confirmer',
-  cancelLabel = 'Annuler',
+  confirmLabel,
+  cancelLabel,
   danger = true,
   onConfirm,
   onCancel,
 }) {
+  const { t } = useTranslation();
   if (!open) return null;
 
   return (
     <div style={styles.overlay} onClick={onCancel}>
       <div style={styles.dialog} onClick={(e) => e.stopPropagation()}>
-        <h3 style={styles.title}>{title}</h3>
+        <h3 style={styles.title}>{title || t('common.confirmationTitle')}</h3>
         <p style={styles.message}>{message}</p>
         <div style={styles.actions}>
-          <button style={styles.cancelBtn} onClick={onCancel}>{cancelLabel}</button>
+          <button style={styles.cancelBtn} onClick={onCancel}>{cancelLabel || t('common.cancel')}</button>
           <button
             style={{ ...styles.confirmBtn, backgroundColor: danger ? '#dc3545' : '#2d6a4f' }}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {confirmLabel || t('common.confirm')}
           </button>
         </div>
       </div>
