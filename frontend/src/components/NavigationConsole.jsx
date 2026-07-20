@@ -2,6 +2,57 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ShoppingCart, User, LogOut, ChevronDown, ShieldCheck, Home, Package, LayoutGrid, Bell, Users, ShoppingBag, Menu, X, MessageCircle, Search } from 'lucide-react';
 
+const translations = {
+  fr: {
+    home: 'Accueil',
+    catalogue: 'Catalogue',
+    myProducts: 'Mes produits',
+    searchTitle: 'Rechercher un utilisateur',
+    login: 'Connexion',
+    register: "S'inscrire",
+    myProfile: 'Mon profil',
+    notifications: 'Notifications',
+    myMessages: 'Mes messages',
+    myOrders: 'Mes commandes',
+    myPurchases: 'Mes achats',
+    dashboard: 'Tableau de bord',
+    receivedOrders: 'Commandes reçues',
+    backToVendorMode: 'Revenir en mode vendeur',
+    loginAsClient: 'Se connecter en tant que client',
+    adminDashboard: 'Tableau de bord admin',
+    logout: 'Déconnexion',
+    clientModeBadge: '🛒 Client (mode)',
+    vendorBadge: '🌾 Vendeur',
+    adminBadge: '🛡️ Admin',
+    clientBadge: '🛒 Client',
+    clientOnlySection: 'Vous êtes en mode client, cette section est réservée aux vendeurs.',
+  },
+  en: {
+    home: 'Home',
+    catalogue: 'Catalogue',
+    myProducts: 'My products',
+    searchTitle: 'Search for a user',
+    login: 'Login',
+    register: 'Sign up',
+    myProfile: 'My profile',
+    notifications: 'Notifications',
+    myMessages: 'My messages',
+    myOrders: 'My orders',
+    myPurchases: 'My purchases',
+    dashboard: 'Dashboard',
+    receivedOrders: 'Received orders',
+    backToVendorMode: 'Back to vendor mode',
+    loginAsClient: 'Log in as client',
+    adminDashboard: 'Admin dashboard',
+    logout: 'Log out',
+    clientModeBadge: '🛒 Client (mode)',
+    vendorBadge: '🌾 Vendor',
+    adminBadge: '🛡️ Admin',
+    clientBadge: '🛒 Client',
+    clientOnlySection: 'You are in client mode, this section is reserved for vendors.',
+  },
+};
+
 export default function NavigationConsole({
   currentScreen,
   onNavigate,
@@ -17,6 +68,7 @@ export default function NavigationConsole({
   const [showMenu, setShowMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const t = translations[lang] || translations.fr;
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -66,20 +118,20 @@ export default function NavigationConsole({
             style={{ ...styles.navLink, ...(currentScreen === 'home' ? styles.navLinkActive : {}) }}
             onClick={() => { onNavigate('home'); setMobileMenuOpen(false); }}
           >
-            <Home size={15} /> Accueil
+            <Home size={15} /> {t.home}
           </button>
           <button
             style={{ ...styles.navLink, ...(currentScreen === 'catalogue' ? styles.navLinkActive : {}) }}
             onClick={() => { onNavigate('catalogue'); setMobileMenuOpen(false); }}
           >
-            <LayoutGrid size={15} /> Catalogue
+            <LayoutGrid size={15} /> {t.catalogue}
           </button>
           {currentUser?.role === 'vendeur' && !isClientMode && (
             <button
               style={{ ...styles.navLink, ...(currentScreen === 'my-products' ? styles.navLinkActive : {}) }}
               onClick={() => { onNavigate('my-products'); setMobileMenuOpen(false); }}
             >
-              <Package size={15} /> Mes produits
+              <Package size={15} /> {t.myProducts}
             </button>
           )}
 
@@ -96,8 +148,8 @@ export default function NavigationConsole({
               </button>
               {!currentUser ? (
                 <div style={styles.authButtons}>
-                  <button style={styles.loginBtn} onClick={() => { onNavigate('login-page'); setMobileMenuOpen(false); }}>Connexion</button>
-                  <button style={styles.registerBtn} onClick={() => { onNavigate('register'); setMobileMenuOpen(false); }}>S'inscrire</button>
+                  <button style={styles.loginBtn} onClick={() => { onNavigate('login-page'); setMobileMenuOpen(false); }}>{t.login}</button>
+                  <button style={styles.registerBtn} onClick={() => { onNavigate('register'); setMobileMenuOpen(false); }}>{t.register}</button>
                 </div>
               ) : (
                 <>
@@ -122,7 +174,7 @@ export default function NavigationConsole({
 
         {/* Zone droite - Desktop */}
         <div style={styles.rightZone}>
-          <button style={styles.notifBtn} onClick={() => onNavigate('user-search')} title="Rechercher un utilisateur">
+          <button style={styles.notifBtn} onClick={() => onNavigate('user-search')} title={t.searchTitle}>
             <Search size={19} />
           </button>
           {onToggleLang && (
@@ -132,8 +184,8 @@ export default function NavigationConsole({
           )}
           {!currentUser ? (
             <div style={styles.authButtons}>
-              <button style={styles.loginBtn} onClick={() => onNavigate('login-page')}>Connexion</button>
-              <button style={styles.registerBtn} onClick={() => onNavigate('register')}>S'inscrire</button>
+              <button style={styles.loginBtn} onClick={() => onNavigate('login-page')}>{t.login}</button>
+              <button style={styles.registerBtn} onClick={() => onNavigate('register')}>{t.register}</button>
             </div>
           ) : (
             <>
@@ -162,9 +214,9 @@ export default function NavigationConsole({
                   <span style={styles.userInfo}>
                     <span style={styles.userName}>{currentUser.prenom || currentUser.email}</span>
                     <span style={styles.roleBadge}>
-                      {isClientMode ? '🛒 Client (mode)' :
-                        currentUser.role === 'vendeur' ? '🌾 Vendeur' :
-                        currentUser.role === 'admin' ? '🛡️ Admin' : '🛒 Client'}
+                      {isClientMode ? t.clientModeBadge :
+                        currentUser.role === 'vendeur' ? t.vendorBadge :
+                        currentUser.role === 'admin' ? t.adminBadge : t.clientBadge}
                     </span>
                   </span>
                   <ChevronDown size={14} color="#6c757d" />
@@ -173,49 +225,49 @@ export default function NavigationConsole({
                 {showMenu && (
                   <div style={styles.dropdown}>
                     <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('user-profile'); }}>
-                      <User size={15} /> Mon profil
+                      <User size={15} /> {t.myProfile}
                     </button>
                     <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('notifications'); }}>
-                      <Bell size={15} /> Notifications
+                      <Bell size={15} /> {t.notifications}
                       {unreadNotifications > 0 && <span style={styles.dropdownBadge}>{unreadNotifications}</span>}
                     </button>
                     <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('messages-inbox'); }}>
-                      <MessageCircle size={15} /> Mes messages
+                      <MessageCircle size={15} /> {t.myMessages}
                     </button>
                     {currentUser.role === 'client' && (
                       <>
                         <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('orders'); }}>
-                          <Package size={15} /> Mes commandes
+                          <Package size={15} /> {t.myOrders}
                         </button>
                         <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('purchases'); }}>
-                          <ShoppingBag size={15} /> Mes achats
+                          <ShoppingBag size={15} /> {t.myPurchases}
                         </button>
                       </>
                     )}
                     {currentUser.role === 'vendeur' && !isClientMode && (
                       <>
                         <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('seller-dashboard'); }}>
-                          <Package size={15} /> Tableau de bord
+                          <Package size={15} /> {t.dashboard}
                         </button>
                         <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('vendeur-orders'); }}>
-                          <ShoppingBag size={15} /> Commandes reçues
+                          <ShoppingBag size={15} /> {t.receivedOrders}
                         </button>
                       </>
                     )}
                     {currentUser.role === 'vendeur' && (
                       <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onToggleClientMode(); }}>
                         <Users size={15} />
-                        {isClientMode ? 'Revenir en mode vendeur' : 'Se connecter en tant que client'}
+                        {isClientMode ? t.backToVendorMode : t.loginAsClient}
                       </button>
                     )}
                     {currentUser.role === 'admin' && (
                       <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('admin-dashboard'); }}>
-                        <Package size={15} /> Tableau de bord admin
+                        <Package size={15} /> {t.adminDashboard}
                       </button>
                     )}
                     <div style={styles.dropdownDivider} />
                     <button style={styles.dropdownItemDanger} onClick={handleLogoutClick}>
-                      <LogOut size={15} /> Déconnexion
+                      <LogOut size={15} /> {t.logout}
                     </button>
                   </div>
                 )}
