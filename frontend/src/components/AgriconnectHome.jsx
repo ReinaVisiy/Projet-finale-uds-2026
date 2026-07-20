@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ShoppingBag, Leaf, ShieldCheck, Truck, Star, ArrowRight, UserPlus, PackageSearch } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
-import { useLanguage } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 import { correspondRecherche } from '../utils/produceSearch';
 import { getStatsPubliques as getStatsUtilisateurs } from '../services/api/utilisateurApi';
 import { getStatsPubliques as getStatsCertifications } from '../services/api/certificationApi';
@@ -32,106 +32,6 @@ function normaliserNomCategorie(nom) {
   return (nom || '').trim().toLowerCase();
 }
 
-const translations = {
-  fr: {
-    navHome: 'Accueil',
-    navCatalogue: 'Catalogue',
-    navCategories: 'Catégories',
-    navHow: 'Comment ça marche',
-    navCart: 'Panier',
-    navLogin: 'Connexion',
-    heroTitle: 'Agriconnect',
-    heroSubtitle: 'Connectez-vous directement aux producteurs locaux',
-    pill1: 'Produits frais',
-    pill2: 'Prix justes',
-    pill3: 'Livraison rapide',
-    heroCta: 'Commencer à acheter',
-    searchPlaceholder: 'Cherchez un produit, une ferme ou une catégorie (ex: agricole, élevage)...',
-    filterBtn: 'Filtrer',
-    catTitle: 'Catégories',
-    trendTitle: 'Produits disponibles',
-    searchResults: 'Résultats de recherche',
-    noResult: 'Aucun produit trouvé pour',
-    resultCount: 'produit(s) pour',
-    reset: '✕ Réinitialiser',
-    showAll: '✕ Tout afficher',
-    inStock: 'En stock',
-    lowStock: 'Stock faible',
-    addCart: 'Ajouter au panier',
-    howTitle: 'Comment ça marche ?',
-    step1: 'Créer un compte',
-    step1d: '5 minutes',
-    step2: 'Parcourir les produits',
-    step2d: 'Frais & bio',
-    step3: 'Commander',
-    step3d: 'Paiement sécurisé',
-    step4: 'Livraison rapide',
-    step4d: '2-3 jours max',
-    statsTitle: 'Rejoignez des milliers de clients heureux',
-    stat1: 'Utilisateurs actifs',
-    stat2: 'Producteurs vérifiés',
-    stat3: 'Produits disponibles',
-    stat4: 'Commandes livrées',
-    testiTitle: 'Ce que disent nos clients',
-    prefooterTitle: 'Prêt à commencer ? Inscrivez-vous gratuitement ou connectez-vous',
-    prefooterBtn: 'Se connecter',
-    footerTagline: 'La plateforme de marché agricole local',
-    footerFollow: 'Nous suivre :',
-    catSelected: '✓ Sélectionné',
-    emptyMsg: 'Aucun produit dans cette catégorie.',
-    seeAll: 'Voir tous les produits',
-    voirCatalogue: 'Voir tout le catalogue',
-  },
-  en: {
-    navHome: 'Home',
-    navCatalogue: 'Catalogue',
-    navCategories: 'Categories',
-    navHow: 'How it works',
-    navCart: 'Cart',
-    navLogin: 'Login',
-    heroTitle: 'Agriconnect',
-    heroSubtitle: 'Connect directly with local producers',
-    pill1: 'Fresh products',
-    pill2: 'Fair prices',
-    pill3: 'Fast delivery',
-    heroCta: 'Start shopping',
-    searchPlaceholder: 'Search a product, farm or category (ex: agriculture, livestock)...',
-    filterBtn: 'Filter',
-    catTitle: 'Categories',
-    trendTitle: 'Available products',
-    searchResults: 'Search results',
-    noResult: 'No product found for',
-    resultCount: 'product(s) for',
-    reset: '✕ Reset',
-    showAll: '✕ Show all',
-    inStock: 'In stock',
-    lowStock: 'Low stock',
-    addCart: 'Add to cart',
-    howTitle: 'How does it work?',
-    step1: 'Create an account',
-    step1d: '5 minutes',
-    step2: 'Browse products',
-    step2d: 'Fresh & organic',
-    step3: 'Order',
-    step3d: 'Secure payment',
-    step4: 'Fast delivery',
-    step4d: '2-3 days max',
-    statsTitle: 'Join thousands of happy customers',
-    stat1: 'Active users',
-    stat2: 'Verified producers',
-    stat3: 'Available products',
-    stat4: 'Orders delivered',
-    testiTitle: 'What our customers say',
-    prefooterTitle: 'Ready to start? Sign up for free or log in',
-    prefooterBtn: 'Log in',
-    footerTagline: 'The local farm marketplace platform',
-    footerFollow: 'Follow us:',
-    catSelected: '✓ Selected',
-    emptyMsg: 'No products in this category.',
-    seeAll: 'See all products',
-    voirCatalogue: 'See full catalogue',
-  },
-};
 
 export default function AgroMarketHome({
   onNavigateToProduct,
@@ -140,48 +40,10 @@ export default function AgroMarketHome({
   onAddToCart,
   currentUser,
 }) {
-  // Avant : `lang` était reçu en props avec un repli 'fr', mais certains
-  // écrans (ex. la route par défaut dans App.jsx) ne transmettaient pas
-  // cette prop -> la page restait bloquée en français quoi qu'on clique
-  // sur le bouton de langue. On lit directement le contexte global, comme
-  // le fait déjà useDict() dans les autres pages, pour ne plus dépendre
-  // de la transmission manuelle de la prop à chaque appel du composant.
-  const { lang } = useLanguage();
-  const { produits: allProducts, categories: categoriesBrutes, chargement, erreur } = useProduits();
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState(null);
-  const [activeCategory, setActiveCategory] = useState(null);
-
-  // ===== STATS RÉELLES (visiteurs non connectés uniquement) =====
-  // Remplace les chiffres codés en dur ('5,000+' etc.) par de vrais totaux
-  // récupérés auprès de chaque microservice via des endpoints publics dédiés
-  // (ils ne renvoient qu'un total, jamais la liste des comptes/commandes).
-  const [statsReelles, setStatsReelles] = useState({
-    totalUtilisateurs: null,
-    producteursVerifies: null,
-    commandesLivrees: null,
-  });
-
-  useEffect(() => {
-    if (currentUser) return; // section masquée une fois connecté, inutile d'appeler
-    let annule = false;
-    Promise.all([
-      getStatsUtilisateurs().catch(() => null),
-      getStatsCertifications().catch(() => null),
-      getStatsCommandes().catch(() => null),
-    ]).then(([utilisateurs, certifications, commandes]) => {
-      if (annule) return;
-      setStatsReelles({
-        totalUtilisateurs: utilisateurs?.totalUtilisateurs ?? null,
-        producteursVerifies: certifications?.producteursVerifies ?? null,
-        commandesLivrees: commandes?.commandesLivrees ?? null,
-      });
-    });
-    return () => { annule = true; };
-  }, [currentUser]);
-
-  const t = translations[lang] || translations.fr;
+  // La langue est gérée globalement par react-i18next (voir src/i18n) —
+  // useTranslation() lit directement l'instance i18next partagée, donc
+  // aucune prop `lang` à faire transiter depuis App.jsx.
+  const { t } = useTranslation();
 
   const categories = categoriesBrutes.map((c) => {
     const cle = normaliserNomCategorie(c.name);
@@ -258,15 +120,15 @@ export default function AgroMarketHome({
       <div style={styles.heroSection}>
         <div style={styles.heroOverlay} />
         <div style={styles.heroContent}>
-          <h1 style={styles.heroTitle}>{t.heroTitle}</h1>
-          <p style={styles.heroSubtitle}>{t.heroSubtitle}</p>
+          <h1 style={styles.heroTitle}>{t('home.heroTitle')}</h1>
+          <p style={styles.heroSubtitle}>{t('home.heroSubtitle')}</p>
           <div style={styles.heroPills}>
-            <span style={styles.heroPill}><Leaf size={14} /> {t.pill1}</span>
-            <span style={styles.heroPill}><ShieldCheck size={14} /> {t.pill2}</span>
-            <span style={styles.heroPill}><Truck size={14} /> {t.pill3}</span>
+            <span style={styles.heroPill}><Leaf size={14} /> {t('home.pill1')}</span>
+            <span style={styles.heroPill}><ShieldCheck size={14} /> {t('home.pill2')}</span>
+            <span style={styles.heroPill}><Truck size={14} /> {t('home.pill3')}</span>
           </div>
           <button style={styles.heroCta} onClick={goToCatalogue}>
-            {t.heroCta} <ArrowRight size={18} />
+            {t('home.heroCta')} <ArrowRight size={18} />
           </button>
         </div>
       </div>
@@ -277,21 +139,21 @@ export default function AgroMarketHome({
           <Search size={22} color="#6c757d" style={styles.searchIcon} />
           <input
             type="text"
-            placeholder={t.searchPlaceholder}
+            placeholder={t('home.searchPlaceholder')}
             style={styles.searchInput}
             value={searchQuery}
             onChange={handleSearchChange}
             onKeyDown={handleKeyDown}
           />
-          <button style={styles.searchBtn} onClick={handleFilter}>{t.filterBtn}</button>
+          <button style={styles.searchBtn} onClick={handleFilter}>{t('home.filterBtn')}</button>
         </div>
         {filteredProducts !== null && filteredProducts.length === 0 && (
-          <div style={styles.noResult}>{t.noResult} "<strong>{searchQuery}</strong>"</div>
+          <div style={styles.noResult}>{t('home.noResult')} "<strong>{searchQuery}</strong>"</div>
         )}
         {filteredProducts !== null && filteredProducts.length > 0 && !activeCategory && (
           <div style={styles.resultInfo}>
-            {filteredProducts.length} {t.resultCount} "<strong>{searchQuery}</strong>"
-            <button style={styles.resetBtn} onClick={handleReset}>{t.reset}</button>
+            {filteredProducts.length} {t('home.resultCount')} "<strong>{searchQuery}</strong>"
+            <button style={styles.resetBtn} onClick={handleReset}>{t('home.reset')}</button>
           </div>
         )}
       </div>
@@ -299,7 +161,7 @@ export default function AgroMarketHome({
       <div style={styles.container}>
         {/* CATEGORIES */}
         <div style={styles.section} id="categories">
-          <h2 style={styles.sectionTitle}>{t.catTitle}</h2>
+          <h2 style={styles.sectionTitle}>{t('home.catTitle')}</h2>
           <div style={styles.categoryGrid}>
             {categories.map(cat => (
               <div
@@ -320,7 +182,7 @@ export default function AgroMarketHome({
                 <h3 style={styles.catName}>{cat.name}</h3>
                 <span style={styles.catCount}>{cat.count}</span>
                 {activeCategory === cat.id && (
-                  <span style={styles.catActive}>{t.catSelected}</span>
+                  <span style={styles.catActive}>{t('home.catSelected')}</span>
                 )}
               </div>
             ))}
@@ -331,13 +193,13 @@ export default function AgroMarketHome({
         <div style={styles.section} id="produits">
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>
-              {activeCategory ? activeCatName : filteredProducts !== null ? t.searchResults : t.trendTitle}
+              {activeCategory ? activeCatName : filteredProducts !== null ? t('home.searchResults') : t('home.trendTitle')}
             </h2>
             <div style={{ display: 'flex', gap: '10px' }}>
               {(activeCategory || filteredProducts !== null) && (
-                <button style={styles.resetBtn} onClick={handleReset}>{t.showAll}</button>
+                <button style={styles.resetBtn} onClick={handleReset}>{t('home.showAll')}</button>
               )}
-              <button style={styles.resetBtn} onClick={goToCatalogue}>{t.voirCatalogue} →</button>
+              <button style={styles.resetBtn} onClick={goToCatalogue}>{t('home.voirCatalogue')} →</button>
             </div>
           </div>
 
@@ -352,7 +214,7 @@ export default function AgroMarketHome({
                   <div style={styles.productImageWrap}>
                     <img src={prod.image} alt={prod.name} style={styles.productImg} onError={(e) => { e.target.src = 'https://picsum.photos/seed/' + prod.id + '/300/300'; }} />
                     <span style={styles.catBadge}>{prod.category}</span>
-                    {!prod.stock && <span style={styles.lowStockBadge}>{t.lowStock}</span>}
+                    {!prod.stock && <span style={styles.lowStockBadge}>{t('home.lowStock')}</span>}
                   </div>
                   <div style={styles.productInfo}>
                     <div style={styles.prodHeaderRow}>
@@ -380,14 +242,14 @@ export default function AgroMarketHome({
                         color: prod.stock ? '#2d6a4f' : '#e07a5f',
                         backgroundColor: prod.stock ? '#e9f5ee' : '#fdf1ed'
                       }}>
-                        {prod.stock ? t.inStock : t.lowStock}
+                        {prod.stock ? t('home.inStock') : t('home.lowStock')}
                       </span>
                     </div>
                     <button
                       style={styles.addToCartBtn}
                       onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(prod); }}
                     >
-                      <ShoppingBag size={14} /> {t.addCart}
+                      <ShoppingBag size={14} /> {t('home.addCart')}
                     </button>
                   </div>
                 </div>
@@ -396,21 +258,21 @@ export default function AgroMarketHome({
           ) : (
             <div style={styles.emptyState}>
               <span style={{fontSize: '48px'}}>🔍</span>
-              <p>{t.emptyMsg}</p>
-              <button style={styles.resetBtn} onClick={handleReset}>{t.seeAll}</button>
+              <p>{t('home.emptyMsg')}</p>
+              <button style={styles.resetBtn} onClick={handleReset}>{t('home.seeAll')}</button>
             </div>
           )}
         </div>
 
         {/* COMMENT ÇA MARCHE */}
         <div style={styles.section} id="comment">
-          <h2 style={styles.sectionTitle}>{t.howTitle}</h2>
+          <h2 style={styles.sectionTitle}>{t('home.howTitle')}</h2>
           <div style={styles.stepsGrid}>
             {[
-              { icon: <UserPlus size={28} />, title: t.step1, desc: t.step1d },
-              { icon: <PackageSearch size={28} />, title: t.step2, desc: t.step2d },
-              { icon: <ShoppingBag size={28} />, title: t.step3, desc: t.step3d },
-              { icon: <Truck size={28} />, title: t.step4, desc: t.step4d }
+              { icon: <UserPlus size={28} />, title: t('home.step1'), desc: t('home.step1d') },
+              { icon: <PackageSearch size={28} />, title: t('home.step2'), desc: t('home.step2d') },
+              { icon: <ShoppingBag size={28} />, title: t('home.step3'), desc: t('home.step3d') },
+              { icon: <Truck size={28} />, title: t('home.step4'), desc: t('home.step4d') }
             ].map((step, i) => (
               <div key={i} style={styles.stepCard}>
                 <div style={styles.stepNumber}>{i + 1}</div>
@@ -425,13 +287,13 @@ export default function AgroMarketHome({
         {/* STATS (uniquement pour les visiteurs non connectés — chiffres réels) */}
         {!currentUser && (
           <div style={styles.section}>
-            <h2 style={styles.sectionTitle}>{t.statsTitle}</h2>
+            <h2 style={styles.sectionTitle}>{t('home.statsTitle')}</h2>
             <div style={styles.statsGrid}>
               {[
-                { num: statsReelles.totalUtilisateurs, label: t.stat1 },
-                { num: statsReelles.producteursVerifies, label: t.stat2 },
-                { num: allProducts.length, label: t.stat3 },
-                { num: statsReelles.commandesLivrees, label: t.stat4 }
+                { num: statsReelles.totalUtilisateurs, label: t('home.stat1') },
+                { num: statsReelles.producteursVerifies, label: t('home.stat2') },
+                { num: allProducts.length, label: t('home.stat3') },
+                { num: statsReelles.commandesLivrees, label: t('home.stat4') }
               ].map((stat, i) => (
                 <div key={i} style={styles.statCard}>
                   <h3 style={styles.statNum}>{stat.num == null ? '…' : stat.num.toLocaleString()}</h3>
@@ -445,7 +307,7 @@ export default function AgroMarketHome({
         {/* TÉMOIGNAGES (uniquement pour les visiteurs non connectés) */}
         {!currentUser && (
           <div style={styles.section}>
-            <h2 style={styles.sectionTitle}>{t.testiTitle}</h2>
+            <h2 style={styles.sectionTitle}>{t('home.testiTitle')}</h2>
             <div style={styles.testimonialGrid}>
               {[
                 { name: 'Ravie D.', text: '"Produits très frais et livraison ultra-rapide ! Je recommande à 100%."' },
@@ -468,8 +330,8 @@ export default function AgroMarketHome({
       {/* PRE-FOOTER (si non connecté) */}
       {!currentUser && (
         <div style={styles.preFooter}>
-          <h2 style={styles.preFooterTitle}>{t.prefooterTitle}</h2>
-          <button style={styles.preFooterBtn} onClick={onNavigateToLogin}>{t.prefooterBtn}</button>
+          <h2 style={styles.preFooterTitle}>{t('home.prefooterTitle')}</h2>
+          <button style={styles.preFooterBtn} onClick={onNavigateToLogin}>{t('home.prefooterBtn')}</button>
         </div>
       )}
 
@@ -477,16 +339,16 @@ export default function AgroMarketHome({
       <footer style={styles.footer}>
         <div style={styles.footerInner}>
           <h2 style={styles.footerBrand}>🌿 Agriconnect</h2>
-          <p style={styles.footerTagline}>{t.footerTagline}</p>
+          <p style={styles.footerTagline}>{t('home.footerTagline')}</p>
           <div style={styles.footerLinks}>
-            <a href="#" style={styles.footerLink}>{t.navHome}</a>
-            <a href="#" style={styles.footerLink} onClick={(e) => { e.preventDefault(); goToCatalogue(); }}>{t.navCatalogue}</a>
-            <a href="#categories" style={styles.footerLink}>{t.navCategories}</a>
-            <a href="#comment" style={styles.footerLink}>{t.navHow}</a>
-            {!currentUser && <a href="#" style={styles.footerLink} onClick={onNavigateToLogin}>{t.navLogin}</a>}
+            <a href="#" style={styles.footerLink}>{t('home.navHome')}</a>
+            <a href="#" style={styles.footerLink} onClick={(e) => { e.preventDefault(); goToCatalogue(); }}>{t('home.navCatalogue')}</a>
+            <a href="#categories" style={styles.footerLink}>{t('home.navCategories')}</a>
+            <a href="#comment" style={styles.footerLink}>{t('home.navHow')}</a>
+            {!currentUser && <a href="#" style={styles.footerLink} onClick={onNavigateToLogin}>{t('home.navLogin')}</a>}
           </div>
           <div style={styles.footerSocials}>
-            <span style={styles.socialText}>{t.footerFollow}</span>
+            <span style={styles.socialText}>{t('home.footerFollow')}</span>
             <div style={styles.socialIcons}>
               <a href="#" style={styles.socialLink}>Facebook</a>
               <a href="#" style={styles.socialLink}>Twitter</a>
