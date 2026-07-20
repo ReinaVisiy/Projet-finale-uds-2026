@@ -1,6 +1,18 @@
 // src/components/UserProfile.jsx
 import React from 'react';
 import { User, Mail, Phone, ArrowLeft, Settings, Lock } from 'lucide-react';
+import { useDict } from '../context/LanguageContext';
+
+const translations = {
+  fr: {
+    mustLogin: 'Vous devez être connecté pour voir votre profil.', back: 'Retour',
+    notProvided: 'Non renseigné', editProfile: 'Modifier le profil', changePassword: 'Modifier le mot de passe',
+  },
+  en: {
+    mustLogin: 'You must be logged in to view your profile.', back: 'Back',
+    notProvided: 'Not provided', editProfile: 'Edit profile', changePassword: 'Change password',
+  },
+};
 
 export default function UserProfile({
   currentUser,
@@ -8,15 +20,16 @@ export default function UserProfile({
   onChangePassword,
   onBack,
 }) {
+  const t = useDict(translations);
   if (!currentUser) {
     return (
       <div style={styles.wrapper}>
         <div style={styles.card}>
           <p style={{ textAlign: 'center', color: '#6c757d' }}>
-            Vous devez être connecté pour voir votre profil.
+            {t.mustLogin}
           </p>
           <button style={styles.backBtn} onClick={onBack}>
-            Retour
+            {t.back}
           </button>
         </div>
       </div>
@@ -28,7 +41,7 @@ export default function UserProfile({
       <div style={styles.card}>
         {/* Bouton Retour en haut à gauche */}
         <button style={styles.backBtnSmall} onClick={onBack}>
-          <ArrowLeft size={20} /> Retour
+          <ArrowLeft size={20} /> {t.back}
         </button>
 
         {/* Photo de profil centrée */}
@@ -53,17 +66,17 @@ export default function UserProfile({
           </div>
           <div style={styles.infoItem}>
             <Phone size={18} color="#6c757d" />
-            <span>{currentUser.telephone || 'Non renseigné'}</span>
+            <span>{currentUser.telephone || t.notProvided}</span>
           </div>
         </div>
 
         {/* Boutons d'action */}
         <div style={styles.actions}>
           <button style={styles.actionBtn} onClick={onEditProfile}>
-            <Settings size={18} /> Modifier le profil
+            <Settings size={18} /> {t.editProfile}
           </button>
           <button style={styles.actionBtn} onClick={onChangePassword}>
-            <Lock size={18} /> Modifier le mot de passe
+            <Lock size={18} /> {t.changePassword}
           </button>
         </div>
       </div>
