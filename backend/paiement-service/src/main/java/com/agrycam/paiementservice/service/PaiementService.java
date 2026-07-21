@@ -86,24 +86,23 @@ public class PaiementService {
 
         // 3. Appel a la passerelle de paiement Simiz (sandbox)
         String description = String.format("Paiement AgryCam - %s #%d", dto.getTypeReference(), dto.getReferenceId());
-        
-        // URLs de retour
-        String successUrl = String.format("%s/pay/success?transactionId=%d", frontendUrl, transaction.getId());
+
+        // URLs de retour (page cote frontend qui affiche le resultat au client)
+        String returnUrl = String.format("%s/pay/success?transactionId=%d", frontendUrl, transaction.getId());
         String cancelUrl = String.format("%s/pay/cancel?transactionId=%d", frontendUrl, transaction.getId());
 
-        Map<String, String> metadata = new HashMap<>();
-        metadata.put("transactionId", transaction.getId().toString());
-        metadata.put("typeReference", dto.getTypeReference().name());
-        metadata.put("referenceId", dto.getReferenceId().toString());
-        metadata.put("vendeurId", dto.getVendeurId().toString());
+        // Simiz exige un userId au format UUID ; notre clientId est un Long,
+        // donc on derive un UUID stable et reproductible a partir de celui-ci
+        // (uniquement pour l'identification cote Simiz).
+        UUID simizUserId = UUID.nameUUIDFromBytes(("agrycam-client-" + clientId).getBytes());
 
         SimizCheckoutRequest checkoutRequest = SimizCheckoutRequest.builder()
+                .userId(simizUserId)
                 .amount(montantTotal)
                 .currency("XAF")
                 .description(description)
-                .successUrl(successUrl)
+                .returnUrl(returnUrl)
                 .cancelUrl(cancelUrl)
-                .metadata(metadata)
                 .build();
 
         try {
@@ -112,30 +111,35 @@ public class PaiementService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<SimizCheckoutRequest> httpEntity = new HttpEntity<>(checkoutRequest, headers);
-            
-            log.info("Appel de Simiz API sur {}/checkout pour initiation", simizApiUrl);
+
+            // Le bon endpoint de creation est POST /payments (et non /checkout,
+            // qui n'existe pas dans l'API Simiz : c'etait la cause du bug de
+            // redirection vers une page inexistante).
+            log.info("Appel de Simiz API sur {}/payments pour initiation", simizApiUrl);
             ResponseEntity<SimizCheckoutResponse> responseEntity = restTemplate.postForEntity(
-                    simizApiUrl + "/checkout", 
-                    httpEntity, 
+                    simizApiUrl + "/payments",
+                    httpEntity,
                     SimizCheckoutResponse.class
             );
 
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
                 SimizCheckoutResponse simizResponse = responseEntity.getBody();
-                transaction.setSimizSessionId(simizResponse.getId());
-                transaction.setSimizCheckoutUrl(simizResponse.getCheckoutUrl());
-                log.info("Session de paiement Simiz creee avec succes. SessionID: {}", simizResponse.getId());
+                transaction.setSimizSessionId(simizResponse.getToken());
+                transaction.setSimizCheckoutUrl(simizResponse.getPaymentUrl());
+                log.info("Paiement Simiz cree avec succes. Token: {}", simizResponse.getToken());
             } else {
                 throw new IllegalStateException("Reponse invalide de Simiz");
             }
         } catch (Exception e) {
+            // On ne genere plus d'URL de paiement factice : une fausse URL
+            // menait le client vers une page inexistante (cf. bug remonte en
+            // test). Si Simiz est injoignable ou mal configure, l'initiation
+            // echoue clairement plutot que de simuler un faux succes.
             log.error("Erreur lors de l'appel de l'API Simiz : {}", e.getMessage());
-            // Mode de secours / Simulation locale robuste en cas d'erreur reseau ou si la clef Simiz n'est pas configuree
-            String mockSessionId = "simiz_pay_mock_" + UUID.randomUUID().toString().substring(0, 8);
-            String mockCheckoutUrl = "https://checkout.simiz.io/pay/mock_" + transaction.getId();
-            transaction.setSimizSessionId(mockSessionId);
-            transaction.setSimizCheckoutUrl(mockCheckoutUrl);
-            log.warn("Utilisation d'une session de paiement factice de secours : {}", mockSessionId);
+            transaction.setStatut(StatutTransaction.ECHOUE);
+            transactionRepository.save(transaction);
+            throw new IllegalStateException(
+                    "Impossible d'initier le paiement aupres de Simiz. Reessayez plus tard.", e);
         }
 
         return transactionRepository.save(transaction);
@@ -176,7 +180,11 @@ public class PaiementService {
             headers.setBearerAuth(simizSecretKey);
             HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
 
-            String url = String.format("%s/payments/%s", simizApiUrl, sessionId);
+            // GET /payments/{token}/verify : re-verifie le statut aupres du
+            // fournisseur Mobile Money (plus fiable qu'une simple lecture en
+            // cas de webhook manque). "sessionId" contient en realite le
+            // token Simiz (cf. initierPaiement).
+            String url = String.format("%s/payments/%s/verify", simizApiUrl, sessionId);
             log.info("Appel de Simiz API sur {}", url);
             ResponseEntity<SimizPaymentStatusResponse> responseEntity = restTemplate.exchange(
                     url,
@@ -187,19 +195,21 @@ public class PaiementService {
 
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
                 remoteStatus = responseEntity.getBody().getStatus();
-                log.info("Statut retourne par Simiz pour la session {}: {}", sessionId, remoteStatus);
+                log.info("Statut retourne par Simiz pour le token {}: {}", sessionId, remoteStatus);
             }
         } catch (Exception e) {
-            log.error("Impossible de joindre l'API Simiz pour verifier le paiement de la session {}: {}. Statut inchange.",
+            log.error("Impossible de joindre l'API Simiz pour verifier le paiement du token {}: {}. Statut inchange.",
                     sessionId, e.getMessage());
             // Dans le cadre du simulateur de developpement, si l'appel Simiz echoue parce qu'il n'y a pas de vraie connexion internet,
             // on conserve le statut courant sans faire planter le service.
         }
 
-        // Mettre a jour la transaction locale
-        if ("SUCCESSFUL".equalsIgnoreCase(remoteStatus) || "PAID".equalsIgnoreCase(remoteStatus) || "SUCCESS".equalsIgnoreCase(remoteStatus)) {
+        // Mettre a jour la transaction locale.
+        // Valeurs reelles renvoyees par Simiz : PENDING, PROCESSING, COMPLETED,
+        // FAILED, CANCELLED, EXPIRED, REFUNDED, PARTIALLY_REFUNDED.
+        if ("COMPLETED".equalsIgnoreCase(remoteStatus)) {
             confirmerPaiementInterne(transaction);
-        } else if ("FAILED".equalsIgnoreCase(remoteStatus) || "FAILURE".equalsIgnoreCase(remoteStatus)) {
+        } else if ("FAILED".equalsIgnoreCase(remoteStatus) || "CANCELLED".equalsIgnoreCase(remoteStatus)) {
             transaction.setStatut(StatutTransaction.ECHOUE);
             transactionRepository.save(transaction);
             log.warn("Paiement Simiz echoue pour la transaction {}", id);
@@ -212,6 +222,7 @@ public class PaiementService {
             serviceCommunicationClient.notifierStatutPaiement(
                     transaction.getTypeReference(), transaction.getReferenceId(), false);
         }
+        // PENDING / PROCESSING : aucun changement, le sondage cote frontend continuera.
 
         return transaction;
     }

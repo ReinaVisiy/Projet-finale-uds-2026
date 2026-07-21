@@ -6,24 +6,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 /**
- * Reponse retournee par Simiz lors de la verification du statut d'un paiement.
+ * Reponse retournee par Simiz lors de la verification du statut d'un
+ * paiement (GET /payments/{token}/verify). Meme forme que la reponse de
+ * creation, seul le statut nous interesse ici pour le sondage.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class SimizPaymentStatusResponse {
-    
-    private String id;
-    
+
+    private String token;
+
     private BigDecimal amount;
-    
+
     private String currency;
-    
-    private String status; // SUCCESSFUL, FAILED, PENDING
-    
-    private Map<String, String> metadata;
+
+    /** PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED, EXPIRED, REFUNDED, PARTIALLY_REFUNDED */
+    private String status;
 }

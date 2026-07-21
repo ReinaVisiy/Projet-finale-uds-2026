@@ -6,26 +6,31 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
- * Reponse retournee par Simiz lors de la creation d'un checkout.
+ * Reponse retournee par Simiz lors de la creation d'un paiement
+ * (POST /payments). Ne mappe que les champs utilises par
+ * paiement-service ; Simiz renvoie egalement id, projectId, payerPhone,
+ * payerName, payerEmail, livemode, createdAt, completedAt, etc.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class SimizCheckoutResponse {
-    
-    private String id; // Session ID (ex. simiz_pay_abc123xyz)
-    
+
+    /** Token unique du paiement (ex. pay_abc123xyz789), utilise pour la verification et le webhook. */
+    private String token;
+
     private BigDecimal amount;
-    
+
     private String currency;
-    
-    private String status; // PENDING
-    
-    private String checkoutUrl; // URL vers la page de paiement Simiz
-    
+
+    /** PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED, EXPIRED, REFUNDED, PARTIALLY_REFUNDED */
+    private String status;
+
+    /** URL Simiz vers laquelle rediriger le client pour payer. */
+    private String paymentUrl;
+
     private String createdAt;
 }
