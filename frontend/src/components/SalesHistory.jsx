@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArrowLeft } from 'lucide-react';
 
 // Avant : toutes les données (mois, catégories, transactions, statuts,
 // KPIs) étaient des tableaux fictifs codés en dur (mêmes 6 "ventes" pour
@@ -33,7 +34,7 @@ const PERIOD_DAYS = { '7j': 7, '30j': 30, '3m': 90, '1a': 365 };
 const statusKeys = ['toutes', ...STATUS_ORDER];
 
 
-export default function SalesHistory({ adminOrders = [], vendeurProducts = [] }) {
+export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts = [] }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const STATUS_LABEL_KEYS = {
@@ -154,6 +155,10 @@ export default function SalesHistory({ adminOrders = [], vendeurProducts = [] })
       {/* ── Header ── */}
       <div style={styles.pageHeader}>
         <div>
+          <button onClick={onBack} style={styles.backBtn}>
+            <ArrowLeft size={16} style={{ marginRight: '6px' }} />
+            {t('salesHistory.back', { defaultValue: 'Retour' })}
+          </button>
           <h2 style={styles.pageTitle}>{t('salesHistory.pageTitle')}</h2>
           <p style={styles.pageSubtitle}>{t('salesHistory.pageSubtitle')}</p>
         </div>
@@ -469,6 +474,19 @@ const styles = {
     paddingBottom: '18px',
     flexWrap: 'wrap',
     gap: '12px',
+  },
+  backBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    backgroundColor: '#ffffff',
+    color: '#1b4d3e',
+    fontSize: '13px',
+    fontWeight: '700',
+    border: '1.5px solid #dee2e6',
+    cursor: 'pointer',
+    marginBottom: '12px',
   },
   pageTitle: {
     fontSize: '26px',

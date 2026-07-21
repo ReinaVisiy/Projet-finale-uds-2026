@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArrowLeft } from 'lucide-react';
 
 const alertConfig = {
   CRITIQUE: { color: '#dc3545', bg: '#fde8ea' },
@@ -19,7 +20,7 @@ const priorityConfig = {
 const CRITICAL_THRESHOLD = 3;
 const LOW_THRESHOLD = 10;
 
-export default function StockAlerts({ vendeurProducts = [] }) {
+export default function StockAlerts({ onBack, vendeurProducts = [] }) {
   const { t } = useTranslation();
   // Alertes construites à partir des vrais produits du vendeur (stock réel
   // renvoyé par produit-service), et non plus d'une liste de produits
@@ -70,6 +71,10 @@ export default function StockAlerts({ vendeurProducts = [] }) {
   if (items.length === 0) {
     return (
       <div style={styles.container} className="fade-in">
+        <button onClick={onBack} style={styles.backBtn}>
+          <ArrowLeft size={16} style={{ marginRight: '6px' }} />
+          {t('stockAlerts.back', { defaultValue: 'Retour' })}
+        </button>
         <div style={styles.emptyOk}>
           <span style={{ fontSize: '40px' }}>✅</span>
           <h2 style={styles.emptyOkTitle}>{t('stockAlerts.noAlertsTitle')}</h2>
@@ -83,6 +88,11 @@ export default function StockAlerts({ vendeurProducts = [] }) {
     <div style={styles.container} className="fade-in">
 
       {toast && <div style={styles.toast} className="fade-in">{toast}</div>}
+
+      <button onClick={onBack} style={styles.backBtn}>
+        <ArrowLeft size={16} style={{ marginRight: '6px' }} />
+        {t('stockAlerts.back', { defaultValue: 'Retour' })}
+      </button>
 
       {/* ── Alert Banner ── */}
       <div style={styles.alertBanner}>
@@ -287,6 +297,19 @@ export default function StockAlerts({ vendeurProducts = [] }) {
 }
 
 const styles = {
+  backBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    backgroundColor: '#ffffff',
+    color: '#1b4d3e',
+    fontSize: '13px',
+    fontWeight: '700',
+    border: '1.5px solid #dee2e6',
+    cursor: 'pointer',
+    marginBottom: '16px',
+  },
   emptyOk: {
     display: 'flex',
     flexDirection: 'column',
