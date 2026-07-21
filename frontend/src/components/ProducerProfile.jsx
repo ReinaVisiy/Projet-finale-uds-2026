@@ -47,9 +47,16 @@ export default function ProducerProfile({
     setChargeErreur(null);
     try {
       const produitsBruts = await produitApi.getProduitsParProducteur(producteur.id);
-      setProduits((produitsBruts || []).map(mapProduitPourVitrine));
+      const produitsMappes = (produitsBruts || []).map(mapProduitPourVitrine);
+      setProduits(produitsMappes);
+      // On associe chaque avis au produit déjà chargé pour pouvoir afficher
+      // son contexte (nom, lien) sans requête supplémentaire.
       const avisParProduit = await Promise.all(
-        (produitsBruts || []).map((p) => avisApi.getAvisParProduit(p.id).catch(() => []))
+        (produitsBruts || []).map((p, idx) =>
+          avisApi.getAvisParProduit(p.id)
+            .then((avis) => (avis || []).map((a) => ({ ...a, produit: produitsMappes[idx] })))
+            .catch(() => [])
+        )
       );
       setAvisList(avisParProduit.flat());
     } catch (e) {
@@ -493,6 +500,13 @@ export default function ProducerProfile({
                           {new Date(avis.date).toLocaleDateString('fr-FR')}
                         </span>
                       </div>
+                      <button
+                        style={styles.avisProduitLink}
+                        onClick={() => avis.produit && onNavigateToProduct && onNavigateToProduct(avis.produit)}
+                        disabled={!avis.produit}
+                      >
+                        {avis.produit?.name || t('producerProfile.productUnavailable')}
+                      </button>
                       <StarRow value={avis.note} size={14} />
                       <p style={styles.avisComment}>{avis.commentaire}</p>
                     </div>
