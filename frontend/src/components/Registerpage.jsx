@@ -1,6 +1,6 @@
 // src/components/Registerpage.jsx
 import { useState, useRef } from 'react';
-import { User, Mail, Lock, Phone, Eye, EyeOff, CheckCircle, ArrowRight, Camera } from 'lucide-react';
+import { User, Mail, Lock, Phone, Eye, EyeOff, ArrowRight, Camera } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 

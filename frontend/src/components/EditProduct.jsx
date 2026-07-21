@@ -18,7 +18,6 @@ export default function EditProduct({
   const [quantity, setQuantity] = useState(product?.stock || '');
   const [price, setPrice] = useState(product?.price || '');
   const [description, setDescription] = useState(product?.description || '');
-  const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(product?.imageUrl || product?.image || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
@@ -41,8 +40,7 @@ export default function EditProduct({
       alert(t('editProduct.selectImage'));
       return;
     }
-    setImageFile(file);
-    const reader = new FileReader();
+        const reader = new FileReader();
     reader.onload = (e) => setImagePreview(e.target.result);
     reader.readAsDataURL(file);
   };
@@ -50,8 +48,7 @@ export default function EditProduct({
   const handleFileInput = (e) => handleImageChange(e.target.files[0]);
 
   const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
+        setImagePreview(null);
   };
 
   const handleSubmit = async (e) => {

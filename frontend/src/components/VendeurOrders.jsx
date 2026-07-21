@@ -1,6 +1,6 @@
 // src/components/VendeurOrders.jsx
 import { useState } from 'react';
-import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 

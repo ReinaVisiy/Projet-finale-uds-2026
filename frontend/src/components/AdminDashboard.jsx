@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, ShieldCheck, CheckCircle, XCircle, Clock, Eye, FileText, AlertOctagon, Lock, RotateCcw } from 'lucide-react';
+import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 
@@ -18,8 +18,6 @@ function getNavItems(t) {
 
 export default function AdminDashboard({
   onNavigate,
-  onApproveCertification,
-  onRejectCertification,
   onNavigateToVendorVerification,
   onNavigateToModeration,
   pendingVerificationCount = 0,
@@ -58,7 +56,7 @@ export default function AdminDashboard({
 
   // ===== STATISTIQUES =====
   const totalUsers = registeredUsers.length;
-  const totalClients = registeredUsers.filter(u => u.role === 'client').length;
+
   const totalVendeurs = registeredUsers.filter(u => u.role === 'vendeur').length;
   const totalOrders = adminOrders.length;
   const totalRevenue = adminOrders.reduce((sum, o) => sum + (o.amount || 0), 0);
@@ -66,7 +64,7 @@ export default function AdminDashboard({
   const pendingSignalements = signalements.filter(s => s.status === 'pending').length;
   const pendingCertifications = vendorVerifications.filter(v => v.status === 'pending').length;
   const approvedCertifications = vendorVerifications.filter(v => v.status === 'approved').length;
-  const rejectedCertifications = vendorVerifications.filter(v => v.status === 'rejected').length;
+
 
   // ===== REVENU PLATEFORME (section 4) =====
   // Commission de 5% : prelevee des qu'une transaction est payee (et
@@ -141,16 +139,6 @@ export default function AdminDashboard({
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
-  };
-
-  // certificationMapping.js (mapCertificationPourAdmin) renvoie prenom/nom,
-  // pas farm/vendeurNom/vendeur (qui n'existaient pas sur l'objet réel et
-  // laissaient l'affichage vide). Petit helper pour construire le nom
-  // complet du producteur de façon sûre.
-  const nomCompletProducteur = (cert) => {
-    if (!cert) return '';
-    const nom = `${cert.prenom || ''} ${cert.nom || ''}`.trim();
-    return nom || `Producteur #${cert.producteurId ?? ''}`;
   };
 
   // ===== NAVIGATION =====

@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Package, ShoppingBag, Bell, User,
   BarChart3, AlertTriangle, LogOut, Menu, X,
-  ShoppingCart, DollarSign, CheckCircle, XCircle,
-  Shield, Clock, Plus, Edit, Trash2, Send, CreditCard,
-  Upload, Wallet, Lock, AlertCircle
+  DollarSign, CheckCircle,
+  Shield, Clock, Plus, Edit, Trash2, Send,
+  Wallet, Lock, AlertCircle
 } from 'lucide-react';
 import VendeurOrders from './VendeurOrders';
 import ConfirmDialog from './ConfirmDialog';

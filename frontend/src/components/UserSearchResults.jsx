@@ -1,6 +1,6 @@
 // src/components/UserSearchResults.jsx
 import { useState } from 'react';
-import { Search, ArrowLeft, User, ShieldCheck } from 'lucide-react';
+import { Search, ArrowLeft, User } from 'lucide-react';
 import { utilisateurApi } from '../services/api';
 import { mapProfileToFrontendUser } from '../services/userMapping';
 import { useTranslation } from 'react-i18next';

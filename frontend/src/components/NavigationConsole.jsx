@@ -1,7 +1,7 @@
 // src/components/NavigationConsole.jsx
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShoppingCart, User, LogOut, ChevronDown, ShieldCheck, Home, Package, LayoutGrid, Bell, Users, ShoppingBag, Menu, X, MessageCircle, Search } from 'lucide-react';
+import { ShoppingCart, User, LogOut, ChevronDown, Home, Package, LayoutGrid, Bell, Users, ShoppingBag, Menu, X, MessageCircle, Search } from 'lucide-react';
 
 
 export default function NavigationConsole({

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Star, MessageCircle, ShieldCheck, Edit3, Trash2, Flag, Package, ShoppingBag, MessageSquareText } from 'lucide-react';
+import { ArrowLeft, Star, MessageCircle, ShieldCheck, Edit3, Trash2, Flag, Package, MessageSquareText } from 'lucide-react';
 import { produitApi, avisApi, certificationApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
 import ConfirmDialog from './ConfirmDialog';

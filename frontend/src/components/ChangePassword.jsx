@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Lock, Eye, EyeOff, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 
-export default function ChangePassword({ onBack, onSave, currentUser }) {
+export default function ChangePassword({ onBack, onSave }) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     currentPassword: '',

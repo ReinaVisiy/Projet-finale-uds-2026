@@ -19,7 +19,7 @@ const priorityConfig = {
 const CRITICAL_THRESHOLD = 3;
 const LOW_THRESHOLD = 10;
 
-export default function StockAlerts({ onBack, vendeurProducts = [] }) {
+export default function StockAlerts({ vendeurProducts = [] }) {
   const { t } = useTranslation();
   // Alertes construites à partir des vrais produits du vendeur (stock réel
   // renvoyé par produit-service), et non plus d'une liste de produits

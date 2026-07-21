@@ -15,7 +15,6 @@ export default function AddProduct({ onProductAdded, onCancel }) {
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
-  const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [erreur, setErreur] = useState('');
@@ -38,8 +37,7 @@ export default function AddProduct({ onProductAdded, onCancel }) {
       alert(t('addProduct.selectImage'));
       return;
     }
-    setImageFile(file);
-    const reader = new FileReader();
+        const reader = new FileReader();
     reader.onload = (e) => setImagePreview(e.target.result);
     reader.readAsDataURL(file);
   };
@@ -47,8 +45,7 @@ export default function AddProduct({ onProductAdded, onCancel }) {
   const handleFileInput = (e) => handleImageChange(e.target.files[0]);
 
   const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
+        setImagePreview(null);
   };
 
   const handleSubmit = async (e) => {
@@ -89,6 +86,7 @@ export default function AddProduct({ onProductAdded, onCancel }) {
       </div>
 
       <form style={styles.form} onSubmit={handleSubmit}>
+        {erreur && <div style={styles.errorBanner}>{erreur}</div>}
         <div style={styles.grid}>
           {/* Colonne gauche : formulaire */}
           <div style={styles.formCard}>
@@ -206,6 +204,15 @@ export default function AddProduct({ onProductAdded, onCancel }) {
 }
 
 const styles = {
+  errorBanner: {
+    background: '#fdecea',
+    color: '#b91c1c',
+    border: '1px solid #f5b5b0',
+    borderRadius: '8px',
+    padding: '12px 16px',
+    marginBottom: '16px',
+    fontSize: '14px',
+  },
   container: {
     maxWidth: '1100px',
     margin: '0 auto',

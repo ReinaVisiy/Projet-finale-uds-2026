@@ -13,7 +13,6 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
   const { t } = useTranslation();
   const [statusKey, setStatusKey] = useState('en_preparation');
   const [notification, setNotification] = useState('');
-  const [isDelivered, setIsDelivered] = useState(false);
 
   const getStepIndex = (currentStatusKey) => {
     return STEP_KEYS.indexOf(currentStatusKey);
@@ -21,7 +20,6 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
 
   const handleMarkAsDelivered = () => {
     setStatusKey('livree');
-    setIsDelivered(true);
     setNotification(t('orderDetailAdmin.deliveredToast'));
     if (onMarkAsDeliveredState) {
       onMarkAsDeliveredState('001', 'livree');

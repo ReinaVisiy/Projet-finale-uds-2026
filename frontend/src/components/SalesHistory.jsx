@@ -11,14 +11,6 @@ import { useTranslation } from 'react-i18next';
 // Les 6 statuts réels renvoyés par commande-service (voir
 // STATUT_BACKEND_TO_FRANCAIS dans commandeMapping.js).
 const STATUS_ORDER = ['En attente', 'Validée', 'En préparation', 'En livraison', 'Livrée', 'Annulée'];
-const STATUS_EN = {
-  'En attente': 'Pending',
-  'Validée': 'Validated',
-  'En préparation': 'Preparing',
-  'En livraison': 'Shipping',
-  'Livrée': 'Delivered',
-  'Annulée': 'Cancelled',
-};
 const STATUS_COLORS = {
   'En attente': { color: '#f0a500', bg: '#fff9e6' },
   'Validée': { color: '#6c757d', bg: '#f1f3f5' },
@@ -41,7 +33,7 @@ const PERIOD_DAYS = { '7j': 7, '30j': 30, '3m': 90, '1a': 365 };
 const statusKeys = ['toutes', ...STATUS_ORDER];
 
 
-export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts = [] }) {
+export default function SalesHistory({ adminOrders = [], vendeurProducts = [] }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const STATUS_LABEL_KEYS = {
