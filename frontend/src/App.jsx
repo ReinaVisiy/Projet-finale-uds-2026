@@ -35,7 +35,7 @@ import NotificationsCenter from './components/NotificationsCenter';
 import OrderDetailAdmin from './components/OrderDetailAdmin';
 import ChangePassword from './components/ChangePassword';
 import PaymentReturn from './components/PaymentReturn';
-import { authApi, utilisateurApi, produitApi, signalementApi, commandeApi, paiementApi, certificationApi, notificationApi, litigeApi, getSession } from './services/api';
+import { authApi, utilisateurApi, produitApi, signalementApi, commandeApi, paiementApi, messageApi, certificationApi, notificationApi, litigeApi, getSession } from './services/api';
 import { ROLE_FRONTEND_TO_BACKEND, joinNomComplet, splitNomComplet, mapProfileToFrontendUser } from './services/userMapping';
 import { mapCertificationPourAdmin } from './services/certificationMapping';
 import { mapProduitPourVendeur, construireProduitRequest } from './services/productMapping';
@@ -168,6 +168,21 @@ export default function App() {
       setNotifications((dtos || []).map(mapNotificationPourAffichage));
     } catch (err) {
       console.error('Impossible de charger vos notifications :', err);
+    }
+  };
+
+  // ===== MESSAGES NON LUS =====
+  // Compteur affiché en badge sur "Mes messages", à côté de la cloche de
+  // notifications. Rechargé au changement d'utilisateur, puis toutes les
+  // 30s tant qu'un utilisateur est connecté (pas de websocket disponible).
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const chargerMessagesNonLus = async () => {
+    if (!currentUser?.id) return;
+    try {
+      const count = await messageApi.compterNonLus();
+      setUnreadMessagesCount(count || 0);
+    } catch (err) {
+      console.error('Impossible de charger le nombre de messages non lus :', err);
     }
   };
 
@@ -525,8 +540,12 @@ export default function App() {
   useEffect(() => {
     if (currentUser?.id) {
       chargerMesNotifications();
+      chargerMessagesNonLus();
+      const interval = setInterval(chargerMessagesNonLus, 30000);
+      return () => clearInterval(interval);
     } else {
       setNotifications([]);
+      setUnreadMessagesCount(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id]);
@@ -857,6 +876,9 @@ export default function App() {
 
   const navigate = (s) => {
     setPreviousScreen(screen);
+    if (screen === 'messages-inbox' && s !== 'messages-inbox') {
+      chargerMessagesNonLus();
+    }
     const publicScreens = ['home', 'login-page', 'register', 'recovery', 'product-detail', 'faq', 'producer-profile', 'client-profile', 'user-search', 'catalogue'];
     if (!currentUser && !publicScreens.includes(s)) {
       requireLogin(() => setScreen(s));
@@ -1283,6 +1305,7 @@ export default function App() {
         onLogout={handleLogout}
         cartCount={cartItems.length}
         notifications={notifications}
+        unreadMessagesCount={unreadMessagesCount}
         isClientMode={isClientMode}
         onToggleClientMode={toggleClientMode}
       />

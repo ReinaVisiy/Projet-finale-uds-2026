@@ -11,6 +11,7 @@ export default function NavigationConsole({
   onLogout,
   cartCount = 0,
   notifications = [],
+  unreadMessagesCount = 0,
   isClientMode = false,
   onToggleClientMode,
 }) {
@@ -113,6 +114,7 @@ export default function NavigationConsole({
                   </button>
                   <button style={styles.notifBtn} onClick={() => { onNavigate('messages-inbox'); setMobileMenuOpen(false); }}>
                     <MessageCircle size={20} />
+                    {unreadMessagesCount > 0 && <span style={styles.notifBadge}>{unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}</span>}
                   </button>
                 </>
               )}
@@ -179,6 +181,7 @@ export default function NavigationConsole({
                     </button>
                     <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('messages-inbox'); }}>
                       <MessageCircle size={15} /> {t('navigation.myMessages')}
+                      {unreadMessagesCount > 0 && <span style={styles.dropdownBadge}>{unreadMessagesCount}</span>}
                     </button>
                     {currentUser.role === 'client' && (
                       <>
