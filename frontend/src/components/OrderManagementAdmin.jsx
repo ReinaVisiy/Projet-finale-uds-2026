@@ -35,6 +35,7 @@ export default function OrderManagementAdmin({
                 <th style={styles.th}>{t('orderManagementAdmin.client')}</th>
                 <th style={styles.th}>{t('orderManagementAdmin.amount')}</th>
                 <th style={styles.th}>{t('orderManagementAdmin.status')}</th>
+                <th style={styles.th}>{t('orderManagementAdmin.paymentStatus')}</th>
                 <th style={styles.th}>{t('orderManagementAdmin.date')}</th>
                 <th style={styles.th}>{t('orderManagementAdmin.action')}</th>
               </tr>
@@ -52,6 +53,15 @@ export default function OrderManagementAdmin({
                       color: order.status === 'Livrée' ? '#2d6a4f' : order.status === 'En livraison' ? '#f5b041' : '#6c757d',
                     }}>
                       {order.status || t('orderManagementAdmin.pending')}
+                    </span>
+                  </td>
+                  <td style={styles.td}>
+                    <span style={{
+                      ...styles.statusBadge,
+                      backgroundColor: order.paye ? '#e9f5ee' : '#fdecea',
+                      color: order.paye ? '#2d6a4f' : '#b3261e',
+                    }}>
+                      {order.paye ? t('orderManagementAdmin.paid') : t('orderManagementAdmin.unpaid')}
                     </span>
                   </td>
                   <td style={styles.td}>{order.date}</td>

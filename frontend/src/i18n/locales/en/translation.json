@@ -211,7 +211,10 @@
     "date": "Date",
     "action": "Action",
     "pending": "Pending",
-    "view": "View"
+    "view": "View",
+    "paymentStatus": "Payment",
+    "paid": "Paid",
+    "unpaid": "Unpaid"
   },
   "login": {
     "fillFields": "Please fill in all fields",

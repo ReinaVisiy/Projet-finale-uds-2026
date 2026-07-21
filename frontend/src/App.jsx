@@ -420,6 +420,23 @@ export default function App() {
     }
   };
 
+  // Interroge paiement-service pour savoir si une commande a été payée
+  // (transaction.statut === PAYE). Utilisé pour afficher un badge "Payée"
+  // côté admin, vendeur et client.
+  const enrichirAvecStatutPaiement = async (commandes) => {
+    return Promise.all((commandes || []).map(async (commande) => {
+      try {
+        const statut = await paiementApi.getStatutReference('COMMANDE', commande.id);
+        return { ...commande, paye: !!statut?.paye };
+      } catch {
+        // Pas de transaction trouvée ou service indisponible : on
+        // considère la commande comme non payée plutôt que de bloquer
+        // l'affichage de la liste.
+        return { ...commande, paye: false };
+      }
+    }));
+  };
+
   const chargerToutesLesCommandes = async () => {
     try {
       const dtos = await commandeApi.getAllCommandes();
@@ -434,10 +451,11 @@ export default function App() {
           // client supprimé entretemps : on gardera le repli "Client #id"
         }
       }));
-      setToutesLesCommandes((dtos || []).map((dto) => {
+      const commandesMappees = (dtos || []).map((dto) => {
         const client = clients.get(dto.clientId);
         return mapCommandePourAffichage(dto, client?.nom, client?.email, noms);
-      }));
+      });
+      setToutesLesCommandes(await enrichirAvecStatutPaiement(commandesMappees));
     } catch (err) {
       console.error('Impossible de charger les commandes :', err);
     }

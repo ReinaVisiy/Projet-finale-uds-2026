@@ -211,7 +211,10 @@
     "date": "Date",
     "action": "Action",
     "pending": "En attente",
-    "view": "Voir"
+    "view": "Voir",
+    "paymentStatus": "Paiement",
+    "paid": "Payée",
+    "unpaid": "Non payée"
   },
   "login": {
     "fillFields": "Veuillez remplir tous les champs",
