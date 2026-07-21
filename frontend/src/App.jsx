@@ -82,6 +82,10 @@ export default function App() {
 
   // ===== UTILISATEUR CONNECTÉ =====
   const [currentUser, setCurrentUser] = useState(null);
+  // Plan d'abonnement du vendeur. setActivePlan est appele au login/inscription
+  // mais aucun ecran n'affiche encore activePlan (fonctionnalite a construire).
+  // eslint-disable-next-line no-unused-vars
+  const [activePlan, setActivePlan] = useState('gratuit');
 
   // ===== COMPTES INSCRITS =====
   const [registeredUsers, setRegisteredUsers] = useState([]);
@@ -202,7 +206,7 @@ export default function App() {
   // ===== CHARGEMENT DEPUIS localStorage =====
   useEffect(() => {
     const savedCart = localStorage.getItem('cartItems');
-    if (savedCart) { try { setCartItems(JSON.parse(savedCart)); } catch {} }
+    if (savedCart) { try { setCartItems(JSON.parse(savedCart)); } catch { /* panier corrompu dans localStorage, on ignore */ } }
     const savedClientMode = localStorage.getItem('isClientMode');
     if (savedClientMode) { setIsClientMode(JSON.parse(savedClientMode)); }
 
@@ -247,7 +251,7 @@ export default function App() {
     } else {
       setVendeurProducts([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, currentUser?.role]);
 
   // ===== SIGNALEMENTS (modération admin) =====
@@ -294,7 +298,6 @@ export default function App() {
       chargerUtilisateurs();
       chargerCertifications();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, currentUser?.role]);
 
   // ===== UTILISATEURS (liste admin) =====
@@ -402,7 +405,7 @@ export default function App() {
     } else {
       setMesCommandes([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, currentUser?.role]);
 
   // Commandes du vendeur connecté uniquement, via l'endpoint scopé
@@ -444,7 +447,7 @@ export default function App() {
     } else {
       setMesCommandesVendeur([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, currentUser?.role]);
 
   // Revenu plateforme (5% de commission + frais de 10% retenus a
@@ -494,7 +497,6 @@ export default function App() {
       setToutesLesTransactions([]);
       setTousLesLitiges([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, currentUser?.role]);
 
   // Rembourse en un clic un litige "Produit non livré" (refuse par le
@@ -1149,6 +1151,7 @@ export default function App() {
           onRejectCertification={handleRejectVerification}
           onRembourserLitige={handleRembourserLitige}
           onResoudreLitige={handleResoudreLitige}
+          onToggleUserBlocked={handleToggleUserBlocked}
         />;
       case 'order-management-admin':
         return <OrderManagementAdmin
@@ -1160,7 +1163,7 @@ export default function App() {
         return <OrderDetailAdmin
           onBack={() => navigate('order-management-admin')}
           onMarkAsDeliveredState={(id, newStatus) => {
-            setAdminOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+            setToutesLesCommandes(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
           }}
         />;
       case 'moderation-panel':
