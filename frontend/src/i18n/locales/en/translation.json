@@ -279,7 +279,8 @@
     "loadFailed": "Unable to load your messages.",
     "myMessages": "My messages",
     "loadingConvs": "Loading your conversations...",
-    "noConvs": "No conversations yet."
+    "noConvs": "No conversations yet.",
+    "imagePreview": "📷 Image"
   },
   "clientOrders": {
     "back": "Back",

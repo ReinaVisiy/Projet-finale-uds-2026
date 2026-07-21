@@ -23,7 +23,7 @@ function regrouperParConversation(messages, currentUserId, t) {
       parInterlocuteur.set(autreId, {
         id: autreId,
         name: autreNom || t('messagesInbox.user'),
-        dernierMessage: m.contenu,
+        dernierMessage: m.contenu?.trim() ? m.contenu : (m.imageData ? t('messagesInbox.imagePreview') : m.contenu),
         dernierDate: m.dateEnvoi,
         nonLus: 0,
       });

@@ -279,7 +279,8 @@
     "loadFailed": "Impossible de charger vos messages.",
     "myMessages": "Mes messages",
     "loadingConvs": "Chargement de vos conversations...",
-    "noConvs": "Aucune conversation pour le moment."
+    "noConvs": "Aucune conversation pour le moment.",
+    "imagePreview": "📷 Image"
   },
   "clientOrders": {
     "back": "Retour",
