@@ -1,5 +1,5 @@
 // src/App.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import NavigationConsole from './components/NavigationConsole';
 import AgroMarketHome from './components/AgriconnectHome';
 import AddProduct from './components/AddProduct';
@@ -218,9 +218,22 @@ export default function App() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [isClientMode, setIsClientMode] = useState(false);
 
+  // ===== PANIER : clé de stockage propre à l'utilisateur =====
+  // Avant, le panier était stocké sous une clé unique 'cartItems' pour
+  // tout le monde : à la déconnexion, currentUser passait à null mais le
+  // panier restait affiché tel quel en mémoire, puis à la prochaine
+  // connexion (potentiellement un AUTRE utilisateur sur le même
+  // navigateur) c'est ce même panier partagé qui réapparaissait — jamais
+  // le panier propre à l'utilisateur qui vient de se reconnecter. On
+  // scinde donc le panier par utilisateur (clé 'cartItems_<id>'), avec
+  // une clé 'cartItems_invite' pour les visiteurs non connectés, afin que
+  // chaque utilisateur retrouve bien SON panier après une déconnexion.
+  const getCartStorageKey = (user) => (user ? `cartItems_${user.id}` : 'cartItems_invite');
+  const cartKeyRef = useRef(getCartStorageKey(null));
+
   // ===== CHARGEMENT DEPUIS localStorage =====
   useEffect(() => {
-    const savedCart = localStorage.getItem('cartItems');
+    const savedCart = localStorage.getItem(cartKeyRef.current);
     if (savedCart) { try { setCartItems(JSON.parse(savedCart)); } catch { /* panier corrompu dans localStorage, on ignore */ } }
     const savedClientMode = localStorage.getItem('isClientMode');
     if (savedClientMode) { setIsClientMode(JSON.parse(savedClientMode)); }
@@ -243,8 +256,24 @@ export default function App() {
     }
   }, []);
 
+  // ===== PANIER : bascule de panier à la connexion/déconnexion =====
+  // Dès que l'utilisateur connecté change (connexion, déconnexion ou
+  // restauration de session au chargement), on sauvegarde d'abord le
+  // panier courant sous son ancienne clé (pour ne pas perdre les articles
+  // ajoutés en tant qu'invité), puis on recharge le panier propre au
+  // nouvel utilisateur (ou le panier invité après une déconnexion).
+  useEffect(() => {
+    const newKey = getCartStorageKey(currentUser);
+    if (newKey === cartKeyRef.current) return;
+    localStorage.setItem(cartKeyRef.current, JSON.stringify(cartItems));
+    cartKeyRef.current = newKey;
+    const savedCart = localStorage.getItem(newKey);
+    try { setCartItems(savedCart ? JSON.parse(savedCart) : []); } catch { setCartItems([]); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]);
+
   // ===== SAUVEGARDE =====
-  useEffect(() => { localStorage.setItem('cartItems', JSON.stringify(cartItems)); }, [cartItems]);
+  useEffect(() => { localStorage.setItem(cartKeyRef.current, JSON.stringify(cartItems)); }, [cartItems]);
   useEffect(() => { localStorage.setItem('isClientMode', JSON.stringify(isClientMode)); }, [isClientMode]);
 
   // ===== PRODUITS DU VENDEUR CONNECTÉ =====
