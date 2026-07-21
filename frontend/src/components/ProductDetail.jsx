@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Star, Share2, Shield, Truck, Package, Plus, Minus, ShoppingCart, MessageCircle, Flag, ChevronRight } from 'lucide-react';
-import { getAvisParProduit, getAvisStats, publierAvis } from '../services/api/avisApi';
+import { getAvisParProduit, getAvisStats, publierAvis, modifierAvis } from '../services/api/avisApi';
 import { useTranslation } from 'react-i18next';
 
 
@@ -23,6 +23,8 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
   const [noteChoisie, setNoteChoisie] = useState(0);
   const [commentaire, setCommentaire] = useState('');
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  // Avis de l'utilisateur en cours de modification (null = pas d'édition en cours)
+  const [avisEnEdition, setAvisEnEdition] = useState(null);
 
   const chargerAvis = async () => {
     if (!product?.id) { setAvisLoading(false); return; }
@@ -47,6 +49,36 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
   }, [product?.id]);
 
   const dejaNote = currentUser && avisList.some(a => a.clientId === currentUser.id);
+  const monAvis = currentUser && avisList.find(a => a.clientId === currentUser.id);
+
+  const commencerEditionAvis = (avis) => {
+    setAvisEnEdition(avis);
+    setNoteChoisie(avis.note);
+    setCommentaire(avis.commentaire || '');
+  };
+
+  const annulerEditionAvis = () => {
+    setAvisEnEdition(null);
+    setNoteChoisie(0);
+    setCommentaire('');
+  };
+
+  const handleModifierAvis = async (e) => {
+    e.preventDefault();
+    if (!noteChoisie) { alert(t('productDetail.chooseRating')); return; }
+    setEnvoiEnCours(true);
+    try {
+      await modifierAvis(avisEnEdition.id, { produitId: product.id, note: noteChoisie, commentaire });
+      setAvisEnEdition(null);
+      setNoteChoisie(0);
+      setCommentaire('');
+      await chargerAvis();
+    } catch (err) {
+      alert(err?.message || t('productDetail.reviewFailed'));
+    } finally {
+      setEnvoiEnCours(false);
+    }
+  };
 
   const handlePublierAvis = async (e) => {
     e.preventDefault();
@@ -323,8 +355,48 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
 
           {/* Laisser un avis */}
           {currentUser ? (
-            dejaNote ? (
-              <p style={styles.dejaNoteMsg}>{t('productDetail.alreadyReviewed')}</p>
+            avisEnEdition ? (
+              <form style={styles.reviewForm} onSubmit={handleModifierAvis}>
+                <span style={styles.qtyLabel}>{t('productDetail.editReview')}</span>
+                <div style={styles.stars}>
+                  {[1,2,3,4,5].map(i => (
+                    <Star
+                      key={i}
+                      size={22}
+                      style={{ cursor: 'pointer' }}
+                      fill={i <= noteChoisie ? "#f5b041" : "none"}
+                      color="#f5b041"
+                      onClick={() => setNoteChoisie(i)}
+                    />
+                  ))}
+                </div>
+                <textarea
+                  style={styles.reviewTextarea}
+                  rows="3"
+                  placeholder={t('productDetail.commentPlaceholder')}
+                  value={commentaire}
+                  onChange={(e) => setCommentaire(e.target.value)}
+                />
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button type="submit" style={styles.addToCartBtn} disabled={envoiEnCours}>
+                    {envoiEnCours ? t('productDetail.sending') : t('productDetail.saveChanges')}
+                  </button>
+                  <button type="button" style={styles.iconBtn} onClick={annulerEditionAvis} disabled={envoiEnCours}>
+                    {t('productDetail.cancel')}
+                  </button>
+                </div>
+              </form>
+            ) : dejaNote ? (
+              <p style={styles.dejaNoteMsg}>
+                {t('productDetail.alreadyReviewed')}{' '}
+                <button
+                  type="button"
+                  style={{ ...styles.actionBtn, padding: 0, display: 'inline-flex' }}
+                  onClick={() => commencerEditionAvis(monAvis)}
+                >
+                  {t('productDetail.editReview')}
+                </button>
+              </p>
             ) : (
               <form style={styles.reviewForm} onSubmit={handlePublierAvis}>
                 <span style={styles.qtyLabel}>{t('productDetail.leaveReview')}</span>
@@ -371,6 +443,16 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
                       {[1,2,3,4,5].map(i => <Star key={i} size={13} fill={i <= a.note ? "#f5b041" : "none"} color="#f5b041" />)}
                     </div>
                     <span style={styles.reviewDate}>{a.date ? new Date(a.date).toLocaleDateString('fr-FR') : ''}</span>
+                    {currentUser?.id === a.clientId && !avisEnEdition && (
+                      <button
+                        type="button"
+                        style={{ ...styles.iconBtn, padding: '4px' }}
+                        onClick={() => commencerEditionAvis(a)}
+                        title={t('productDetail.editReview')}
+                      >
+                        {t('productDetail.editReview')}
+                      </button>
+                    )}
                   </div>
                   {a.commentaire && <p style={styles.reviewComment}>{a.commentaire}</p>}
                 </div>
