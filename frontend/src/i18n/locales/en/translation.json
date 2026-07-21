@@ -758,7 +758,10 @@
     "noRecipient": "Unable to start the conversation: producer not found.",
     "loadFailed": "Unable to load the conversation.",
     "sendFailed": "Failed to send the message. Try again.",
-    "aboutProduct": "Conversation about:"
+    "aboutProduct": "Conversation about:",
+    "imageTypeError": "Only images are accepted.",
+    "imageSizeError": "The image is too large (3 MB maximum).",
+    "imageReadError": "Could not read this image."
   },
   "changePassword": {
     "title": "Change password",

@@ -21,13 +21,30 @@ public class MessageService {
         this.messageRepository = messageRepository;
     }
 
+    // Data URL base64 : ~1.37 octet encode par octet source. 3 000 000
+    // caracteres ~= 2,1 Mo d'image d'origine, largement suffisant pour une
+    // photo de conversation sans alourdir la base (colonne TEXT partagee
+    // avec les autres messages de la conversation).
+    private static final int TAILLE_MAX_IMAGE_BASE64 = 3_000_000;
+
     public MessageResponse envoyer(MessageRequest request, Long expediteurId, String expediteurNom, String destinataireNom) {
         if (expediteurId.equals(request.getDestinataireId())) {
             throw new RuntimeException("Vous ne pouvez pas vous envoyer un message à vous-même");
         }
 
+        String contenu = request.getContenu() != null ? request.getContenu().trim() : "";
+        String imageData = request.getImageData();
+
+        if (contenu.isEmpty() && (imageData == null || imageData.isBlank())) {
+            throw new RuntimeException("Le message doit contenir du texte ou une image");
+        }
+        if (imageData != null && imageData.length() > TAILLE_MAX_IMAGE_BASE64) {
+            throw new RuntimeException("L'image est trop volumineuse (3 Mo maximum)");
+        }
+
         Message message = Message.builder()
-                .contenu(request.getContenu())
+                .contenu(contenu)
+                .imageData(imageData)
                 .expediteurId(expediteurId)
                 .destinataireId(request.getDestinataireId())
                 .expediteurNom(expediteurNom)
@@ -90,6 +107,7 @@ public class MessageService {
         return new MessageResponse(
                 message.getId(),
                 message.getContenu(),
+                message.getImageData(),
                 message.getDateEnvoi(),
                 message.getEstLu(),
                 message.getEstDelivre(),

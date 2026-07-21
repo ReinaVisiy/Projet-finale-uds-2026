@@ -758,7 +758,10 @@
     "noRecipient": "Impossible de démarrer la conversation : producteur introuvable.",
     "loadFailed": "Impossible de charger la conversation.",
     "sendFailed": "L'envoi du message a échoué. Réessayez.",
-    "aboutProduct": "Conversation à propos de :"
+    "aboutProduct": "Conversation à propos de :",
+    "imageTypeError": "Seules les images sont acceptées.",
+    "imageSizeError": "L'image est trop volumineuse (3 Mo maximum).",
+    "imageReadError": "Impossible de lire cette image."
   },
   "changePassword": {
     "title": "Modifier le mot de passe",

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ArrowLeft, Send, Phone, Video, MoreVertical, Check, CheckCheck } from 'lucide-react';
+import { ArrowLeft, Send, Phone, Video, MoreVertical, Check, CheckCheck, Image as ImageIcon, X } from 'lucide-react';
 import { messageApi } from '../services/api';
 import { useTranslation } from 'react-i18next';
 
@@ -9,6 +9,7 @@ function mapMessage(msg, currentUserId) {
   return {
     id: msg.id,
     text: msg.contenu,
+    imageData: msg.imageData,
     sender: msg.expediteurId === currentUserId ? 'client' : 'vendor',
     time: msg.dateEnvoi
       ? new Date(msg.dateEnvoi).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
@@ -28,7 +29,9 @@ export default function MessagePage({ onBack, vendor, currentUser, onMessageEnvo
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null); // data URL en attente d'envoi
   const bottomRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Charge la conversation réelle depuis message-service au montage.
   const chargerConversation = useCallback(async () => {
@@ -66,16 +69,44 @@ export default function MessagePage({ onBack, vendor, currentUser, onMessageEnvo
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Doit rester cohérent avec MessageService#TAILLE_MAX_IMAGE_BASE64
+  // côté backend (3 000 000 caractères ~= 2,1 Mo d'image d'origine).
+  const TAILLE_MAX_IMAGE_BASE64 = 3_000_000;
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // permet de re-sélectionner le même fichier ensuite
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setErreur(t('messagePage.imageTypeError'));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result.length > TAILLE_MAX_IMAGE_BASE64) {
+        setErreur(t('messagePage.imageSizeError'));
+        return;
+      }
+      setErreur(null);
+      setSelectedImage(reader.result);
+    };
+    reader.onerror = () => setErreur(t('messagePage.imageReadError'));
+    reader.readAsDataURL(file);
+  };
+
   const handleSend = async () => {
     const contenu = input.trim();
-    if (!contenu || !destinataireId || envoiEnCours) return;
+    if ((!contenu && !selectedImage) || !destinataireId || envoiEnCours) return;
 
     setEnvoiEnCours(true);
     setErreur(null);
     try {
-      const response = await messageApi.envoyerMessage({ destinataireId, contenu });
+      const response = await messageApi.envoyerMessage({ destinataireId, contenu, imageData: selectedImage });
       setMessages((prev) => [...prev, mapMessage(response, currentUser?.id)]);
       setInput('');
+      setSelectedImage(null);
       onMessageEnvoye?.(destinataireId, response);
     } catch (e) {
       setErreur(e?.message || t('messagePage.sendFailed'));
@@ -151,7 +182,10 @@ export default function MessagePage({ onBack, vendor, currentUser, onMessageEnvo
               ...styles.bubble,
               ...(msg.sender === 'client' ? styles.bubbleClient : styles.bubbleVendor)
             }}>
-              <p style={styles.msgText}>{msg.text}</p>
+              {msg.imageData && (
+                <img src={msg.imageData} alt="" style={styles.msgImage} />
+              )}
+              {msg.text && <p style={styles.msgText}>{msg.text}</p>}
               <div style={styles.msgMeta}>
                 <span style={styles.msgTime}>{msg.time}</span>
                 {msg.sender === 'client' && (
@@ -168,7 +202,29 @@ export default function MessagePage({ onBack, vendor, currentUser, onMessageEnvo
 
       {/* ZONE DE SAISIE */}
       <div style={styles.inputArea}>
+        {selectedImage && (
+          <div style={styles.imagePreviewWrap}>
+            <img src={selectedImage} alt="" style={styles.imagePreview} />
+            <button style={styles.removeImageBtn} onClick={() => setSelectedImage(null)}>
+              <X size={14} color="#ffffff" />
+            </button>
+          </div>
+        )}
         <div style={styles.inputWrap}>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageSelect}
+            style={{ display: 'none' }}
+          />
+          <button
+            style={styles.attachBtn}
+            onClick={() => fileInputRef.current?.click()}
+            type="button"
+          >
+            <ImageIcon size={20} color="#6c757d" />
+          </button>
           <textarea
             style={styles.input}
             placeholder={t('messagePage.inputPlaceholder')}
@@ -180,13 +236,13 @@ export default function MessagePage({ onBack, vendor, currentUser, onMessageEnvo
           <button
             style={{
               ...styles.sendBtn,
-              backgroundColor: input.trim() && !envoiEnCours ? '#2d6a4f' : '#dee2e6',
-              cursor: input.trim() && !envoiEnCours ? 'pointer' : 'default'
+              backgroundColor: (input.trim() || selectedImage) && !envoiEnCours ? '#2d6a4f' : '#dee2e6',
+              cursor: (input.trim() || selectedImage) && !envoiEnCours ? 'pointer' : 'default'
             }}
             onClick={handleSend}
-            disabled={!input.trim() || envoiEnCours}
+            disabled={(!input.trim() && !selectedImage) || envoiEnCours}
           >
-            <Send size={18} color={input.trim() && !envoiEnCours ? '#ffffff' : '#adb5bd'} />
+            <Send size={18} color={(input.trim() || selectedImage) && !envoiEnCours ? '#ffffff' : '#adb5bd'} />
           </button>
         </div>
         <p style={styles.hint}>{t('messagePage.pressEnter')}</p>
@@ -337,6 +393,14 @@ const styles = {
     margin: '0 0 6px 0',
     lineHeight: '1.5',
   },
+  msgImage: {
+    maxWidth: '100%',
+    maxHeight: '260px',
+    borderRadius: '12px',
+    display: 'block',
+    marginBottom: '6px',
+    objectFit: 'cover',
+  },
   msgMeta: {
     display: 'flex',
     alignItems: 'center',
@@ -362,6 +426,43 @@ const styles = {
     borderRadius: '20px',
     padding: '8px 8px 8px 16px',
     border: '1px solid #e9ecef',
+  },
+  attachBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  imagePreviewWrap: {
+    position: 'relative',
+    display: 'inline-block',
+    marginBottom: '10px',
+  },
+  imagePreview: {
+    height: '72px',
+    width: '72px',
+    objectFit: 'cover',
+    borderRadius: '10px',
+    border: '1px solid #e9ecef',
+    display: 'block',
+  },
+  removeImageBtn: {
+    position: 'absolute',
+    top: '-6px',
+    right: '-6px',
+    width: '20px',
+    height: '20px',
+    borderRadius: '50%',
+    backgroundColor: '#b3261e',
+    border: '2px solid #ffffff',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 0,
   },
   input: {
     flex: 1,

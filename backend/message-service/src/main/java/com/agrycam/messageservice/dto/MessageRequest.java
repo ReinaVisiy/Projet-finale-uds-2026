@@ -10,4 +10,5 @@ import lombok.*;
 public class MessageRequest {
     private Long destinataireId;
     private String contenu;
+    private String imageData;
 }

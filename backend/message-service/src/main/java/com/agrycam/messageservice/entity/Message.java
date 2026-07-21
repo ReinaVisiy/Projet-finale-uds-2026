@@ -23,6 +23,13 @@ public class Message {
     @Column(name = "date_envoi", nullable = false)
     private LocalDateTime dateEnvoi;
 
+    // Image jointe au message, encodee en base64 (data URL complete, ex.
+    // "data:image/png;base64,...") pour eviter d'ajouter un stockage de
+    // fichiers separe. Nullable : la plupart des messages restent texte
+    // seul. Taille plafonnee cote service (cf. MessageService#envoyer).
+    @Column(name = "image_data", columnDefinition = "TEXT")
+    private String imageData;
+
     @Column(name = "est_lu", nullable = false)
     private Boolean estLu = false;
 

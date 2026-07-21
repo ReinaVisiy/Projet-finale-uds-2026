@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public class MessageResponse {
     private final Long id;
     private final String contenu;
+    private final String imageData;
     private final LocalDateTime dateEnvoi;
     private final Boolean estLu;
     private final Boolean estDelivre;
@@ -15,10 +16,11 @@ public class MessageResponse {
     private final Long destinataireId;
     private final String destinataireNom;
 
-    public MessageResponse(Long id, String contenu, LocalDateTime dateEnvoi, Boolean estLu, Boolean estDelivre,
+    public MessageResponse(Long id, String contenu, String imageData, LocalDateTime dateEnvoi, Boolean estLu, Boolean estDelivre,
                            Long expediteurId, String expediteurNom, Long destinataireId, String destinataireNom) {
         this.id = id;
         this.contenu = contenu;
+        this.imageData = imageData;
         this.dateEnvoi = dateEnvoi;
         this.estLu = estLu;
         this.estDelivre = estDelivre;
