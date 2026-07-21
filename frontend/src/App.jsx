@@ -733,7 +733,17 @@ export default function App() {
     const authResponse = await authApi.login(email, password);
     const expectedBackendRole = ROLE_FRONTEND_TO_BACKEND[uiRole];
 
-    if (!authResponse.roles?.includes(expectedBackendRole)) {
+    // Un admin n'a ni le rôle CLIENT ni PRODUCTEUR : il n'existe pas de
+    // bouton "admin" sur l'écran de connexion (il n'y a que
+    // client/vendeur), donc on le laisse passer quel que soit le toggle
+    // sélectionné. Son rôle réel (ADMIN) est de toute façon déterminé
+    // juste après par mapProfileToFrontendUser à partir du profil
+    // backend, pas par uiRole : le bypass ici ne fait qu'éviter un rejet
+    // à tort, il ne donne pas les droits admin à quelqu'un qui ne les a
+    // pas déjà.
+    const estAdmin = authResponse.roles?.includes('ADMIN');
+
+    if (!estAdmin && !authResponse.roles?.includes(expectedBackendRole)) {
       authApi.logout();
       throw new Error(`Aucun compte ${uiRole} trouvé avec ces identifiants.`);
     }
