@@ -9,13 +9,28 @@ import ConfirmDialog from './ConfirmDialog';
 // cette vérification, ceci ne fait que masquer le bouton au bon moment).
 const STATUTS_ANNULABLES = ['En attente', 'Validée', 'En préparation'];
 
-export default function ClientOrders({ orders, onBackHome, onConfirmReception, onCancelOrder }) {
+export default function ClientOrders({ orders, onBackHome, onConfirmReception, onCancelOrder, onPayOrder }) {
   const { t } = useTranslation();
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [confirmingOrderId, setConfirmingOrderId] = useState(null);
   const [cancelingOrderId, setCancelingOrderId] = useState(null);
   const [orderToCancel, setOrderToCancel] = useState(null); // order | null
   const [actionError, setActionError] = useState('');
+  const [payingOrderId, setPayingOrderId] = useState(null);
+
+  const handlePayOrder = async (order) => {
+    setActionError('');
+    setPayingOrderId(order.id);
+    try {
+      await onPayOrder(order);
+      // En cas de succès, onPayOrder redirige vers NotchPay (window.location) :
+      // on ne réinitialise payingOrderId que si on est encore là (échec silencieux).
+    } catch (err) {
+      setActionError(err?.message || t('clientOrders.payOrderError'));
+    } finally {
+      setPayingOrderId(null);
+    }
+  };
 
   const handleConfirmReception = async (order) => {
     setActionError('');
@@ -98,6 +113,17 @@ export default function ClientOrders({ orders, onBackHome, onConfirmReception, o
                   </div>
                   <div style={styles.orderRight}>
                     <div style={styles.orderTotal}>{order.amount.toLocaleString()} FCFA</div>
+                    {order.paye ? (
+                      <span style={styles.paidBadge}>{t('clientOrders.paid')}</span>
+                    ) : (
+                      <button
+                        style={styles.payBtn}
+                        disabled={payingOrderId === order.id}
+                        onClick={(e) => { e.stopPropagation(); handlePayOrder(order); }}
+                      >
+                        {payingOrderId === order.id ? t('clientOrders.payOrderInProgress') : t('clientOrders.payOrder')}
+                      </button>
+                    )}
                     <span style={{
                       ...styles.statusBadge,
                       backgroundColor: statusStyle.bg,
@@ -268,6 +294,24 @@ const styles = {
     borderRadius: '20px',
     fontSize: '12px',
     fontWeight: '700',
+  },
+  paidBadge: {
+    padding: '4px 12px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '700',
+    backgroundColor: '#e9f5ee',
+    color: '#2d6a4f',
+  },
+  payBtn: {
+    padding: '6px 14px',
+    backgroundColor: '#e07a5f',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '700',
+    cursor: 'pointer',
   },
   expandBtn: { background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d', padding: '4px' },
   orderDetails: { padding: '0 20px 20px 20px', borderTop: '1px solid #f1f3f5' },

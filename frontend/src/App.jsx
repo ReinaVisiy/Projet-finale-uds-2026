@@ -414,7 +414,8 @@ export default function App() {
       const dtos = await commandeApi.getCommandesByClientId(currentUser.id);
       const noms = await resoudreNomsProduits(dtos || []);
       const nomClient = joinNomComplet(currentUser.prenom, currentUser.nom);
-      setMesCommandes((dtos || []).map((dto) => mapCommandePourAffichage(dto, nomClient, currentUser.email, noms)));
+      const commandesMappees = (dtos || []).map((dto) => mapCommandePourAffichage(dto, nomClient, currentUser.email, noms));
+      setMesCommandes(await enrichirAvecStatutPaiement(commandesMappees));
     } catch (err) {
       console.error('Impossible de charger vos commandes :', err);
     }
@@ -696,6 +697,25 @@ export default function App() {
     addNotification(currentUser.id, 'success', `Commande #${commande.id} confirmée !`, '/orders');
     await chargerMesCommandes();
     navigate('orders');
+  };
+
+  // Bouton "Payer" dans "Mes commandes" : la commande existe déjà (créée
+  // par handleCheckout) mais n'a pas de transaction PAYE — soit le client
+  // a fermé l'onglet NotchPay, soit un paiement précédent a échoué. On
+  // réutilise initierPaiement avec la même referenceId (commande.id) : le
+  // backend crée une nouvelle Transaction (référence NotchPay unique via
+  // suffixe aléatoire, cf. PaiementService), sans dupliquer la commande.
+  const handlePayerCommandeExistante = async (order) => {
+    const transaction = await paiementApi.initierPaiement({
+      typeReference: 'COMMANDE',
+      referenceId: order.id,
+      vendeurId: order.producteurId,
+      montant: order.amount,
+    });
+
+    if (transaction?.notchpayCheckoutUrl) {
+      window.location.href = transaction.notchpayCheckoutUrl;
+    }
   };
 
   const openSignalement = (product) => {
@@ -1089,6 +1109,7 @@ export default function App() {
             await commandeApi.annulerCommande(orderId);
             await chargerMesCommandes();
           }}
+          onPayOrder={handlePayerCommandeExistante}
         />;
       case 'purchases':
         return <ClientPurchases

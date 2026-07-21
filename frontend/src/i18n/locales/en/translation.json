@@ -306,7 +306,11 @@
     "cancelOrderError": "Failed to cancel the order.",
     "cancelConfirmTitle": "Cancel order",
     "cancelConfirmMsg": "Are you sure you want to cancel order",
-    "cancelConfirmBtn": "Yes, cancel"
+    "cancelConfirmBtn": "Yes, cancel",
+    "paid": "Paid",
+    "payOrder": "Pay",
+    "payOrderInProgress": "Redirecting...",
+    "payOrderError": "Could not start the payment."
   },
   "register": {
     "firstNameRequired": "First name is required",

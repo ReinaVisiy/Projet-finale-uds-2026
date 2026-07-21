@@ -306,7 +306,11 @@
     "cancelOrderError": "L'annulation de la commande a échoué.",
     "cancelConfirmTitle": "Annuler la commande",
     "cancelConfirmMsg": "Confirmez-vous l'annulation de la commande",
-    "cancelConfirmBtn": "Oui, annuler"
+    "cancelConfirmBtn": "Oui, annuler",
+    "paid": "Payée",
+    "payOrder": "Payer",
+    "payOrderInProgress": "Redirection...",
+    "payOrderError": "Impossible d'initier le paiement."
   },
   "register": {
     "firstNameRequired": "Le prénom est requis",
