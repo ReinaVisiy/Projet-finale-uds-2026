@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * Controleur REST exposant les endpoints de paiement, de portefeuille, de webhook et d'administration.
- * Tous les endpoints sont proteges par JWT, a l'exception du webhook de Simiz.
+ * Tous les endpoints sont proteges par JWT, a l'exception du webhook de paiement (NotchPay).
  */
 @RestController
 @RequestMapping("/api/paiements")
@@ -44,7 +44,7 @@ public class PaiementController {
 
     /**
      * POST /api/paiements/initier (rôle client)
-     * Cree une Transaction EN_ATTENTE et initie une session de paiement avec Simiz.
+     * Cree une Transaction EN_ATTENTE et initie un paiement avec NotchPay.
      * Renvoie l'URL de checkout a rediriger cote client.
      */
     @PostMapping("/initier")
@@ -57,7 +57,7 @@ public class PaiementController {
 
     /**
      * GET /api/paiements/{id}/verifier
-     * Sonde l'API Simiz pour mettre a jour le statut du paiement en base de donnees.
+     * Sonde l'API NotchPay pour mettre a jour le statut du paiement en base de donnees.
      * Si la transaction passe a PAYE, le solde du vendeur (95%) est credite.
      */
     @GetMapping("/{id}/verifier")
@@ -122,7 +122,10 @@ public class PaiementController {
 
     /**
      * POST /api/paiements/webhook/simiz (Public / Non protege par JWT)
-     * Receptionne les notifications asynchrones de paiement de Simiz.
+     * Receptionne les notifications asynchrones de paiement de NotchPay.
+     * (Chemin et noms de methode "simiz" conserves pour ne pas casser un
+     * webhook deja enregistre ; a renommer si vous repartez de zero cote
+     * dashboard NotchPay.)
      */
     @PostMapping("/webhook/simiz")
     public ResponseEntity<Void> recevoirWebhookSimiz(@RequestBody Map<String, Object> payload) {

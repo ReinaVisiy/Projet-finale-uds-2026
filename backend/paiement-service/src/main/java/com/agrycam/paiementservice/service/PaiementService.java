@@ -28,7 +28,7 @@ import java.util.UUID;
 
 /**
  * Service metier gérant toutes les operations de paiement, de sequestre, de portefeuille vendeur,
- * d'integration de la passerelle Simiz et de retrait de fonds.
+ * d'integration de la passerelle de paiement (NotchPay) et de retrait de fonds.
  */
 @Service
 @RequiredArgsConstructor
@@ -41,22 +41,25 @@ public class PaiementService {
     private final RestTemplate restTemplate;
     private final ServiceCommunicationClient serviceCommunicationClient;
 
-    @Value("${simiz.api.url}")
-    private String simizApiUrl;
+    @Value("${notchpay.api.url}")
+    private String notchPayApiUrl;
 
-    @Value("${simiz.secret-key}")
-    private String simizSecretKey;
+    @Value("${notchpay.public-key}")
+    private String notchPayPublicKey;
 
-    @Value("${simiz.public-key}")
-    private String simizPublicKey;
+    @Value("${notchpay.secret-key}")
+    private String notchPaySecretKey; // reserve pour la verification des webhooks (non utilise ici)
 
     @Value("${frontend.url:http://localhost:3000}")
     private String frontendUrl;
 
+    @Value("${utilisateur.service.url}")
+    private String utilisateurServiceUrl;
+
     /**
      * Initie un paiement cote client.
      * Calcule la commission fixe de 5%, le montant net vendeur,
-     * et cree une session de checkout avec Simiz.
+     * et cree un paiement NotchPay.
      */
     @Transactional
     public Transaction initierPaiement(InitiationPaiementDTO dto, Long clientId) {
@@ -84,75 +87,102 @@ public class PaiementService {
         // On sauvegarde temporairement pour obtenir l'ID de notre transaction locale
         transaction = transactionRepository.save(transaction);
 
-        // 3. Appel a la passerelle de paiement Simiz (sandbox)
+        // 3. Recuperation des infos client (NotchPay exige un email) aupres
+        // d'utilisateur-service, sans modifier le contrat d'API du frontend.
+        UtilisateurInfoDTO client;
+        try {
+            client = restTemplate.getForObject(
+                    utilisateurServiceUrl + "/api/utilisateurs/" + clientId,
+                    UtilisateurInfoDTO.class
+            );
+        } catch (Exception e) {
+            log.error("Impossible de recuperer les informations du client {} aupres d'utilisateur-service : {}",
+                    clientId, e.getMessage());
+            transaction.setStatut(StatutTransaction.ECHOUE);
+            transactionRepository.save(transaction);
+            throw new IllegalStateException(
+                    "Impossible de recuperer les informations du client pour initier le paiement.", e);
+        }
+        if (client == null || client.getEmail() == null || client.getEmail().isBlank()) {
+            log.error("Le client {} n'a pas d'email enregistre : NotchPay ne peut pas etre initie.", clientId);
+            transaction.setStatut(StatutTransaction.ECHOUE);
+            transactionRepository.save(transaction);
+            throw new IllegalStateException("Le client ne dispose pas d'un email valide pour le paiement.");
+        }
+
+        // 4. Appel a la passerelle de paiement NotchPay (sandbox)
         String description = String.format("Paiement AgryCam - %s #%d", dto.getTypeReference(), dto.getReferenceId());
 
-        // URLs de retour (page cote frontend qui affiche le resultat au client)
-        String returnUrl = String.format("%s/pay/success?transactionId=%d", frontendUrl, transaction.getId());
-        String cancelUrl = String.format("%s/pay/cancel?transactionId=%d", frontendUrl, transaction.getId());
+        // URL de retour unique (NotchPay ne distingue pas succes/echec par URL
+        // separee) ; App.jsx traite deja /pay/success et /pay/cancel de
+        // maniere identique, donc aucune modification frontend necessaire.
+        String callbackUrl = String.format("%s/pay/success?transactionId=%d", frontendUrl, transaction.getId());
 
-        // Simiz exige un userId au format UUID ; notre clientId est un Long,
-        // donc on derive un UUID stable et reproductible a partir de celui-ci
-        // (uniquement pour l'identification cote Simiz).
-        UUID simizUserId = UUID.nameUUIDFromBytes(("agrycam-client-" + clientId).getBytes());
+        NotchPayCustomer customer = NotchPayCustomer.builder()
+                .name(client.getNom())
+                .email(client.getEmail())
+                .phone(client.getTelephone())
+                .build();
 
-        SimizCheckoutRequest checkoutRequest = SimizCheckoutRequest.builder()
-                .userId(simizUserId)
+        NotchPayCreateRequest createRequest = NotchPayCreateRequest.builder()
                 .amount(montantTotal)
                 .currency("XAF")
+                .customer(customer)
                 .description(description)
-                .returnUrl(returnUrl)
-                .cancelUrl(cancelUrl)
+                .callback(callbackUrl)
+                .reference(transaction.getId().toString())
                 .build();
 
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(simizSecretKey);
+            // NotchPay attend la cle publique brute dans Authorization, sans
+            // prefixe "Bearer" (cf. documentation officielle).
+            headers.set("Authorization", notchPayPublicKey);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<SimizCheckoutRequest> httpEntity = new HttpEntity<>(checkoutRequest, headers);
+            HttpEntity<NotchPayCreateRequest> httpEntity = new HttpEntity<>(createRequest, headers);
 
-            // Le bon endpoint de creation est POST /payments (et non /checkout,
-            // qui n'existe pas dans l'API Simiz : c'etait la cause du bug de
-            // redirection vers une page inexistante).
-            log.info("Appel de Simiz API sur {}/payments pour initiation", simizApiUrl);
-            ResponseEntity<SimizCheckoutResponse> responseEntity = restTemplate.postForEntity(
-                    simizApiUrl + "/payments",
+            log.info("Appel de NotchPay API sur {}/payments pour initiation", notchPayApiUrl);
+            ResponseEntity<NotchPayCreateResponse> responseEntity = restTemplate.postForEntity(
+                    notchPayApiUrl + "/payments",
                     httpEntity,
-                    SimizCheckoutResponse.class
+                    NotchPayCreateResponse.class
             );
 
-            if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
-                SimizCheckoutResponse simizResponse = responseEntity.getBody();
-                transaction.setSimizSessionId(simizResponse.getToken());
-                transaction.setSimizCheckoutUrl(simizResponse.getPaymentUrl());
-                log.info("Paiement Simiz cree avec succes. Token: {}", simizResponse.getToken());
+            if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null
+                    && responseEntity.getBody().getAuthorization_url() != null) {
+                NotchPayCreateResponse notchResponse = responseEntity.getBody();
+                // On utilise notre propre reference (transaction.getId()) pour
+                // les verifications ulterieures : c'est celle qu'on a envoyee.
+                transaction.setSimizSessionId(transaction.getId().toString());
+                transaction.setSimizCheckoutUrl(notchResponse.getAuthorization_url());
+                log.info("Paiement NotchPay cree avec succes pour la transaction {}", transaction.getId());
             } else {
-                throw new IllegalStateException("Reponse invalide de Simiz");
+                throw new IllegalStateException("Reponse invalide de NotchPay");
             }
         } catch (Exception e) {
-            // On ne genere plus d'URL de paiement factice : une fausse URL
-            // menait le client vers une page inexistante (cf. bug remonte en
-            // test). Si Simiz est injoignable ou mal configure, l'initiation
-            // echoue clairement plutot que de simuler un faux succes.
-            log.error("Erreur lors de l'appel de l'API Simiz : {}", e.getMessage());
+            // Aucun mode de secours factice : une fausse URL menerait le
+            // client vers une page inexistante (cf. bug deja rencontre avec
+            // Simiz). En cas d'echec, la transaction est marquee ECHOUE et
+            // une erreur claire remonte au frontend.
+            log.error("Erreur lors de l'appel de l'API NotchPay : {}", e.getMessage());
             transaction.setStatut(StatutTransaction.ECHOUE);
             transactionRepository.save(transaction);
             throw new IllegalStateException(
-                    "Impossible d'initier le paiement aupres de Simiz. Reessayez plus tard.", e);
+                    "Impossible d'initier le paiement aupres de NotchPay. Reessayez plus tard.", e);
         }
 
         return transactionRepository.save(transaction);
     }
 
     /**
-     * Verifie le statut d'un paiement en interrogeant directement l'API Simiz (sondage/polling).
+     * Verifie le statut d'un paiement en interrogeant directement l'API NotchPay (sondage/polling).
      * Si le statut est passe a PAYE, credite automatiquement le solde du vendeur (sequestre libere).
      * Methode synchronisee pour eviter les conditions de concurrence et les double-credits de solde.
      */
     @Transactional
     public synchronized Transaction verifierPaiement(Long id) {
-        log.info("Verification de la transaction {} via Simiz API (polling)...", id);
+        log.info("Verification de la transaction {} via NotchPay API (polling)...", id);
         
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new TransactionNotFoundException("La transaction de paiement #" + id + " n'existe pas."));
@@ -169,60 +199,61 @@ public class PaiementService {
 
         String sessionId = transaction.getSimizSessionId();
         if (sessionId == null) {
-            log.error("Aucun SimizSessionId associe a la transaction {}", id);
+            log.error("Aucune reference NotchPay associee a la transaction {}", id);
             return transaction;
         }
 
-        // Interroger l'API Simiz
+        // Interroger l'API NotchPay
         String remoteStatus = "PENDING";
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(simizSecretKey);
+            // Meme cle publique brute (sans "Bearer") que pour la creation.
+            headers.set("Authorization", notchPayPublicKey);
             HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
 
-            // GET /payments/{token}/verify : re-verifie le statut aupres du
-            // fournisseur Mobile Money (plus fiable qu'une simple lecture en
-            // cas de webhook manque). "sessionId" contient en realite le
-            // token Simiz (cf. initierPaiement).
-            String url = String.format("%s/payments/%s/verify", simizApiUrl, sessionId);
-            log.info("Appel de Simiz API sur {}", url);
-            ResponseEntity<SimizPaymentStatusResponse> responseEntity = restTemplate.exchange(
+            // GET /payments/{reference} : "sessionId" contient en realite
+            // notre propre reference NotchPay (cf. initierPaiement).
+            String url = String.format("%s/payments/%s", notchPayApiUrl, sessionId);
+            log.info("Appel de NotchPay API sur {}", url);
+            ResponseEntity<NotchPayVerifyResponse> responseEntity = restTemplate.exchange(
                     url,
                     org.springframework.http.HttpMethod.GET,
                     httpEntity,
-                    SimizPaymentStatusResponse.class
+                    NotchPayVerifyResponse.class
             );
 
-            if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
-                remoteStatus = responseEntity.getBody().getStatus();
-                log.info("Statut retourne par Simiz pour le token {}: {}", sessionId, remoteStatus);
+            if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null
+                    && responseEntity.getBody().getTransaction() != null) {
+                remoteStatus = responseEntity.getBody().getTransaction().getStatus();
+                log.info("Statut retourne par NotchPay pour la reference {}: {}", sessionId, remoteStatus);
             }
         } catch (Exception e) {
-            log.error("Impossible de joindre l'API Simiz pour verifier le paiement du token {}: {}. Statut inchange.",
+            log.error("Impossible de joindre l'API NotchPay pour verifier le paiement de la reference {}: {}. Statut inchange.",
                     sessionId, e.getMessage());
-            // Dans le cadre du simulateur de developpement, si l'appel Simiz echoue parce qu'il n'y a pas de vraie connexion internet,
+            // Dans le cadre du simulateur de developpement, si l'appel NotchPay echoue parce qu'il n'y a pas de vraie connexion internet,
             // on conserve le statut courant sans faire planter le service.
         }
 
         // Mettre a jour la transaction locale.
-        // Valeurs reelles renvoyees par Simiz : PENDING, PROCESSING, COMPLETED,
-        // FAILED, CANCELLED, EXPIRED, REFUNDED, PARTIALLY_REFUNDED.
-        if ("COMPLETED".equalsIgnoreCase(remoteStatus)) {
+        // Valeurs observees cote NotchPay : pending, processing, complete,
+        // failed, canceled, expired (cf. evenements webhook payment.complete
+        // / payment.failed de la documentation officielle).
+        if ("complete".equalsIgnoreCase(remoteStatus)) {
             confirmerPaiementInterne(transaction);
-        } else if ("FAILED".equalsIgnoreCase(remoteStatus) || "CANCELLED".equalsIgnoreCase(remoteStatus)) {
+        } else if ("failed".equalsIgnoreCase(remoteStatus) || "canceled".equalsIgnoreCase(remoteStatus)) {
             transaction.setStatut(StatutTransaction.ECHOUE);
             transactionRepository.save(transaction);
-            log.warn("Paiement Simiz echoue pour la transaction {}", id);
+            log.warn("Paiement NotchPay echoue pour la transaction {}", id);
             serviceCommunicationClient.notifierStatutPaiement(
                     transaction.getTypeReference(), transaction.getReferenceId(), false);
-        } else if ("EXPIRED".equalsIgnoreCase(remoteStatus)) {
+        } else if ("expired".equalsIgnoreCase(remoteStatus)) {
             transaction.setStatut(StatutTransaction.EXPIRE);
             transactionRepository.save(transaction);
-            log.info("Session de paiement Simiz expiree pour la transaction {}", id);
+            log.info("Session de paiement NotchPay expiree pour la transaction {}", id);
             serviceCommunicationClient.notifierStatutPaiement(
                     transaction.getTypeReference(), transaction.getReferenceId(), false);
         }
-        // PENDING / PROCESSING : aucun changement, le sondage cote frontend continuera.
+        // pending / processing : aucun changement, le sondage cote frontend continuera.
 
         return transaction;
     }
@@ -260,7 +291,7 @@ public class PaiementService {
         // Repercute la confirmation de paiement sur le service concerne
         // (commande-service ou certification-service), pour que son propre
         // statut (VALIDEE / paiement PAYE) reste synchronise avec la
-        // transaction reellement confirmee cote Simiz.
+        // transaction reellement confirmee cote NotchPay.
         serviceCommunicationClient.notifierStatutPaiement(
                 transaction.getTypeReference(), transaction.getReferenceId(), true);
     }
@@ -404,12 +435,14 @@ public class PaiementService {
     }
 
     /**
-     * Traite le webhook passif envoye par Simiz.
-     * Valide le paiement de maniere securisee en interrogeant l'API Simiz pour eviter tout spoofing de requete.
+     * Traite le webhook passif envoye par NotchPay (nom de methode conserve
+     * pour eviter de toucher le mapping du controleur ; a renommer plus tard
+     * si souhaite).
+     * Valide le paiement de maniere securisee en interrogeant l'API NotchPay pour eviter tout spoofing de requete.
      */
     @Transactional
     public void traiterWebhookSimiz(Map<String, Object> payload) {
-        log.info("Reception d'un Webhook de Simiz: {}", payload);
+        log.info("Reception d'un Webhook de NotchPay: {}", payload);
         
         String sessionId = null;
         if (payload.containsKey("id")) {
@@ -429,12 +462,12 @@ public class PaiementService {
                 .orElse(null);
 
         if (transaction == null) {
-            log.warn("Aucune transaction correspondante trouvee pour le SimizSessionId: {}", sessionId);
+            log.warn("Aucune transaction correspondante trouvee pour la reference NotchPay: {}", sessionId);
             return;
         }
 
         // Pour une securite maximale, au lieu de faire aveuglément confiance au payload du webhook,
-        // on declenche notre methode verifierPaiement qui interroge directement l'API Simiz via un canal securise de confiance.
+        // on declenche notre methode verifierPaiement qui interroge directement l'API NotchPay via un canal securise de confiance.
         verifierPaiement(transaction.getId());
     }
 
