@@ -4,6 +4,7 @@ import { Search, ShoppingBag, Leaf, ShieldCheck, Truck, Star, ArrowRight, UserPl
 import useProduits from '../hooks/useProduits';
 import { useTranslation } from 'react-i18next';
 import { correspondRecherche } from '../utils/produceSearch';
+import { traduireNomCategorie } from '../services/productMapping';
 import { getStatsPubliques as getStatsUtilisateurs } from '../services/api/utilisateurApi';
 import { getStatsPubliques as getStatsCertifications } from '../services/api/certificationApi';
 import { getStatsPubliques as getStatsCommandes } from '../services/api/commandeApi';
@@ -21,12 +22,6 @@ const STYLE_CATEGORIES_PAR_NOM = {
 };
 // Repli si une catégorie porte un autre nom (nouvelle catégorie ajoutée par un admin).
 const STYLE_CATEGORIE_PAR_DEFAUT = { image: '/image/marche.jpg', color: '#e9f5ee' };
-
-// Le backend stocke "Agriculture" mais l'affichage doit dire "Agricole" —
-// on ne change que le libellé affiché, pas la donnée backend.
-const LIBELLE_CATEGORIE_AFFICHE = {
-  agriculture: 'Agricole',
-};
 
 function normaliserNomCategorie(nom) {
   return (nom || '').trim().toLowerCase();
@@ -84,7 +79,7 @@ export default function AgroMarketHome({
     const style = STYLE_CATEGORIES_PAR_NOM[cle] || STYLE_CATEGORIE_PAR_DEFAUT;
     return {
       id: c.id,
-      name: LIBELLE_CATEGORIE_AFFICHE[cle] || c.name,
+      name: traduireNomCategorie(c.name, t),
       count: allProducts.filter(p => p.categoryId === c.id).length,
       image: style.image,
       color: style.color,

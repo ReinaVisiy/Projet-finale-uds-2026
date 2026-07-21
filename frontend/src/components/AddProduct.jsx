@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { produitApi } from '../services/api';
-import { mapCategorie, mapProduitPourVendeur, construireProduitRequest } from '../services/productMapping';
+import { mapCategorie, mapProduitPourVendeur, construireProduitRequest, traduireNomCategorie } from '../services/productMapping';
 import { useTranslation } from 'react-i18next';
 
 
@@ -108,7 +108,7 @@ export default function AddProduct({ onProductAdded, onCancel }) {
                 <select value={category} onChange={(e) => setCategory(e.target.value)} style={styles.select}>
                   {categories.length === 0 && <option value="">{t('addProduct.loading')}</option>}
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    <option key={cat.id} value={cat.id}>{traduireNomCategorie(cat.name, t)}</option>
                   ))}
                 </select>
               </div>

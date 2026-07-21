@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { Search, ShoppingBag, Star, ArrowLeft } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
 import { correspondRecherche } from '../utils/produceSearch';
+import { traduireNomCategorie } from '../services/productMapping';
 import { useTranslation } from 'react-i18next';
 
 
@@ -128,7 +129,7 @@ export default function ProductCatalog({
             }}
             onClick={() => handleCategoryClick(cat.id)}
           >
-            {cat.name} ({counts[cat.id] || 0})
+            {traduireNomCategorie(cat.name, t)} ({counts[cat.id] || 0})
           </button>
         ))}
       </div>
@@ -144,7 +145,7 @@ export default function ProductCatalog({
             <div key={prod.id} style={styles.productCard} onClick={() => onNavigateToProduct(prod)}>
               <div style={styles.productImageWrap}>
                 <img src={prod.image} alt={prod.name} style={styles.productImg} onError={(e) => { e.target.src = 'https://picsum.photos/seed/' + prod.id + '/300/300'; }} />
-                <span style={styles.catBadge}>{prod.category}</span>
+                <span style={styles.catBadge}>{traduireNomCategorie(prod.category, t)}</span>
               </div>
               <div style={styles.productInfo}>
                 <div style={styles.prodHeaderRow}>

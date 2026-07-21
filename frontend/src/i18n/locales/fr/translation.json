@@ -1004,5 +1004,9 @@
     "errorGeneric": "Impossible de vérifier ce paiement pour le moment.",
     "errorMissingId": "Identifiant de transaction manquant.",
     "backToOrders": "Retour à mes commandes"
+  },
+  "categories": {
+    "agriculture": "Agricole",
+    "elevage": "Élevage"
   }
 }

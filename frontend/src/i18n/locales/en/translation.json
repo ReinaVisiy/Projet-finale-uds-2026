@@ -1004,5 +1004,9 @@
     "errorGeneric": "Unable to verify this payment right now.",
     "errorMissingId": "Missing transaction ID.",
     "backToOrders": "Back to my orders"
+  },
+  "categories": {
+    "agriculture": "Farming",
+    "elevage": "Livestock"
   }
 }

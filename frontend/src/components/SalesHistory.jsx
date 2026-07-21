@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
+import { traduireNomCategorie } from '../services/productMapping';
 
 // Avant : toutes les données (mois, catégories, transactions, statuts,
 // KPIs) étaient des tableaux fictifs codés en dur (mêmes 6 "ventes" pour
@@ -134,7 +135,7 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
   const categories = Object.entries(salesByCategory)
     .sort((a, b) => b[1] - a[1])
     .map(([name, amount], i) => ({
-      name,
+      name: traduireNomCategorie(name, t),
       amount: fmt(amount),
       pct: totalSales > 0 ? Math.round((amount / totalSales) * 100) : 0,
       color: CATEGORY_COLORS[i % CATEGORY_COLORS.length],

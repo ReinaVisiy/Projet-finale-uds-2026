@@ -11,6 +11,24 @@
 export const IMAGE_PLACEHOLDER =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="100%25" height="100%25" fill="%23e2e8f0"/><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="48">🌱</text></svg>';
 
+/**
+ * Traduit un nom de catégorie brut (tel que renvoyé par produit-service,
+ * toujours en français : "Agriculture", "Élevage"...) via i18next.
+ * Les clés connues vivent sous "categories.*" dans les fichiers de
+ * traduction ; toute catégorie inconnue (ajoutée par un admin après coup)
+ * retombe simplement sur son nom brut plutôt que de planter ou d'afficher
+ * une clé manquante.
+ *
+ * @param nom nom brut de la catégorie (ex. produit.categorieNom, cat.name)
+ * @param t   fonction t() obtenue via useTranslation() dans le composant
+ */
+export function traduireNomCategorie(nom, t) {
+  if (!nom) return nom;
+  const cle = nom.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const traduction = t(`categories.${cle}`, { defaultValue: '' });
+  return traduction || nom;
+}
+
 /** Convertit une CategorieResponse backend { id, nom } vers le format utilisé côté vitrine. */
 export function mapCategorie(categorie) {
   return {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
+import { traduireNomCategorie } from '../services/productMapping';
 
 const alertConfig = {
   CRITIQUE: { color: '#dc3545', bg: '#fde8ea' },
@@ -210,7 +211,7 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
                         <div style={styles.productEmoji}>{item.emoji}</div>
                         <div>
                           <p style={styles.productName}>{item.product}</p>
-                          <p style={styles.productCategory}>{item.category}</p>
+                          <p style={styles.productCategory}>{traduireNomCategorie(item.category, t)}</p>
                         </div>
                       </div>
                     </td>
