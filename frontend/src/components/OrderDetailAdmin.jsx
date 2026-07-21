@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import useIsMobile from '../hooks/useIsMobile';
 
 // Avant : aucune traduction ici, y compris pour le statut de commande qui
 // servait à la fois de donnée d'état ET de texte affiché ('Livrée', ...).
@@ -13,6 +14,8 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
   const { t } = useTranslation();
   const [statusKey, setStatusKey] = useState('en_preparation');
   const [notification, setNotification] = useState('');
+  const isNarrow = useIsMobile(576);
+  const isTablet = useIsMobile(768);
 
   const getStepIndex = (currentStatusKey) => {
     return STEP_KEYS.indexOf(currentStatusKey);
@@ -58,14 +61,14 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
       {/* Progress Timeline Tracker */}
       <div style={styles.trackerCard}>
         <span style={styles.statusLabel}>{t('orderDetailAdmin.currentStatus')}<strong style={{ color: statusKey === 'livree' ? '#2d6a4f' : '#e07a5f' }}>{t('orderDetailAdmin.stepLabels', { returnObjects: true })[statusKey]}</strong></span>
-        <div style={styles.timelineWrapper}>
+        <div style={{ ...styles.timelineWrapper, ...(isNarrow ? styles.timelineWrapperNarrow : {}) }}>
           {STEP_KEYS.map((step, idx) => {
             const isCompleted = idx <= currentStepIdx;
             const isActive = idx === currentStepIdx;
             return (
               <React.Fragment key={step}>
                 {/* Connecting Line */}
-                {idx > 0 && (
+                {idx > 0 && !isNarrow && (
                   <div style={{
                     ...styles.timelineLine,
                     backgroundColor: idx <= currentStepIdx ? '#2d6a4f' : '#dee2e6'
@@ -73,7 +76,7 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
                 )}
                 
                 {/* Step Node */}
-                <div style={styles.stepNodeContainer}>
+                <div style={{ ...styles.stepNodeContainer, ...(isNarrow ? styles.stepNodeContainerNarrow : {}) }}>
                   <div style={{
                     ...styles.stepDot,
                     backgroundColor: isCompleted ? '#2d6a4f' : '#ffffff',
@@ -103,7 +106,7 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
       </div>
 
       {/* Grid Layout (Left Content, Right Summary Card) */}
-      <div style={styles.layoutGrid}>
+      <div style={{ ...styles.layoutGrid, ...(isTablet ? styles.layoutGridMobile : {}) }}>
         
         {/* Left Side: Order Information Card */}
         <div style={styles.leftCard}>
@@ -295,12 +298,12 @@ const styles = {
     justifyContent: 'space-between',
     position: 'relative',
     padding: '0 20px',
-    '@media (max-width: 576px)': {
-      flexDirection: 'column',
-      alignItems: 'flex-start',
-      gap: '20px',
-      padding: '0',
-    }
+  },
+  timelineWrapperNarrow: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '20px',
+    padding: '0',
   },
   timelineLine: {
     flexGrow: 1,
@@ -309,9 +312,6 @@ const styles = {
     transform: 'translateY(-10px)',
     borderRadius: '2px',
     transition: 'background-color 0.4s ease',
-    '@media (max-width: 576px)': {
-      display: 'none',
-    }
   },
   stepNodeContainer: {
     display: 'flex',
@@ -320,11 +320,11 @@ const styles = {
     gap: '8px',
     zIndex: 2,
     position: 'relative',
-    '@media (max-width: 576px)': {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: '12px',
-    }
+  },
+  stepNodeContainerNarrow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: '12px',
   },
   stepDot: {
     width: '32px',
@@ -352,9 +352,9 @@ const styles = {
     gridTemplateColumns: '1.4fr 1fr',
     gap: '30px',
     alignItems: 'start',
-    '@media (max-width: 768px)': {
-      gridTemplateColumns: '1fr',
-    }
+  },
+  layoutGridMobile: {
+    gridTemplateColumns: '1fr',
   },
   leftCard: {
     backgroundColor: '#ffffff',

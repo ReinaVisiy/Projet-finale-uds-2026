@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ShoppingCart, User, LogOut, ChevronDown, Home, Package, LayoutGrid, Bell, Users, ShoppingBag, Menu, X, MessageCircle, Search } from 'lucide-react';
+import useIsMobile from '../hooks/useIsMobile';
 
 
 export default function NavigationConsole({
@@ -19,6 +20,7 @@ export default function NavigationConsole({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const { t, i18n } = useTranslation();
+  const isMobile = useIsMobile(768);
   const toggleLang = () => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr');
 
   useEffect(() => {
@@ -59,27 +61,30 @@ export default function NavigationConsole({
         </button>
 
         {/* Menu mobile toggle */}
-        <button style={styles.mobileToggle} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {isMobile && (
+          <button style={styles.mobileToggle} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        )}
 
-        {/* Liens centraux - Desktop */}
-        <nav style={{ ...styles.navLinks, ...(mobileMenuOpen ? styles.navLinksMobile : {}) }}>
+        {/* Liens centraux - Desktop, ou menu deroulant mobile */}
+        {(!isMobile || mobileMenuOpen) && (
+        <nav style={{ ...styles.navLinks, ...(isMobile ? styles.navLinksMobile : {}) }}>
           <button
-            style={{ ...styles.navLink, ...(currentScreen === 'home' ? styles.navLinkActive : {}) }}
+            style={{ ...styles.navLink, ...(isMobile ? styles.navLinkMobile : {}), ...(currentScreen === 'home' ? styles.navLinkActive : {}) }}
             onClick={() => { onNavigate('home'); setMobileMenuOpen(false); }}
           >
             <Home size={15} /> {t('navigation.home')}
           </button>
           <button
-            style={{ ...styles.navLink, ...(currentScreen === 'catalogue' ? styles.navLinkActive : {}) }}
+            style={{ ...styles.navLink, ...(isMobile ? styles.navLinkMobile : {}), ...(currentScreen === 'catalogue' ? styles.navLinkActive : {}) }}
             onClick={() => { onNavigate('catalogue'); setMobileMenuOpen(false); }}
           >
             <LayoutGrid size={15} /> {t('navigation.catalogue')}
           </button>
           {currentUser?.role === 'vendeur' && !isClientMode && (
             <button
-              style={{ ...styles.navLink, ...(currentScreen === 'my-products' ? styles.navLinkActive : {}) }}
+              style={{ ...styles.navLink, ...(isMobile ? styles.navLinkMobile : {}), ...(currentScreen === 'my-products' ? styles.navLinkActive : {}) }}
               onClick={() => { onNavigate('my-products'); setMobileMenuOpen(false); }}
             >
               <Package size={15} /> {t('navigation.myProducts')}
@@ -120,9 +125,53 @@ export default function NavigationConsole({
               )}
             </div>
           )}
+          {/* Liens de compte (equivalent du menu deroulant desktop), affiches dans le menu mobile */}
+          {mobileMenuOpen && currentUser && (
+            <div style={styles.mobileAccountLinks}>
+              <button style={styles.navLink} onClick={() => { setMobileMenuOpen(false); onNavigate('user-profile'); }}>
+                <User size={15} /> {t('navigation.myProfile')}
+              </button>
+              {currentUser.role === 'client' && (
+                <>
+                  <button style={styles.navLink} onClick={() => { setMobileMenuOpen(false); onNavigate('orders'); }}>
+                    <Package size={15} /> {t('navigation.myOrders')}
+                  </button>
+                  <button style={styles.navLink} onClick={() => { setMobileMenuOpen(false); onNavigate('purchases'); }}>
+                    <ShoppingBag size={15} /> {t('navigation.myPurchases')}
+                  </button>
+                </>
+              )}
+              {currentUser.role === 'vendeur' && !isClientMode && (
+                <>
+                  <button style={styles.navLink} onClick={() => { setMobileMenuOpen(false); onNavigate('seller-dashboard'); }}>
+                    <Package size={15} /> {t('navigation.dashboard')}
+                  </button>
+                  <button style={styles.navLink} onClick={() => { setMobileMenuOpen(false); onNavigate('vendeur-orders'); }}>
+                    <ShoppingBag size={15} /> {t('navigation.receivedOrders')}
+                  </button>
+                </>
+              )}
+              {currentUser.role === 'vendeur' && (
+                <button style={styles.navLink} onClick={() => { setMobileMenuOpen(false); onToggleClientMode(); }}>
+                  <Users size={15} />
+                  {isClientMode ? t('navigation.backToVendorMode') : t('navigation.loginAsClient')}
+                </button>
+              )}
+              {currentUser.role === 'admin' && (
+                <button style={styles.navLink} onClick={() => { setMobileMenuOpen(false); onNavigate('admin-dashboard'); }}>
+                  <Package size={15} /> {t('navigation.adminDashboard')}
+                </button>
+              )}
+              <button style={styles.navLinkDanger} onClick={handleLogoutClick}>
+                <LogOut size={15} /> {t('navigation.logout')}
+              </button>
+            </div>
+          )}
         </nav>
+        )}
 
-        {/* Zone droite - Desktop */}
+        {/* Zone droite - Desktop uniquement (sur mobile, elle est dans le menu deroulant) */}
+        {!isMobile && (
         <div style={styles.rightZone}>
           <button style={styles.notifBtn} onClick={() => onNavigate('user-search')} title={t('navigation.searchTitle')}>
             <Search size={19} />
@@ -224,6 +273,7 @@ export default function NavigationConsole({
             </>
           )}
         </div>
+        )}
       </div>
     </header>
   );
@@ -261,13 +311,12 @@ const styles = {
   brandName: { fontSize: '18px', fontWeight: '900', color: '#1b4d3e', letterSpacing: '-0.02em' },
 
   mobileToggle: {
-    display: 'none',
+    display: 'flex',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
     color: '#212529',
     padding: '4px',
-    '@media (max-width: 768px)': { display: 'flex' },
   },
 
   navLinks: {
@@ -275,20 +324,6 @@ const styles = {
     alignItems: 'center',
     gap: '4px',
     flex: 1,
-    '@media (max-width: 768px)': {
-      display: 'none',
-      flexDirection: 'column',
-      position: 'absolute',
-      top: '100%',
-      left: 0,
-      right: 0,
-      backgroundColor: '#ffffff',
-      padding: '16px',
-      borderBottom: '1px solid #e9ecef',
-      boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
-      gap: '8px',
-      zIndex: 300,
-    },
   },
   navLinksMobile: {
     display: 'flex',
@@ -317,7 +352,34 @@ const styles = {
     fontWeight: '700',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
-    '@media (max-width: 768px)': { width: '100%', justifyContent: 'center' },
+  },
+  navLinkMobile: {
+    width: '100%',
+    justifyContent: 'center',
+  },
+  mobileAccountLinks: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    width: '100%',
+    paddingTop: '8px',
+    marginTop: '8px',
+    borderTop: '1px solid #e9ecef',
+  },
+  navLinkDanger: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    width: '100%',
+    padding: '8px 14px',
+    borderRadius: '10px',
+    background: 'none',
+    border: 'none',
+    color: '#c0392b',
+    fontSize: '13.5px',
+    fontWeight: '700',
+    cursor: 'pointer',
   },
   navLinkActive: {
     backgroundColor: '#e9f5ee',
@@ -329,7 +391,6 @@ const styles = {
     alignItems: 'center',
     gap: '10px',
     flexShrink: 0,
-    '@media (max-width: 768px)': { display: 'none' },
   },
   mobileRightZone: {
     display: 'flex',
@@ -477,7 +538,6 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    '@media (max-width: 480px)': { display: 'none' },
   },
   userName: { fontSize: '12.5px', fontWeight: '800', color: '#212529', lineHeight: '1.2' },
   roleBadge: { fontSize: '10.5px', fontWeight: '700', color: '#6c757d', display: 'flex', alignItems: 'center' },
@@ -493,7 +553,6 @@ const styles = {
     padding: '8px',
     minWidth: '200px',
     zIndex: 300,
-    '@media (max-width: 480px)': { right: '-10px', minWidth: '180px' },
   },
   dropdownItem: {
     display: 'flex',
