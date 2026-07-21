@@ -123,8 +123,6 @@ public class PaiementController {
     /**
      * POST /api/paiements/webhook/notchpay (Public / Non protege par JWT)
      * Receptionne les notifications asynchrones de paiement de NotchPay.
-     * Si vous aviez deja enregistre l'ancienne URL webhook/simiz cote
-     * dashboard NotchPay, pensez a la mettre a jour vers webhook/notchpay.
      */
     @PostMapping("/webhook/notchpay")
     public ResponseEntity<Void> recevoirWebhookNotchpay(@RequestBody Map<String, Object> payload) {
