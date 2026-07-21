@@ -16,9 +16,9 @@ const priorityConfig = {
 
 // Seuils d'alerte, cohérents avec ceux déjà utilisés dans SellerDashboard
 // (lowStockItems = vendeurProducts.filter(p => p.stock <= 10)) :
-// - stock <= 3  -> CRITIQUE (rupture imminente)
+// - stock <= 2  -> CRITIQUE (rupture imminente)
 // - stock <= 10 -> FAIBLE
-const CRITICAL_THRESHOLD = 3;
+const CRITICAL_THRESHOLD = 2;
 const LOW_THRESHOLD = 10;
 
 export default function StockAlerts({ onBack, vendeurProducts = [] }) {
