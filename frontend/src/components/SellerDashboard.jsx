@@ -52,10 +52,25 @@ export default function SellerDashboard({
   const [retraitError, setRetraitError] = useState('');
   const [retraitSuccess, setRetraitSuccess] = useState('');
 
+  // Transactions paiement-service du vendeur connecte : sert uniquement
+  // a savoir quelles commandes ont ete reellement payees (statut PAYE),
+  // pour que "Revenu total" ne compte pas les commandes en attente de
+  // paiement ou echouees (montantTotal de la commande n'a aucune notion
+  // de paiement, cf. CommandeResponse cote backend).
+  const [mesTransactions, setMesTransactions] = useState([]);
+
   const chargerSoldeEtRetraits = () => {
     paiementApi.getMonSolde().then(setSolde).catch(() => setSolde(null));
     paiementApi.getMesRetraits().then(setMesRetraits).catch(() => setMesRetraits([]));
+    paiementApi.getMesTransactions().then(setMesTransactions).catch(() => setMesTransactions([]));
   };
+
+  // IDs des commandes dont la transaction associee est au statut PAYE.
+  const commandesPayeesIds = new Set(
+    mesTransactions
+      .filter(tr => tr.typeReference === 'COMMANDE' && tr.statut === 'PAYE')
+      .map(tr => tr.referenceId)
+  );
 
   useEffect(() => {
     chargerSoldeEtRetraits();
@@ -107,19 +122,21 @@ export default function SellerDashboard({
       vendeurProducts.some(p => p.name === item.nomProduit || p.name === item.name)
     );
   }).length;
-  const totalRevenue = adminOrders.reduce((sum, order) => {
-    const orderRevenue = order.items?.filter(item =>
-      vendeurProducts.some(p => p.name === item.nomProduit || p.name === item.name)
-    ).reduce((s, item) => s + (item.subtotal || 0), 0);
-    return sum + (orderRevenue || 0);
-  }, 0);
+  const totalRevenue = adminOrders
+    .filter(order => commandesPayeesIds.has(order.id))
+    .reduce((sum, order) => {
+      const orderRevenue = order.items?.filter(item =>
+        vendeurProducts.some(p => p.name === item.nomProduit || p.name === item.name)
+      ).reduce((s, item) => s + (item.subtotal || 0), 0);
+      return sum + (orderRevenue || 0);
+    }, 0);
   const lowStockItems = vendeurProducts.filter(p => p.stock <= 10);
 
   const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
   const monthlyRevenue = months.map((_, idx) => {
     return adminOrders
       .filter(o => {
-        if (!o.dateISO) return false;
+        if (!o.dateISO || !commandesPayeesIds.has(o.id)) return false;
         const d = new Date(o.dateISO);
         return d.getMonth() === idx && d.getFullYear() === new Date().getFullYear();
       })
