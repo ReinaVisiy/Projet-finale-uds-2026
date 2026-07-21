@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service metier gérant toutes les operations de paiement, de sequestre, de portefeuille vendeur,
@@ -40,6 +41,13 @@ public class PaiementService {
     private final RetraitRepository retraitRepository;
     private final RestTemplate restTemplate;
     private final ServiceCommunicationClient serviceCommunicationClient;
+
+    // Un verrou par transaction (et non un `synchronized` global sur le service) :
+    // la verification d'une transaction A ne doit jamais faire attendre la
+    // verification d'une transaction B. Sans ca, un seul appel NotchPay lent
+    // bloquait la verification de paiement de TOUS les utilisateurs de la
+    // plateforme en meme temps.
+    private final Map<Long, Object> verrousVerification = new ConcurrentHashMap<>();
 
     @Value("${notchpay.api.url}")
     private String notchPayApiUrl;
@@ -187,10 +195,26 @@ public class PaiementService {
     /**
      * Verifie le statut d'un paiement en interrogeant directement l'API NotchPay (sondage/polling).
      * Si le statut est passe a PAYE, credite automatiquement le solde du vendeur (sequestre libere).
-     * Methode synchronisee pour eviter les conditions de concurrence et les double-credits de solde.
+     * Verrouillage par transaction (et non global) pour eviter les conditions de concurrence et
+     * les double-credits de solde sans bloquer la verification des autres transactions.
      */
     @Transactional
-    public synchronized Transaction verifierPaiement(Long id) {
+    public Transaction verifierPaiement(Long id) {
+        // Verrou par transaction : une verification lente pour la transaction
+        // #id ne doit jamais bloquer la verification d'une autre transaction.
+        Object verrou = verrousVerification.computeIfAbsent(id, k -> new Object());
+        synchronized (verrou) {
+            try {
+                return executerVerificationPaiement(id);
+            } finally {
+                // Evite une fuite memoire lente : une fois la verification
+                // terminee, plus besoin de conserver ce verrou individuel.
+                verrousVerification.remove(id, verrou);
+            }
+        }
+    }
+
+    private Transaction executerVerificationPaiement(Long id) {
         log.info("Verification de la transaction {} via NotchPay API (polling)...", id);
         
         Transaction transaction = transactionRepository.findById(id)
