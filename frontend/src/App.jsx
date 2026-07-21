@@ -625,7 +625,7 @@ export default function App() {
       return;
     }
 
-    notifierAdmins('info', `Nouvelle commande #${commande.id} de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client'}`, '/admin/order-management-admin');
+    addNotification(vendeurId, 'info', `Nouvelle commande #${commande.id} de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client'}`, '/vendeur-orders');
     addNotification(currentUser.id, 'success', `Commande #${commande.id} confirmée !`, '/orders');
     await chargerMesCommandes();
     navigate('orders');
@@ -661,7 +661,10 @@ export default function App() {
     if (userData.role === 'vendeur') {
       setActivePlan(userData.plan || 'gratuit');
     }
-    notifierAdmins('info', `${userData.prenom} ${userData.nom} (${userData.role}) s'est connecté`, null);
+    // Ne notifie plus les admins à chaque connexion : ce n'est ni un
+    // événement "plateforme" (contrairement à une inscription), ni une
+    // activité de l'admin lui-même — cela leur exposait les connexions de
+    // tous les autres comptes (cf. backlog #16/#18).
     addNotification(userData.id, 'success', `Bienvenue ${userData.prenom} ! Vous êtes connecté.`, '/profil');
 
     setIsClientMode(false);
@@ -949,6 +952,11 @@ export default function App() {
           onSignaler={() => openSignalement(selectedProduct)}
           onNavigateToProducerProfile={goToProducerProfile}
           currentUser={currentUser}
+          onAvisPublie={(producteurId, product) => {
+            if (producteurId) {
+              addNotification(producteurId, 'info', `Un avis a été laissé sur votre produit "${product?.name || ''}"`, '/seller-dashboard');
+            }
+          }}
         />;
       case 'add-product':
         return <AddProduct
@@ -977,6 +985,11 @@ export default function App() {
         return <PaymentReturn
           transactionId={paymentTransactionId}
           onTermine={() => navigate(currentUser?.role === 'client' ? 'orders' : 'home')}
+          onPaiementConfirme={() => {
+            if (currentUser?.id) {
+              addNotification(currentUser.id, 'success', 'Votre paiement a été confirmé avec succès.', '/orders');
+            }
+          }}
         />;
       case 'cart':
         return <ShoppingCart
@@ -1019,7 +1032,14 @@ export default function App() {
           onBack={() => navigate(previousScreen)}
         />;
       case 'message':
-        return <MessagePage vendor={selectedVendor} currentUser={currentUser} onBack={() => navigate(previousScreen)} />;
+        return <MessagePage
+          vendor={selectedVendor}
+          currentUser={currentUser}
+          onBack={() => navigate(previousScreen)}
+          onMessageEnvoye={(destinataireId) => {
+            addNotification(destinataireId, 'info', `Vous avez reçu un message de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'un utilisateur'}`, '/messages-inbox');
+          }}
+        />;
       case 'user-profile':
         return <UserProfile
           currentUser={currentUser}
@@ -1117,7 +1137,10 @@ export default function App() {
             try {
               const statutBackend = STATUT_FRANCAIS_TO_BACKEND[newStatus] || newStatus;
               await commandeApi.updateStatutCommande(orderId, statutBackend);
-              notifierAdmins('info', `Statut de la commande #${orderId} mis à jour : ${newStatus}`, '/admin/order-management-admin');
+              const commandeConcernee = mesCommandesVendeur.find((c) => c.id === orderId);
+              if (commandeConcernee) {
+                addNotification(commandeConcernee.id_client, 'info', `Statut de votre commande #${orderId} mis à jour : ${newStatus}`, '/orders');
+              }
               await chargerCommandesVendeur();
             } catch (err) {
               alert(err?.message || "La mise à jour du statut de la commande a échoué.");
@@ -1227,7 +1250,10 @@ export default function App() {
             try {
               const statutBackend = STATUT_FRANCAIS_TO_BACKEND[newStatus] || newStatus;
               await commandeApi.updateStatutCommande(orderId, statutBackend);
-              notifierAdmins('info', `Statut de la commande #${orderId} mis à jour : ${newStatus}`, '/admin/order-management-admin');
+              const commandeConcernee = mesCommandesVendeur.find((c) => c.id === orderId);
+              if (commandeConcernee) {
+                addNotification(commandeConcernee.id_client, 'info', `Statut de votre commande #${orderId} mis à jour : ${newStatus}`, '/orders');
+              }
               await chargerCommandesVendeur();
             } catch (err) {
               alert(err?.message || "La mise à jour du statut de la commande a échoué.");

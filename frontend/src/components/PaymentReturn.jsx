@@ -10,7 +10,7 @@ import * as paiementApi from '../services/api/paiementApi';
 const INTERVALLE_SONDAGE_MS = 3000;
 const TENTATIVES_MAX = 5;
 
-export default function PaymentReturn({ transactionId, onTermine }) {
+export default function PaymentReturn({ transactionId, onTermine, onPaiementConfirme }) {
   const { t } = useTranslation();
   const [statut, setStatut] = useState('EN_ATTENTE');
   const [erreur, setErreur] = useState(null);
@@ -26,6 +26,12 @@ export default function PaymentReturn({ transactionId, onTermine }) {
 
         if (transaction.statut !== 'EN_ATTENTE' || tentative >= TENTATIVES_MAX) {
           setStatut(transaction.statut);
+          // Notifie le client uniquement quand le paiement est bien confirmé
+          // (pas en cas d'échec/expiration, ni si on abandonne après
+          // TENTATIVES_MAX sondages sans réponse définitive).
+          if (transaction.statut === 'PAYE' && onPaiementConfirme) {
+            onPaiementConfirme(transaction);
+          }
           return;
         }
 

@@ -17,7 +17,7 @@ function mapMessage(msg, currentUserId) {
   };
 }
 
-export default function MessagePage({ onBack, vendor, currentUser }) {
+export default function MessagePage({ onBack, vendor, currentUser, onMessageEnvoye }) {
   const { t } = useTranslation();
 
   const vendorInfo = vendor || { name: 'Ferme Dschang', product: 'Banane Fraîche' };
@@ -76,6 +76,7 @@ export default function MessagePage({ onBack, vendor, currentUser }) {
       const response = await messageApi.envoyerMessage({ destinataireId, contenu });
       setMessages((prev) => [...prev, mapMessage(response, currentUser?.id)]);
       setInput('');
+      onMessageEnvoye?.(destinataireId, response);
     } catch (e) {
       setErreur(e?.message || t('messagePage.sendFailed'));
     } finally {

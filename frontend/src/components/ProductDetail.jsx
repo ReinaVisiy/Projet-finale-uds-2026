@@ -4,7 +4,7 @@ import { getAvisParProduit, getAvisStats, publierAvis } from '../services/api/av
 import { useTranslation } from 'react-i18next';
 
 
-export default function ProductDetail({ onBack, onAddToCart, onContactVendor, onNavigateToProducerProfile, onSignaler, currentUser, product: propProduct }) {
+export default function ProductDetail({ onBack, onAddToCart, onContactVendor, onNavigateToProducerProfile, onSignaler, currentUser, product: propProduct, onAvisPublie }) {
   const { t } = useTranslation();
 
   // Avant : un faux "defaultProduct" (Banane Fraîche Premium) était affiché
@@ -58,6 +58,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
       setNoteChoisie(0);
       setCommentaire('');
       await chargerAvis();
+      onAvisPublie?.(product.producteurId, product);
     } catch (err) {
       alert(err?.message || t('productDetail.reviewFailed'));
     } finally {
