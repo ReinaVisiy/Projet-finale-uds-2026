@@ -182,6 +182,24 @@ public class PaiementService {
                 transaction.setNotchpaySessionId(notchPayReference);
                 transaction.setNotchpayCheckoutUrl(notchResponse.getAuthorization_url());
                 log.info("Paiement NotchPay cree avec succes pour la transaction {}", transaction.getId());
+
+                // Verification defensive : NotchPay est cense echoer exactement
+                // la reference qu'on lui envoie, mais si jamais ce n'est pas le
+                // cas (ou si un futur changement d'API le fait), la verification
+                // ulterieure via /payments/{sessionId} echouerait silencieusement
+                // en 404. On log un WARN immediat pour detecter ce cas plutot
+                // que de le decouvrir 10 minutes plus tard cote client.
+                String referenceRenvoyeeParNotchpay = notchResponse.getTransaction() != null
+                        ? notchResponse.getTransaction().getReference()
+                        : null;
+                if (referenceRenvoyeeParNotchpay != null
+                        && !referenceRenvoyeeParNotchpay.equals(notchPayReference)) {
+                    log.warn("ATTENTION : la reference renvoyee par NotchPay ({}) differe de celle envoyee ({}) "
+                                    + "pour la transaction {}. La verification ulterieure utilisera la reference "
+                                    + "NotchPay reelle pour eviter un 404 permanent.",
+                            referenceRenvoyeeParNotchpay, notchPayReference, transaction.getId());
+                    transaction.setNotchpaySessionId(referenceRenvoyeeParNotchpay);
+                }
             } else {
                 throw new IllegalStateException("Reponse invalide de NotchPay");
             }

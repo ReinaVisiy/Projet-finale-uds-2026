@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import * as paiementApi from '../services/api/paiementApi';
@@ -14,24 +14,41 @@ export default function PaymentReturn({ transactionId, onTermine, onPaiementConf
   const { t } = useTranslation();
   const [statut, setStatut] = useState('EN_ATTENTE');
   const [erreur, setErreur] = useState(null);
+  // Distingue "sondage actif en cours" de "abandonné après TENTATIVES_MAX
+  // essais sans réponse définitive" : avant ce correctif, les deux cas
+  // affichaient le même spinner "vérification en cours", ce qui donnait
+  // l'illusion d'un blocage infini alors que le sondage s'était en réalité
+  // arrêté au bout de TENTATIVES_MAX * INTERVALLE_SONDAGE_MS.
+  const [abandonne, setAbandonne] = useState(false);
+  const [verificationEnCours, setVerificationEnCours] = useState(false);
 
-  useEffect(() => {
+  const lancerSondage = useCallback(() => {
     let annule = false;
     let tentative = 0;
+    setAbandonne(false);
+    setErreur(null);
+    setVerificationEnCours(true);
 
     const sonder = async () => {
       try {
         const transaction = await paiementApi.verifierPaiement(transactionId);
         if (annule) return;
 
-        if (transaction.statut !== 'EN_ATTENTE' || tentative >= TENTATIVES_MAX) {
+        if (transaction.statut !== 'EN_ATTENTE') {
           setStatut(transaction.statut);
-          // Notifie le client uniquement quand le paiement est bien confirmé
-          // (pas en cas d'échec/expiration, ni si on abandonne après
-          // TENTATIVES_MAX sondages sans réponse définitive).
+          setVerificationEnCours(false);
           if (transaction.statut === 'PAYE' && onPaiementConfirme) {
             onPaiementConfirme(transaction);
           }
+          return;
+        }
+
+        if (tentative >= TENTATIVES_MAX) {
+          // On abandonne le sondage automatique, mais on le dit clairement :
+          // le paiement reste peut-être en cours côté NotchPay (mobile money
+          // notamment), le client peut relancer une vérification manuelle.
+          setAbandonne(true);
+          setVerificationEnCours(false);
           return;
         }
 
@@ -40,18 +57,22 @@ export default function PaymentReturn({ transactionId, onTermine, onPaiementConf
       } catch (err) {
         if (!annule) {
           setErreur(err?.message || t('paymentReturn.errorGeneric'));
+          setVerificationEnCours(false);
         }
       }
     };
 
-    if (transactionId) {
-      sonder();
-    } else {
-      setErreur(t('paymentReturn.errorMissingId'));
-    }
-
+    sonder();
     return () => { annule = true; };
-  }, [transactionId, t]);
+  }, [transactionId, onPaiementConfirme, t]);
+
+  useEffect(() => {
+    if (!transactionId) {
+      setErreur(t('paymentReturn.errorMissingId'));
+      return;
+    }
+    return lancerSondage();
+  }, [transactionId, lancerSondage, t]);
 
   return (
     <div style={styles.wrapper} className="fade-in">
@@ -74,6 +95,12 @@ export default function PaymentReturn({ transactionId, onTermine, onPaiementConf
             <h2 style={styles.title}>{t('paymentReturn.failedTitle')}</h2>
             <p style={styles.text}>{t('paymentReturn.failedText')}</p>
           </>
+        ) : abandonne ? (
+          <>
+            <Loader2 size={56} color="#f59e0b" />
+            <h2 style={styles.title}>{t('paymentReturn.stillPendingTitle')}</h2>
+            <p style={styles.text}>{t('paymentReturn.stillPendingText')}</p>
+          </>
         ) : (
           <>
             <Loader2 size={56} color="#2563eb" className="spin" />
@@ -82,7 +109,12 @@ export default function PaymentReturn({ transactionId, onTermine, onPaiementConf
           </>
         )}
 
-        <button style={styles.button} onClick={onTermine}>
+        {abandonne && (
+          <button style={styles.button} onClick={lancerSondage} disabled={verificationEnCours}>
+            {t('paymentReturn.checkAgain')}
+          </button>
+        )}
+        <button style={statut === 'PAYE' ? styles.button : styles.buttonSecondary} onClick={onTermine}>
           {t('paymentReturn.backToOrders')}
         </button>
       </div>
@@ -119,6 +151,16 @@ const styles = {
     border: 'none',
     background: '#16a34a',
     color: '#fff',
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  buttonSecondary: {
+    marginTop: '4px',
+    padding: '12px 28px',
+    borderRadius: '10px',
+    border: '1px solid #d1d5db',
+    background: '#fff',
+    color: '#374151',
     fontWeight: 600,
     cursor: 'pointer',
   },
