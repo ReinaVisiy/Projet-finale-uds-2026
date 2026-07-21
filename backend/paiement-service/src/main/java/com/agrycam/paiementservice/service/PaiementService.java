@@ -127,7 +127,7 @@ public class PaiementService {
         }
 
         // 4. Appel a la passerelle de paiement NotchPay (sandbox)
-        String description = String.format("Paiement AgryCam - %s #%d", dto.getTypeReference(), dto.getReferenceId());
+        String description = String.format("Paiement AgriConnect - %s #%d", dto.getTypeReference(), dto.getReferenceId());
 
         // URL de retour unique (NotchPay ne distingue pas succes/echec par URL
         // separee) ; App.jsx traite deja /pay/success et /pay/cancel de
