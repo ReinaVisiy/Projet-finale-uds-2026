@@ -16,7 +16,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/certifications")
-@CrossOrigin(origins = "*")
 public class CertificationController {
 
     private final CertificationService certificationService;

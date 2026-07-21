@@ -25,7 +25,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/paiements")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class PaiementController {
