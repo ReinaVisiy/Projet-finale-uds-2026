@@ -857,7 +857,7 @@ export default function App() {
 
   // ===== NAVIGATION =====
   const goToProduct = (product) => { setSelectedProduct(product); setScreen('product-detail'); };
-  const goToMessage = (vendor) => requireLogin(() => { setSelectedVendor(vendor); setScreen('message'); });
+  const goToMessage = (vendor) => requireLogin(() => { setPreviousScreen(screen); setSelectedVendor(vendor); setScreen('message'); });
   const goToProducerProfile = (vendor) => { setSelectedVendor(vendor); setScreen('producer-profile'); };
   // Choisit le bon écran de profil public selon le rôle de l'utilisateur trouvé.
   const goToUserProfile = (utilisateur) => {
@@ -1050,7 +1050,7 @@ export default function App() {
       case 'messages-inbox':
         return <MessagesInbox
           currentUser={currentUser}
-          onOpenConversation={(vendor) => { setSelectedVendor(vendor); setScreen('message'); }}
+          onOpenConversation={(vendor) => { setPreviousScreen(screen); setSelectedVendor(vendor); setScreen('message'); }}
           onBack={() => navigate(previousScreen)}
         />;
       case 'message':
