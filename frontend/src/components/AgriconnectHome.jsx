@@ -293,25 +293,27 @@ export default function AgroMarketHome({
           )}
         </div>
 
-        {/* COMMENT ÇA MARCHE */}
-        <div style={styles.section} id="comment">
-          <h2 style={styles.sectionTitle}>{t('home.howTitle')}</h2>
-          <div style={styles.stepsGrid}>
-            {[
-              { icon: <UserPlus size={28} />, title: t('home.step1'), desc: t('home.step1d') },
-              { icon: <PackageSearch size={28} />, title: t('home.step2'), desc: t('home.step2d') },
-              { icon: <ShoppingBag size={28} />, title: t('home.step3'), desc: t('home.step3d') },
-              { icon: <Truck size={28} />, title: t('home.step4'), desc: t('home.step4d') }
-            ].map((step, i) => (
-              <div key={i} style={styles.stepCard}>
-                <div style={styles.stepNumber}>{i + 1}</div>
-                <div style={styles.stepIconWrap}>{step.icon}</div>
-                <h4 style={styles.stepTitle}>{step.title}</h4>
-                <p style={styles.stepDesc}>{step.desc}</p>
-              </div>
-            ))}
+        {/* COMMENT ÇA MARCHE (uniquement pour les visiteurs non connectés) */}
+        {!currentUser && (
+          <div style={styles.section} id="comment">
+            <h2 style={styles.sectionTitle}>{t('home.howTitle')}</h2>
+            <div style={styles.stepsGrid}>
+              {[
+                { icon: <UserPlus size={28} />, title: t('home.step1'), desc: t('home.step1d') },
+                { icon: <PackageSearch size={28} />, title: t('home.step2'), desc: t('home.step2d') },
+                { icon: <ShoppingBag size={28} />, title: t('home.step3'), desc: t('home.step3d') },
+                { icon: <Truck size={28} />, title: t('home.step4'), desc: t('home.step4d') }
+              ].map((step, i) => (
+                <div key={i} style={styles.stepCard}>
+                  <div style={styles.stepNumber}>{i + 1}</div>
+                  <div style={styles.stepIconWrap}>{step.icon}</div>
+                  <h4 style={styles.stepTitle}>{step.title}</h4>
+                  <p style={styles.stepDesc}>{step.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* STATS (uniquement pour les visiteurs non connectés — chiffres réels) */}
         {!currentUser && (
