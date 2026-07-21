@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -10,7 +10,7 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
   const { t } = useTranslation();
   // Normalise un produit vendeur (les champs peuvent varier selon AddProduct.jsx)
   // afin que l'affichage ne casse jamais, même avec des données minimales.
-  const normalize = (p) => ({
+  const normalize = useCallback((p) => ({
     id: p.id,
     name: p.name || t('myProducts.unnamedProduct'),
     category: p.category || t('myProducts.generalCategory'),
@@ -20,9 +20,9 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
     price: p.price ?? 0,
     status: p.status || 'Actif',
     imageUrl: p.imageUrl || p.image || PLACEHOLDER_IMG,
-  });
+  }), [t]);
 
-  const normalized = useMemo(() => products.map(normalize), [products, t]);
+  const normalized = useMemo(() => products.map(normalize), [products, normalize]);
   const [filterTab, setFilterTab] = useState('Tous');
   const [notification, setNotification] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null); // { id, name } | null

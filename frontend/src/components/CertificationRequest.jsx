@@ -56,7 +56,7 @@ export default function CertificationRequest({ onBack }) {
       })
       .catch((err) => setError(err.message || t('certificationRequest.loadStatusError')))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   const handleUpload = (setter) => async (e) => {
     const file = e.target.files[0];

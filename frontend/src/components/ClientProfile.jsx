@@ -44,7 +44,7 @@ export default function ClientProfile({
     } finally {
       setChargement(false);
     }
-  }, [client?.id]);
+  }, [client?.id, t]);
 
   useEffect(() => { chargerAvis(); }, [chargerAvis]);
 
