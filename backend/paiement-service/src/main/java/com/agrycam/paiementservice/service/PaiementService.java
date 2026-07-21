@@ -49,6 +49,14 @@ public class PaiementService {
     // plateforme en meme temps.
     private final Map<Long, Object> verrousVerification = new ConcurrentHashMap<>();
 
+    // Verrou par commandeId, partage par libererFondsSequestre,
+    // traiterRemboursementAnnulation et traiterRemboursementLitige : ces trois
+    // methodes touchent le meme solde vendeur / la meme transaction pour une
+    // commande donnee, donc on veut bien les exclure mutuellement entre elles
+    // pour cette commande precise — mais sans bloquer le traitement d'une
+    // AUTRE commande en meme temps (contrairement a l'ancien `synchronized` global).
+    private final Map<Long, Object> verrousCommande = new ConcurrentHashMap<>();
+
     @Value("${notchpay.api.url}")
     private String notchPayApiUrl;
 
@@ -337,7 +345,18 @@ public class PaiementService {
      * l'appel est ignore silencieusement (retry-safe).
      */
     @Transactional
-    public synchronized void libererFondsSequestre(Long commandeId) {
+    public void libererFondsSequestre(Long commandeId) {
+        Object verrou = verrousCommande.computeIfAbsent(commandeId, k -> new Object());
+        synchronized (verrou) {
+            try {
+                executerLiberationFondsSequestre(commandeId);
+            } finally {
+                verrousCommande.remove(commandeId, verrou);
+            }
+        }
+    }
+
+    private void executerLiberationFondsSequestre(Long commandeId) {
         Transaction transaction = transactionRepository
                 .findByTypeReferenceAndReferenceId(TypeReference.COMMANDE, commandeId)
                 .orElseThrow(() -> new TransactionNotFoundException(
@@ -383,7 +402,18 @@ public class PaiementService {
      * Idempotent comme libererFondsSequestre.
      */
     @Transactional
-    public synchronized void traiterRemboursementAnnulation(Long commandeId) {
+    public void traiterRemboursementAnnulation(Long commandeId) {
+        Object verrou = verrousCommande.computeIfAbsent(commandeId, k -> new Object());
+        synchronized (verrou) {
+            try {
+                executerRemboursementAnnulation(commandeId);
+            } finally {
+                verrousCommande.remove(commandeId, verrou);
+            }
+        }
+    }
+
+    private void executerRemboursementAnnulation(Long commandeId) {
         Transaction transaction = transactionRepository
                 .findByTypeReferenceAndReferenceId(TypeReference.COMMANDE, commandeId)
                 .orElseThrow(() -> new TransactionNotFoundException(
@@ -433,7 +463,18 @@ public class PaiementService {
      * Idempotent comme les deux methodes precedentes.
      */
     @Transactional
-    public synchronized void traiterRemboursementLitige(Long commandeId) {
+    public void traiterRemboursementLitige(Long commandeId) {
+        Object verrou = verrousCommande.computeIfAbsent(commandeId, k -> new Object());
+        synchronized (verrou) {
+            try {
+                executerRemboursementLitige(commandeId);
+            } finally {
+                verrousCommande.remove(commandeId, verrou);
+            }
+        }
+    }
+
+    private void executerRemboursementLitige(Long commandeId) {
         Transaction transaction = transactionRepository
                 .findByTypeReferenceAndReferenceId(TypeReference.COMMANDE, commandeId)
                 .orElseThrow(() -> new TransactionNotFoundException(
