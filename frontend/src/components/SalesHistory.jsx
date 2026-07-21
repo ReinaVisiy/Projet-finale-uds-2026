@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { traduireNomCategorie } from '../services/productMapping';
+import { paiementApi } from '../services/api';
 
 // Avant : toutes les données (mois, catégories, transactions, statuts,
 // KPIs) étaient des tableaux fictifs codés en dur (mêmes 6 "ventes" pour
@@ -52,6 +53,21 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
   const [toast, setToast] = useState('');
   const [statusFilter, setStatusFilter] = useState('toutes');
 
+  // Transactions paiement-service du vendeur connecté : sert à savoir
+  // quelles commandes sont réellement payées (statut PAYE), pour que
+  // l'historique des ventes ne montre que des commandes payées ET
+  // livrées (une commande "Livrée" mais jamais payée, ou payée mais pas
+  // encore livrée, ne doit pas apparaître ici).
+  const [mesTransactions, setMesTransactions] = useState([]);
+  useEffect(() => {
+    paiementApi.getMesTransactions().then(setMesTransactions).catch(() => setMesTransactions([]));
+  }, []);
+  const commandesPayeesIds = new Set(
+    mesTransactions
+      .filter(tr => tr.typeReference === 'COMMANDE' && tr.statut === 'PAYE')
+      .map(tr => tr.referenceId)
+  );
+
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
@@ -59,25 +75,29 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
 
   // ===== Transactions réelles =====
   // Une "transaction" = une ligne de commande dont le produit appartient
-  // à ce vendeur (même filtrage que SellerDashboard pour ses revenus).
+  // à ce vendeur (même filtrage que SellerDashboard pour ses revenus),
+  // et dont la commande est à la fois payée (statut PAYE côté
+  // paiement-service) et livrée (statut Livrée côté commande-service).
   const allTransactions = [];
-  adminOrders.forEach(order => {
-    (order.items || []).forEach(item => {
-      const produit = vendeurProducts.find(p => p.name === item.nomProduit || p.name === item.name);
-      if (!produit) return;
-      allTransactions.push({
-        date: order.date,
-        dateISO: order.dateISO,
-        product: item.nomProduit || item.name || produit.name,
-        category: produit.category || 'Général',
-        qty: `${item.quantity} unité(s)`,
-        amount: item.subtotal || 0,
-        client: order.client,
-        status: order.status,
-        orderId: order.id,
+  adminOrders
+    .filter(order => order.status === 'Livrée' && commandesPayeesIds.has(order.id))
+    .forEach(order => {
+      (order.items || []).forEach(item => {
+        const produit = vendeurProducts.find(p => p.name === item.nomProduit || p.name === item.name);
+        if (!produit) return;
+        allTransactions.push({
+          date: order.date,
+          dateISO: order.dateISO,
+          product: item.nomProduit || item.name || produit.name,
+          category: produit.category || 'Général',
+          qty: `${item.quantity} unité(s)`,
+          amount: item.subtotal || 0,
+          client: order.client,
+          status: order.status,
+          orderId: order.id,
+        });
       });
     });
-  });
   allTransactions.sort((a, b) => new Date(b.dateISO || 0) - new Date(a.dateISO || 0));
 
   // ===== Filtre période (7j/30j/3m/1a) =====
