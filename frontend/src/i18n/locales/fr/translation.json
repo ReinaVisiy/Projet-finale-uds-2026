@@ -256,7 +256,13 @@
     "back": "Retour",
     "notProvided": "Non renseigné",
     "editProfile": "Modifier le profil",
-    "changePassword": "Modifier le mot de passe"
+    "changePassword": "Modifier le mot de passe",
+    "vendorTag": "Vendeur",
+    "clientTag": "Client",
+    "adminTag": "Administrateur",
+    "noProducts": "Vous n'avez pas encore publié de produit.",
+    "noReviewsReceived": "Vous n'avez pas encore reçu d'avis.",
+    "noReviewsGiven": "Vous n'avez pas encore laissé d'avis."
   },
   "clientProfile": {
     "loadFailed": "Impossible de charger les avis.",

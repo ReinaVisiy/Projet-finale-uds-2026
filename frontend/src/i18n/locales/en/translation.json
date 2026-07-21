@@ -256,7 +256,13 @@
     "back": "Back",
     "notProvided": "Not provided",
     "editProfile": "Edit profile",
-    "changePassword": "Change password"
+    "changePassword": "Change password",
+    "vendorTag": "Vendor",
+    "clientTag": "Client",
+    "adminTag": "Administrator",
+    "noProducts": "You haven't published any products yet.",
+    "noReviewsReceived": "You haven't received any reviews yet.",
+    "noReviewsGiven": "You haven't left any reviews yet."
   },
   "clientProfile": {
     "loadFailed": "Unable to load reviews.",

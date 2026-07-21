@@ -1147,6 +1147,7 @@ export default function App() {
           onEditProfile={() => navigate('edit-profile')}
           onChangePassword={() => navigate('change-password')}
           onBack={() => navigate('home')}
+          onNavigateToProduct={goToProduct}
         />;
       case 'edit-profile':
         return <EditProfile
