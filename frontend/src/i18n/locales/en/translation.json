@@ -378,7 +378,9 @@
     "startPreparing": "Start preparing",
     "markShipped": "Mark as shipped",
     "awaitingClientConfirmation": "Awaiting the client's delivery confirmation (or automatic validation after 72h).",
-    "orderClosed": "This order is closed."
+    "orderClosed": "This order is closed.",
+    "paid": "Paid",
+    "unpaid": "Unpaid"
   },
   "home": {
     "navHome": "Home",

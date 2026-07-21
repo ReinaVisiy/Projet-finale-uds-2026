@@ -489,10 +489,11 @@ export default function App() {
           // client supprimé entretemps : on gardera le repli "Client #id"
         }
       }));
-      setMesCommandesVendeur((dtos || []).map((dto) => {
+      const commandesMappees = (dtos || []).map((dto) => {
         const client = clients.get(dto.clientId);
         return mapCommandePourAffichage(dto, client?.nom, client?.email, noms);
-      }));
+      });
+      setMesCommandesVendeur(await enrichirAvecStatutPaiement(commandesMappees));
     } catch (err) {
       console.error('Impossible de charger vos commandes reçues :', err);
     }

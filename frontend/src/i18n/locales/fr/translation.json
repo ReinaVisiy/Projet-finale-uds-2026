@@ -378,7 +378,9 @@
     "startPreparing": "Démarrer la préparation",
     "markShipped": "Marquer comme expédiée",
     "awaitingClientConfirmation": "En attente de confirmation de réception par le client (ou validation automatique après 72h).",
-    "orderClosed": "Cette commande est clôturée."
+    "orderClosed": "Cette commande est clôturée.",
+    "paid": "Payée",
+    "unpaid": "Non payée"
   },
   "home": {
     "navHome": "Accueil",

@@ -78,6 +78,13 @@ export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
                   <div style={styles.orderRight}>
                     <div style={styles.orderTotal}>{totalAmount.toLocaleString()} FCFA</div>
                     <div style={{
+                      ...styles.paymentBadge,
+                      backgroundColor: order.paye ? '#e9f5ee' : '#fdecea',
+                      color: order.paye ? '#2d6a4f' : '#b3261e',
+                    }}>
+                      {order.paye ? t('vendeurOrders.paid') : t('vendeurOrders.unpaid')}
+                    </div>
+                    <div style={{
                       ...styles.statusBadge,
                       backgroundColor: getStatusBg(order.status),
                       color: getStatusColor(order.status),
@@ -247,6 +254,12 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
+    padding: '4px 12px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '700',
+  },
+  paymentBadge: {
     padding: '4px 12px',
     borderRadius: '20px',
     fontSize: '12px',
