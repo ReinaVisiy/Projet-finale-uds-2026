@@ -117,6 +117,7 @@ services:
       DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
       JWT_SECRET: ${JWT_SECRET}
+      UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
       EUREKA_URI: http://eureka-server:8761/eureka/
     ports:
       - "8083:8083"
@@ -135,6 +136,8 @@ services:
       DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
       JWT_SECRET: ${JWT_SECRET}
+      PRODUIT_SERVICE_URL: http://produit-service:8082
+      UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
       EUREKA_URI: http://eureka-server:8761/eureka/
     ports:
       - "8084:8084"
@@ -153,6 +156,7 @@ services:
       DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
       JWT_SECRET: ${JWT_SECRET}
+      UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
       EUREKA_URI: http://eureka-server:8761/eureka/
     ports:
       - "8085:8085"
@@ -192,6 +196,9 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       NOTCHPAY_SECRET_KEY: ${NOTCHPAY_SECRET_KEY}
       NOTCHPAY_PUBLIC_KEY: ${NOTCHPAY_PUBLIC_KEY}
+      CERTIFICATION_SERVICE_URL: http://certification-service:8086
+      COMMANDE_SERVICE_URL: http://commande-service:8088
+      UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
       EUREKA_URI: http://eureka-server:8761/eureka/
     ports:
       - "8087:8087"
@@ -212,6 +219,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       PRODUIT_SERVICE_URL: http://produit-service:8082
       UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
+      PAIEMENT_SERVICE_URL: http://paiement-service:8087
       EUREKA_URI: http://eureka-server:8761/eureka/
     ports:
       - "8088:8088"
