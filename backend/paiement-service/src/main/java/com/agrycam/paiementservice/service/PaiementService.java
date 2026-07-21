@@ -124,13 +124,22 @@ public class PaiementService {
                 .phone(client.getTelephone())
                 .build();
 
+        // NotchPay exige une reference UNIQUE POUR TOUJOURS sur tout le
+        // compte (pas seulement pour la session en cours). Utiliser le seul
+        // ID auto-incremente de la transaction locale n'est pas suffisant :
+        // si la base paiement_db est un jour recreee (ex. ddl-auto=update
+        // en dev), la sequence redemarre a 1 et on retombe sur une
+        // reference deja envoyee a NotchPay -> 409 Conflict "Reference
+        // already existing". On ajoute donc un suffixe aleatoire.
+        String notchPayReference = "agrycam-" + transaction.getId() + "-" + UUID.randomUUID().toString().substring(0, 8);
+
         NotchPayCreateRequest createRequest = NotchPayCreateRequest.builder()
                 .amount(montantTotal)
                 .currency("XAF")
                 .customer(customer)
                 .description(description)
                 .callback(callbackUrl)
-                .reference(transaction.getId().toString())
+                .reference(notchPayReference)
                 .build();
 
         try {
@@ -152,9 +161,9 @@ public class PaiementService {
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null
                     && responseEntity.getBody().getAuthorization_url() != null) {
                 NotchPayCreateResponse notchResponse = responseEntity.getBody();
-                // On utilise notre propre reference (transaction.getId()) pour
-                // les verifications ulterieures : c'est celle qu'on a envoyee.
-                transaction.setSimizSessionId(transaction.getId().toString());
+                // On stocke notre reference (unique) pour les verifications
+                // ulterieures : c'est celle qu'on a envoyee a NotchPay.
+                transaction.setSimizSessionId(notchPayReference);
                 transaction.setSimizCheckoutUrl(notchResponse.getAuthorization_url());
                 log.info("Paiement NotchPay cree avec succes pour la transaction {}", transaction.getId());
             } else {
