@@ -30,7 +30,7 @@ public class AdminSeeder implements CommandLineRunner {
     // connexion (voir auth-service) ; le mot de passe est haché avant
     // stockage et reste modifiable ensuite.
     private static final String ADMIN_NOM = "Reina Visiy";
-    private static final String ADMIN_EMAIL = "admin@agriconnect.com";
+    private static final String ADMIN_EMAIL = "reinavisiy@gmail.com";
     private static final String ADMIN_MOT_DE_PASSE = "Admin2026";
 
     private final UtilisateurRepository utilisateurRepository;
