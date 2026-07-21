@@ -5,7 +5,7 @@
 #
 # Utilisation :
 #   1) Copier .env.example en .env a la racine de backend/ et remplir les
-#      valeurs (JWT_SECRET, INTERNAL_SERVICE_SECRET, mots de passe Simiz...)
+#      valeurs (JWT_SECRET, INTERNAL_SERVICE_SECRET, cles NotchPay...)
 #   2) docker compose up --build
 #
 # Toutes les valeurs sensibles viennent de .env (jamais commitees).
@@ -190,8 +190,8 @@ services:
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
       JWT_SECRET: ${JWT_SECRET}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
-      SIMIZ_SECRET_KEY: ${SIMIZ_SECRET_KEY}
-      SIMIZ_PUBLIC_KEY: ${SIMIZ_PUBLIC_KEY}
+      NOTCHPAY_SECRET_KEY: ${NOTCHPAY_SECRET_KEY}
+      NOTCHPAY_PUBLIC_KEY: ${NOTCHPAY_PUBLIC_KEY}
       EUREKA_URI: http://eureka-server:8761/eureka/
     ports:
       - "8087:8087"

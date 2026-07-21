@@ -77,7 +77,7 @@ public class JwtUtil {
      * meme secret partage que les autres microservices AgryCam.
      * Utilise par paiement-service pour s'authentifier lui-meme lorsqu'il
      * appelle certification-service ou commande-service en arriere-plan
-     * (webhook Simiz, verification asynchrone), contextes ou aucun token
+     * (webhook NotchPay, verification asynchrone), contextes ou aucun token
      * utilisateur n'est disponible a propager.
      * uid=0 identifie conventionnellement un appel systeme (aucun
      * utilisateur reel ne porte cet identifiant).

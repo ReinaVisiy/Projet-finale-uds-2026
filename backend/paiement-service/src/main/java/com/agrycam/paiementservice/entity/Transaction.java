@@ -49,11 +49,11 @@ public class Transaction {
     @Column(name = "vendeur_id", nullable = false)
     private Long vendeurId;
 
-    @Column(name = "simiz_session_id")
-    private String simizSessionId; // Reutilise pour NotchPay : contient notre propre "reference" envoyee a NotchPay (= transaction.id). Nom/colonne conserves pour eviter une migration.
+    @Column(name = "notchpay_session_id")
+    private String notchpaySessionId; // Contient notre propre "reference" envoyee a NotchPay (= transaction.id).
 
-    @Column(name = "simiz_checkout_url", length = 1024)
-    private String simizCheckoutUrl; // Reutilise pour NotchPay : contient authorization_url. Nom conserve car App.jsx lit transaction.simizCheckoutUrl.
+    @Column(name = "notchpay_checkout_url", length = 1024)
+    private String notchpayCheckoutUrl; // Contient l'authorization_url renvoye par NotchPay.
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

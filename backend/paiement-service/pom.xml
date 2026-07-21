@@ -12,7 +12,7 @@
     <artifactId>paiement-service</artifactId>
     <version>1.0.0</version>
     <name>paiement-service</name>
-    <description>Microservice Spring Boot de paiement via la passerelle Simiz (AgryCam)</description>
+    <description>Microservice Spring Boot de paiement via la passerelle NotchPay (AgryCam)</description>
 
     <properties>
         <java.version>21</java.version>

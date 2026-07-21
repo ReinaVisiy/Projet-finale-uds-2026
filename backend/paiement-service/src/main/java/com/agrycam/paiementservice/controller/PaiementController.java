@@ -121,15 +121,14 @@ public class PaiementController {
     }
 
     /**
-     * POST /api/paiements/webhook/simiz (Public / Non protege par JWT)
+     * POST /api/paiements/webhook/notchpay (Public / Non protege par JWT)
      * Receptionne les notifications asynchrones de paiement de NotchPay.
-     * (Chemin et noms de methode "simiz" conserves pour ne pas casser un
-     * webhook deja enregistre ; a renommer si vous repartez de zero cote
-     * dashboard NotchPay.)
+     * Si vous aviez deja enregistre l'ancienne URL webhook/simiz cote
+     * dashboard NotchPay, pensez a la mettre a jour vers webhook/notchpay.
      */
-    @PostMapping("/webhook/simiz")
-    public ResponseEntity<Void> recevoirWebhookSimiz(@RequestBody Map<String, Object> payload) {
-        paiementService.traiterWebhookSimiz(payload);
+    @PostMapping("/webhook/notchpay")
+    public ResponseEntity<Void> recevoirWebhookNotchpay(@RequestBody Map<String, Object> payload) {
+        paiementService.traiterWebhookNotchpay(payload);
         return ResponseEntity.ok().build();
     }
 

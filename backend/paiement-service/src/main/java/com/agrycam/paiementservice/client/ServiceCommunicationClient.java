@@ -18,10 +18,10 @@ import java.util.Map;
 
 /**
  * Client charge de notifier certification-service et commande-service
- * lorsqu'un paiement Simiz est confirme (ou echoue) dans paiement-service.
+ * lorsqu'un paiement NotchPay est confirme (ou echoue) dans paiement-service.
  * Les appels sont authentifies par un token de service interne (voir
  * JwtUtil#genererTokenServiceInterne), car ces notifications se produisent
- * en arriere-plan (webhook Simiz, sondage), sans requete utilisateur dont
+ * en arriere-plan (webhook NotchPay, sondage), sans requete utilisateur dont
  * on pourrait propager le token JWT.
  * Toute erreur de communication est journalisee mais n'interrompt jamais
  * le traitement du paiement lui-meme (la transaction reste la source de

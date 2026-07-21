@@ -732,7 +732,7 @@
     "paymentConfirmed": "✅ Payment confirmed! Redirecting...",
     "securePayment": "🔒 Secure payment",
     "trackedDelivery": "🚚 Tracked delivery",
-    "pay": "Pay {{total}} FCFA with Simiz",
+    "pay": "Pay {{total}} FCFA with NotchPay",
     "checkoutError": "Payment could not be started. Please try again.",
     "itemCount_one": "{{count}} item",
     "itemCount_other": "{{count}} items"
@@ -995,7 +995,7 @@
   },
   "paymentReturn": {
     "pendingTitle": "Verifying payment…",
-    "pendingText": "We're confirming your payment with Simiz. Please wait a moment.",
+    "pendingText": "We're confirming your payment with NotchPay. Please wait a moment.",
     "successTitle": "Payment confirmed!",
     "successText": "Your payment was successfully validated. Thank you for your trust.",
     "failedTitle": "Payment not completed",

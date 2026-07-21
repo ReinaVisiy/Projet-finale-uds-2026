@@ -44,7 +44,7 @@ import { mapCommandePourAffichage, STATUT_FRANCAIS_TO_BACKEND } from './services
 import { mapNotificationPourAffichage, construireNotificationRequest } from './services/notificationMapping';
 
 export default function App() {
-  // Détection du retour de paiement Simiz (successUrl/cancelUrl construits
+  // Détection du retour de paiement NotchPay (successUrl/cancelUrl construits
   // par paiement-service sur /pay/success ou /pay/cancel avec
   // ?transactionId=..., cf. PaiementService#initierPaiement). Le serveur de
   // dev Vite (et la config de déploiement SPA) redirige ces chemins vers
@@ -588,8 +588,8 @@ export default function App() {
   // Le panier est scindé par vendeur (ShoppingCart.jsx affiche un bouton
   // de paiement indépendant par groupe) : une Commande côté backend ne
   // peut plus contenir des produits que d'un seul producteur. On crée
-  // donc ici une Commande + une Transaction Simiz pour le seul groupe
-  // concerné, puis on redirige directement vers Simiz — sans demander de
+  // donc ici une Commande + une Transaction NotchPay pour le seul groupe
+  // concerné, puis on redirige directement vers NotchPay — sans demander de
   // numéro de téléphone sur AgriCam au préalable.
   const handleCheckout = async (vendeurId) => {
     const itemsDuGroupe = cartItems.filter(item => item.producteurId === vendeurId);
@@ -618,10 +618,10 @@ export default function App() {
     // groupes restent disponibles pour un paiement séparé.
     setCartItems(prev => prev.filter(item => item.producteurId !== vendeurId));
 
-    if (transaction?.simizCheckoutUrl) {
-      // Redirection vers la page de paiement Simiz : le client revient
+    if (transaction?.notchpayCheckoutUrl) {
+      // Redirection vers la page de paiement NotchPay : le client revient
       // ensuite sur /pay/success ou /pay/cancel (cf. PaymentReturn).
-      window.location.href = transaction.simizCheckoutUrl;
+      window.location.href = transaction.notchpayCheckoutUrl;
       return;
     }
 

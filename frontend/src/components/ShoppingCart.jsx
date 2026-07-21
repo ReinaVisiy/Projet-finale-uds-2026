@@ -11,13 +11,13 @@ export default function ShoppingCart({
   onContinueShopping,
 }) {
   const { t } = useTranslation();
-  // Redirection Simiz directe : plus de choix de mode de paiement ni de
+  // Redirection NotchPay directe : plus de choix de mode de paiement ni de
   // numéro à saisir sur AgriCam (cf. section 1 du cahier des charges).
   const [processingVendorId, setProcessingVendorId] = useState(null);
   const [checkoutError, setCheckoutError] = useState('');
 
   // Total global, purement informatif : le paiement se fait groupe par
-  // groupe (un vendeur = une commande = un paiement Simiz indépendant).
+  // groupe (un vendeur = une commande = un paiement NotchPay indépendant).
   const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   // Le panier est scindé par vendeur, car une Commande ne peut plus
@@ -51,7 +51,7 @@ export default function ShoppingCart({
     setProcessingVendorId(vendeurId);
     try {
       await onCheckout(vendeurId);
-      // En cas de succès, onCheckout redirige vers Simiz ; ce composant
+      // En cas de succès, onCheckout redirige vers NotchPay ; ce composant
       // sera démonté avant même que le finally ne compte.
     } catch (err) {
       setCheckoutError(err?.message || t('shoppingCart.checkoutError'));

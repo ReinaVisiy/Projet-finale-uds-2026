@@ -163,8 +163,8 @@ public class PaiementService {
                 NotchPayCreateResponse notchResponse = responseEntity.getBody();
                 // On stocke notre reference (unique) pour les verifications
                 // ulterieures : c'est celle qu'on a envoyee a NotchPay.
-                transaction.setSimizSessionId(notchPayReference);
-                transaction.setSimizCheckoutUrl(notchResponse.getAuthorization_url());
+                transaction.setNotchpaySessionId(notchPayReference);
+                transaction.setNotchpayCheckoutUrl(notchResponse.getAuthorization_url());
                 log.info("Paiement NotchPay cree avec succes pour la transaction {}", transaction.getId());
             } else {
                 throw new IllegalStateException("Reponse invalide de NotchPay");
@@ -172,7 +172,7 @@ public class PaiementService {
         } catch (Exception e) {
             // Aucun mode de secours factice : une fausse URL menerait le
             // client vers une page inexistante (cf. bug deja rencontre avec
-            // Simiz). En cas d'echec, la transaction est marquee ECHOUE et
+            // NotchPay). En cas d'echec, la transaction est marquee ECHOUE et
             // une erreur claire remonte au frontend.
             log.error("Erreur lors de l'appel de l'API NotchPay : {}", e.getMessage());
             transaction.setStatut(StatutTransaction.ECHOUE);
@@ -206,7 +206,7 @@ public class PaiementService {
             return transaction;
         }
 
-        String sessionId = transaction.getSimizSessionId();
+        String sessionId = transaction.getNotchpaySessionId();
         if (sessionId == null) {
             log.error("Aucune reference NotchPay associee a la transaction {}", id);
             return transaction;
@@ -444,13 +444,11 @@ public class PaiementService {
     }
 
     /**
-     * Traite le webhook passif envoye par NotchPay (nom de methode conserve
-     * pour eviter de toucher le mapping du controleur ; a renommer plus tard
-     * si souhaite).
+     * Traite le webhook passif envoye par NotchPay.
      * Valide le paiement de maniere securisee en interrogeant l'API NotchPay pour eviter tout spoofing de requete.
      */
     @Transactional
-    public void traiterWebhookSimiz(Map<String, Object> payload) {
+    public void traiterWebhookNotchpay(Map<String, Object> payload) {
         log.info("Reception d'un Webhook de NotchPay: {}", payload);
         
         String sessionId = null;
@@ -467,7 +465,7 @@ public class PaiementService {
             return;
         }
 
-        Transaction transaction = transactionRepository.findBySimizSessionId(sessionId)
+        Transaction transaction = transactionRepository.findByNotchpaySessionId(sessionId)
                 .orElse(null);
 
         if (transaction == null) {

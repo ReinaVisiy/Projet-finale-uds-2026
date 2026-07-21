@@ -15,7 +15,7 @@ Backend du projet **AGRYCAM**, une plateforme de mise en relation entre producte
 | `signalement-service` | 8084 | `signalement_db` | Signalement de produits ou d'utilisateurs, traitement par un administrateur. |
 | `avis-service` | 8085 | `avis_db` | Avis et notes sur les produits. |
 | `certification-service` | 8086 | `certification_db` | Demande et gestion des certifications des producteurs. |
-| `paiement-service` | 8087 | `paiement_db` | Paiements via la passerelle Simiz (transactions, retraits, solde vendeur). |
+| `paiement-service` | 8087 | `paiement_db` | Paiements via la passerelle NotchPay (transactions, retraits, solde vendeur). |
 | `commande-service` | 8088 | `commande_db` | Création et suivi des commandes. |
 | `notification-service` | 8089 | `notification_db` | Notifications adressées aux utilisateurs (commande, paiement, certification, etc.). |
 
@@ -37,7 +37,7 @@ Les appels **entre microservices** (ex. `avis-service` → `utilisateur-service`
 - `avis-service` → `utilisateur-service`
 - `commande-service` → `produit-service`, `utilisateur-service` (validation du client et des produits, prix authentique)
 - `signalement-service` → `produit-service` ou `utilisateur-service` selon le type de signalement
-- `paiement-service` : n'appelle aucun autre microservice AgryCam pour l'instant (uniquement l'API externe Simiz via `RestTemplate`) ; à l'inverse, il expose `GET /api/paiements/statut/{typeReference}/{referenceId}` pour que `commande-service` et `certification-service` puissent vérifier si une commande/certification a été payée — voir la section suivante
+- `paiement-service` : n'appelle aucun autre microservice AgryCam pour l'instant (uniquement l'API externe NotchPay via `RestTemplate`) ; à l'inverse, il expose `GET /api/paiements/statut/{typeReference}/{referenceId}` pour que `commande-service` et `certification-service` puissent vérifier si une commande/certification a été payée — voir la section suivante
 - `notification-service` ne reçoit pour l'instant d'appels que du frontend (aucun autre microservice ne le déclenche encore automatiquement)
 
 Ces URLs sont définies par des variables d'environnement, avec une valeur par défaut pointant vers `localhost` pour le développement local (voir la section **Variables d'environnement**).
@@ -68,8 +68,8 @@ Chaque service lit sa configuration depuis `application.properties`, avec des va
 | `CERTIFICATION_SERVICE_URL` | URL de `certification-service` | `http://localhost:8086` |
 | `PAIEMENT_SERVICE_URL` | URL de `paiement-service` | `http://localhost:8087` |
 | `COMMANDE_SERVICE_URL` | URL de `commande-service` | `http://localhost:8088` |
-| `FRONTEND_URL` | URL du frontend déployé (utilisée par `paiement-service` pour les retours Simiz) | `http://localhost:3000` |
-| `SIMIZ_SECRET_KEY` / `SIMIZ_PUBLIC_KEY` | Clés de la passerelle de paiement Simiz (sandbox), utilisées par `paiement-service` | *Vide par défaut, simulation locale de secours* |
+| `FRONTEND_URL` | URL du frontend déployé (utilisée par `paiement-service` pour les retours NotchPay) | `http://localhost:3000` |
+| `NOTCHPAY_SECRET_KEY` / `NOTCHPAY_PUBLIC_KEY` | Clés de la passerelle de paiement NotchPay (sandbox), utilisées par `paiement-service` — la clé publique est obligatoire, sans quoi l'initiation de paiement échoue (401, pas de simulation de secours) | *Vide par défaut* |
 | `INTERNAL_SERVICE_SECRET` | Secret partagé entre `auth-service` et `utilisateur-service` pour leurs appels internes | *(à générer — voir README racine)* |
 | `EUREKA_URI` | URL du serveur Eureka auprès duquel chaque service s'enregistre | `http://localhost:8761/eureka/` |
 | `EUREKA_HOSTNAME` | Nom d'hôte annoncé par `eureka-server` lui-même | `localhost` |
@@ -147,7 +147,7 @@ cp .env.example .env
 ```
 
 Puis remplir `.env` (`JWT_SECRET`, `INTERNAL_SERVICE_SECRET`, et les clés
-Simiz si besoin — voir la section "Variables d'environnement" ci-dessus).
+NotchPay si besoin — voir la section "Variables d'environnement" ci-dessus).
 Ce fichier ne doit jamais être commité.
 
 ### 2. Lancer toute la stack

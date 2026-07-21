@@ -732,7 +732,7 @@
     "paymentConfirmed": "✅ Paiement validé ! Redirection...",
     "securePayment": "🔒 Paiement sécurisé",
     "trackedDelivery": "🚚 Livraison suivie",
-    "pay": "Payer {{total}} FCFA avec Simiz",
+    "pay": "Payer {{total}} FCFA avec NotchPay",
     "checkoutError": "Le paiement n'a pas pu être initié. Veuillez réessayer.",
     "itemCount_one": "{{count}} article",
     "itemCount_other": "{{count}} articles"
@@ -995,7 +995,7 @@
   },
   "paymentReturn": {
     "pendingTitle": "Vérification du paiement en cours…",
-    "pendingText": "Nous confirmons votre paiement auprès de Simiz. Merci de patienter quelques instants.",
+    "pendingText": "Nous confirmons votre paiement auprès de NotchPay. Merci de patienter quelques instants.",
     "successTitle": "Paiement confirmé !",
     "successText": "Votre paiement a été validé avec succès. Merci pour votre confiance.",
     "failedTitle": "Paiement non abouti",

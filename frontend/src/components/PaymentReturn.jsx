@@ -3,9 +3,9 @@ import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import * as paiementApi from '../services/api/paiementApi';
 
-// Écran de retour après redirection Simiz (successUrl / cancelUrl construits
+// Écran de retour après redirection NotchPay (successUrl / cancelUrl construits
 // par paiement-service, cf. PaiementService#initierPaiement). Le paiement
-// Simiz étant asynchrone, on sonde plusieurs fois GET /verifier avant de
+// NotchPay étant asynchrone, on sonde plusieurs fois GET /verifier avant de
 // considérer le statut comme définitif (EN_ATTENTE peut encore évoluer).
 const INTERVALLE_SONDAGE_MS = 3000;
 const TENTATIVES_MAX = 5;

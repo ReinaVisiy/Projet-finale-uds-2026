@@ -16,7 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 /**
  * Configuration de la securite pour le microservice de paiement.
  * Active la protection contre CSRF, desactive la gestion de session (stateless) et configure les regles de securite JWT.
- * Le webhook de Simiz est accessible de maniere publique.
+ * Le webhook de NotchPay est accessible de maniere publique.
  */
 @Configuration
 @EnableWebSecurity
@@ -32,8 +32,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Webhook Simiz : accessible sans token JWT (vient de la passerelle de paiement)
-                        .requestMatchers(HttpMethod.POST, "/api/paiements/webhook/simiz").permitAll()
+                        // Webhook NotchPay : accessible sans token JWT (vient de la passerelle de paiement)
+                        .requestMatchers(HttpMethod.POST, "/api/paiements/webhook/notchpay").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Reste des endpoints : necessite une authentification JWT valide
                         .anyRequest().authenticated()

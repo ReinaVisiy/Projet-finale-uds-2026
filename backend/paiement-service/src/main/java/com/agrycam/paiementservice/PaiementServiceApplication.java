@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Point d'entree principal du microservice de paiement Simiz d'AgryCam.
+ * Point d'entree principal du microservice de paiement NotchPay d'AgryCam.
  */
 @SpringBootApplication
 public class PaiementServiceApplication {

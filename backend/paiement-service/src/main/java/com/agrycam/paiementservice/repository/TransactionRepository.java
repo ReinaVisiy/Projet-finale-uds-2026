@@ -15,5 +15,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     
     List<Transaction> findByVendeurId(Long vendeurId);
     
-    Optional<Transaction> findBySimizSessionId(String simizSessionId);
+    Optional<Transaction> findByNotchpaySessionId(String notchpaySessionId);
 }
