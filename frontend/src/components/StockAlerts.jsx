@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { traduireNomCategorie } from '../services/productMapping';
+import useIsMobile from '../hooks/useIsMobile';
 
 const alertConfig = {
   CRITIQUE: { color: '#dc3545', bg: '#fde8ea' },
@@ -23,6 +24,7 @@ const LOW_THRESHOLD = 10;
 
 export default function StockAlerts({ onBack, vendeurProducts = [] }) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile(768);
   // Alertes construites à partir des vrais produits du vendeur (stock réel
   // renvoyé par produit-service), et non plus d'une liste de produits
   // fictifs (banane, tomate, maïs...) identique pour tout le monde.
@@ -120,7 +122,7 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
       </div>
 
       {/* ── Summary Cards ── */}
-      <div style={styles.summaryGrid}>
+      <div style={{ ...styles.summaryGrid, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
         <div style={styles.summaryCard}>
           <div style={styles.summaryLeft}>
             <div style={{ ...styles.summaryIconWrap, backgroundColor: '#fde8ea' }}>
