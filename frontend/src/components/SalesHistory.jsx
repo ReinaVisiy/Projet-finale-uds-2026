@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { traduireNomCategorie } from '../services/productMapping';
 import { paiementApi } from '../services/api';
+import useIsMobile from '../hooks/useIsMobile';
 
 // Avant : toutes les données (mois, catégories, transactions, statuts,
 // KPIs) étaient des tableaux fictifs codés en dur (mêmes 6 "ventes" pour
@@ -38,6 +39,7 @@ const statusKeys = ['toutes', ...STATUS_ORDER];
 
 export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts = [] }) {
   const { t, i18n } = useTranslation();
+  const isMobile = useIsMobile(768);
   const lang = i18n.language;
   const STATUS_LABEL_KEYS = {
     'En attente': 'statusPending', 'Validée': 'statusValidated', 'En préparation': 'statusPreparing',
@@ -214,7 +216,7 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
       </div>
 
       {/* ── KPI Cards ── */}
-      <div style={styles.kpiGrid}>
+      <div style={{ ...styles.kpiGrid, ...(isMobile && { gridTemplateColumns: 'repeat(2, 1fr)' }) }}>
         {kpis.map((k, i) => (
           <div key={i} style={styles.kpiCard}>
             <div style={styles.kpiRow}>
@@ -232,7 +234,7 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
       </div>
 
       {/* ── Charts Row ── */}
-      <div style={styles.chartsGrid}>
+      <div style={{ ...styles.chartsGrid, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
 
         {/* Bar Chart: Sales last 6 months */}
         <div style={styles.chartCard}>
