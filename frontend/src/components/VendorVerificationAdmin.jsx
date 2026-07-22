@@ -4,6 +4,7 @@ import {
   ArrowLeft, ShieldCheck, FileText, CreditCard, CheckCircle,
   XCircle, Clock, AlertCircle, Phone, Mail, Search, Wallet,
 } from 'lucide-react';
+import useIsMobile from '../hooks/useIsMobile';
 
 // pendingVerifications: [{ id, producteurId, prenom, nom, email, telephone,
 //   typeDocument, typeDocumentLabel, idRecto, idVerso, photoUtilisateur,
@@ -12,6 +13,7 @@ import {
 //   motifRejet }]
 export default function VendorVerificationAdmin({ pendingVerifications = [], onApprove, onReject, onConfirmerPaiement, onBack }) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile(768);
   const [selectedId, setSelectedId] = useState(pendingVerifications[0]?.id ?? null);
   const [search, setSearch] = useState('');
   const [rejectReason, setRejectReason] = useState('');
@@ -103,7 +105,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
           ))}
         </div>
 
-        <div style={styles.grid}>
+        <div style={{ ...styles.grid, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
 
           {/* Liste des demandes */}
           <div style={styles.listPanel}>
@@ -185,7 +187,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
                 <div style={styles.section}>
                   <h3 style={styles.sectionTitle}><FileText size={16} color="#2d6a4f" /> {selected.typeDocumentLabel || t('vendorVerificationAdmin.idDocument')}</h3>
                   {(selected.idRecto || selected.idVerso || selected.photoUtilisateur) ? (
-                    <div style={styles.photoGrid}>
+                    <div style={{ ...styles.photoGrid, ...(isMobile && { gridTemplateColumns: 'repeat(2, 1fr)' }) }}>
                       {selected.idRecto && (
                         <div style={styles.photoItem}>
                           <img src={selected.idRecto} alt="Recto" style={styles.photoImg} />
