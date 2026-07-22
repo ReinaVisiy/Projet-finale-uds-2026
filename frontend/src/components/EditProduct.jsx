@@ -4,6 +4,7 @@ import { ArrowLeft, Upload, X } from 'lucide-react';
 import { produitApi } from '../services/api';
 import { mapCategorie, mapProduitPourVendeur, construireProduitRequest, traduireNomCategorie } from '../services/productMapping';
 import { useTranslation } from 'react-i18next';
+import useIsMobile from '../hooks/useIsMobile';
 
 
 export default function EditProduct({ 
@@ -12,6 +13,7 @@ export default function EditProduct({
   onCancel 
 }) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile(768);
   const [name, setName] = useState(product?.name || '');
   const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState(product?.categoryId != null ? String(product.categoryId) : '');
@@ -86,7 +88,7 @@ export default function EditProduct({
       </div>
 
       <form style={styles.form} onSubmit={handleSubmit}>
-        <div style={styles.grid}>
+        <div style={{ ...styles.grid, ...(isMobile && { gridTemplateColumns: '1fr', gap: '20px' }) }}>
           {/* Colonne gauche : formulaire */}
           <div style={styles.formCard}>
             <div style={styles.field}>
@@ -101,7 +103,7 @@ export default function EditProduct({
               />
             </div>
 
-            <div style={styles.row2}>
+            <div style={{ ...styles.row2, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
               <div style={styles.field}>
                 <label style={styles.label}>{t('editProduct.category')}</label>
                 <select value={category} onChange={(e) => setCategory(e.target.value)} style={styles.select}>
