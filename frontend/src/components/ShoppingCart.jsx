@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import { ShoppingBag, Trash2, Plus, Minus, ArrowLeft, CreditCard, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import useIsMobile from '../hooks/useIsMobile';
 
 export default function ShoppingCart({
   cartItems,
@@ -11,6 +12,7 @@ export default function ShoppingCart({
   onContinueShopping,
 }) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile(768);
   // Redirection NotchPay directe : plus de choix de mode de paiement ni de
   // numéro à saisir sur AgriCam (cf. section 1 du cahier des charges).
   const [processingVendorId, setProcessingVendorId] = useState(null);
@@ -100,7 +102,7 @@ export default function ShoppingCart({
         </div>
       )}
 
-      <div style={styles.grid}>
+      <div style={{ ...styles.grid, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
         {/* Colonne gauche : produits groupés par vendeur, un paiement chacun */}
         <div style={styles.productsSection}>
           {groupesParVendeur.map((groupe) => {
