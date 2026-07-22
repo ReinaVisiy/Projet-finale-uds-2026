@@ -2,10 +2,12 @@
 import { useState, useRef } from 'react';
 import { User, Mail, Lock, Phone, Eye, EyeOff, ArrowRight, Camera } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import useIsMobile from '../hooks/useIsMobile';
 
 
 export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile(768);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [role, setRole] = useState('client');
@@ -132,7 +134,7 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
         </div>
 
         <form style={styles.form} onSubmit={handleSubmit}>
-          <div style={styles.row2}>
+          <div style={{ ...styles.row2, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
             <div style={styles.field}>
               <label style={styles.label}>{t('register.firstName')}</label>
               <div style={{ ...styles.inputWrap, borderColor: errors.prenom ? '#e07a5f' : '#dee2e6' }}>
