@@ -13,7 +13,9 @@ import java.time.LocalDateTime;
  * Entite représentant une transaction de paiement initiee par un client.
  */
 @Entity
-@Table(name = "transactions")
+@Table(name = "transactions", uniqueConstraints = @UniqueConstraint(
+        name = "uk_transactions_type_reference_reference_id",
+        columnNames = {"type_reference", "reference_id"}))
 @Data
 @Builder
 @NoArgsConstructor
