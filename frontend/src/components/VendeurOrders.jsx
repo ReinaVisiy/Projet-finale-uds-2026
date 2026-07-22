@@ -2,10 +2,12 @@
 import { useState } from 'react';
 import { Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import useIsMobile from '../hooks/useIsMobile';
 
 
 export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile(768);
   const [expandedOrder, setExpandedOrder] = useState(null);
 
   // orders est déjà scopé au vendeur connecté (App.jsx appelle
@@ -99,7 +101,7 @@ export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
 
                 {expandedOrder === order.id && (
                   <div style={styles.orderDetails}>
-                    <div style={styles.detailsGrid}>
+                    <div style={{ ...styles.detailsGrid, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
                       <div>
                         <p style={styles.detailLabel}>{t('vendeurOrders.client')}</p>
                         <p style={styles.detailValue}>{order.client}</p>
