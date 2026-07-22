@@ -2,6 +2,7 @@ package com.agrycam.paiementservice.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -12,6 +13,19 @@ import java.util.Map;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * Refus d'acces (@PreAuthorize) : renvoie un 403 propre avec un message
+     * exploitable cote frontend, plutot que de laisser tomber dans le
+     * handler generique ci-dessous (qui renverrait un 500 "Access Denied"
+     * trompeur, comme si le serveur avait plante).
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(Map.of("erreur", "Vous n'avez pas les droits necessaires pour effectuer cette action."));
+    }
 
     @ExceptionHandler(SoldeInsuffisantException.class)
     public ResponseEntity<Map<String, String>> handleSoldeInsuffisant(SoldeInsuffisantException ex) {

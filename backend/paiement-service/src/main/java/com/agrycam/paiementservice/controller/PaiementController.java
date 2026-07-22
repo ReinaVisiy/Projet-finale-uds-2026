@@ -135,7 +135,7 @@ public class PaiementController {
      * Renvoie le solde actuel disponible dans le portefeuille du vendeur connecte.
      */
     @GetMapping("/mon-solde")
-    @PreAuthorize("hasRole('VENDEUR')")
+    @PreAuthorize("hasRole('PRODUCTEUR')")
     public ResponseEntity<SoldeVendeur> recupererMonSolde() {
         Long vendeurId = getConnecteUserId();
         SoldeVendeur solde = paiementService.recupererSoldeVendeur(vendeurId);
@@ -147,7 +147,7 @@ public class PaiementController {
      * Renvoie l'historique des transactions/ventes afferentes au vendeur connecte.
      */
     @GetMapping("/mes-transactions")
-    @PreAuthorize("hasRole('VENDEUR')")
+    @PreAuthorize("hasRole('PRODUCTEUR')")
     public ResponseEntity<List<Transaction>> recupererMesTransactions() {
         Long vendeurId = getConnecteUserId();
         List<Transaction> transactions = paiementService.recupererTransactionsVendeur(vendeurId);
@@ -160,7 +160,7 @@ public class PaiementController {
      * Decremente le solde et genere un recu de retrait contenant une reference de virement factice.
      */
     @PostMapping("/retrait")
-    @PreAuthorize("hasRole('VENDEUR')")
+    @PreAuthorize("hasRole('PRODUCTEUR')")
     public ResponseEntity<RetraitDTO> demanderRetrait(@RequestBody Map<String, BigDecimal> request) {
         Long vendeurId = getConnecteUserId();
         BigDecimal montant = request.get("montant");
@@ -188,7 +188,7 @@ public class PaiementController {
      * Renvoie l'historique des retraits effectues par le vendeur connecte.
      */
     @GetMapping("/mes-retraits")
-    @PreAuthorize("hasRole('VENDEUR')")
+    @PreAuthorize("hasRole('PRODUCTEUR')")
     public ResponseEntity<List<Retrait>> recupererMesRetraits() {
         Long vendeurId = getConnecteUserId();
         List<Retrait> retraits = paiementService.recupererRetraitsVendeur(vendeurId);

@@ -78,7 +78,9 @@ export default function ClientOrders({ orders, onBackHome, onConfirmReception, o
       <ConfirmDialog
         open={!!orderToCancel}
         title={t('clientOrders.cancelConfirmTitle')}
-        message={orderToCancel ? `${t('clientOrders.cancelConfirmMsg')} #${orderToCancel.id} ?` : ''}
+        message={orderToCancel
+          ? `${t('clientOrders.cancelConfirmMsg')} #${orderToCancel.id} ?${orderToCancel.paye ? ' ' + t('clientOrders.cancelConfirmRefundNote') : ''}`
+          : ''}
         confirmLabel={t('clientOrders.cancelConfirmBtn')}
         onCancel={() => setOrderToCancel(null)}
         onConfirm={handleCancelOrder}
