@@ -218,6 +218,19 @@ public class ProduitService {
         produitRepository.delete(produit);
     }
 
+    /**
+     * Suppression d'un produit par un administrateur (modération), sans
+     * vérification de propriété : utilisé lorsqu'un produit signalé doit
+     * être retiré du catalogue.
+     */
+    @Transactional
+    public void supprimerParAdmin(Long id) {
+        Produit produit = produitRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produit introuvable"));
+
+        produitRepository.delete(produit);
+    }
+
     private List<ProduitResponse> sortCertifiedFirst(List<ProduitResponse> results) {
         return results.stream()
                 .sorted(Comparator.comparing((ProduitResponse p) -> !Boolean.TRUE.equals(p.getCertifie())))

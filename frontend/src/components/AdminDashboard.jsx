@@ -3,6 +3,7 @@ import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw, Log
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 import useProduits from '../hooks/useProduits';
+import ConfirmActionModal from './ConfirmActionModal';
 
 
 function getNavItems(t) {
@@ -68,6 +69,9 @@ export default function AdminDashboard({
     ? notifications.filter(n => n.utilisateurId === currentUser.id && !n.lu).length
     : 0;
   const [toast, setToast] = useState('');
+  // Utilisateur en attente de confirmation de suspension (fenêtre intégrée,
+  // remplace l'ancien window.prompt() qui demandait le nombre de jours).
+  const [suspendTarget, setSuspendTarget] = useState(null);
   const [hoveredBar, setHoveredBar] = useState(null);
   const [disputeFilter, setDisputeFilter] = useState('tous'); // 'tous' | 'non_livre' | 'autres'
   const [litigeActionEnCours, setLitigeActionEnCours] = useState(null); // litigeId en cours de traitement
@@ -252,6 +256,19 @@ export default function AdminDashboard({
   return (
     <div style={styles.wrapper}>
       {toast && <div style={styles.toast}>{toast}</div>}
+      {suspendTarget && (
+        <ConfirmActionModal
+          mode="suspend"
+          title={t('adminDashboard.suspendConfirmTitle')}
+          targetLabel={`${suspendTarget.prenom || ''} ${suspendTarget.nom || ''}`.trim()}
+          confirmLabel={t('adminDashboard.suspend')}
+          onConfirm={(jours) => {
+            onToggleUserBlocked && onToggleUserBlocked(suspendTarget.id, jours);
+            setSuspendTarget(null);
+          }}
+          onCancel={() => setSuspendTarget(null)}
+        />
+      )}
 
       {/* SIDEBAR (inchangé) */}
       <aside style={{ ...styles.sidebar, width: sidebarCollapsed ? '72px' : '220px' }}>
@@ -708,7 +725,16 @@ export default function AdminDashboard({
                             : t('adminDashboard.active')}
                         </span>
                         <div style={styles.certActions}>
-                          <button style={u.suspendu ? styles.certApproveBtn : styles.certRejectBtn} onClick={() => onToggleUserBlocked && onToggleUserBlocked(u.id)}>
+                          <button
+                            style={u.suspendu ? styles.certApproveBtn : styles.certRejectBtn}
+                            onClick={() => {
+                              if (u.suspendu) {
+                                onToggleUserBlocked && onToggleUserBlocked(u.id);
+                              } else {
+                                setSuspendTarget(u);
+                              }
+                            }}
+                          >
                             {u.suspendu ? t('adminDashboard.liftSuspension') : t('adminDashboard.suspend')}
                           </button>
                         </div>

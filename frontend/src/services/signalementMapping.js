@@ -29,12 +29,20 @@ export function construireRaison(motif, commentaire) {
  * Convertit un SignalementResponse (backend) + les noms déjà résolus de
  * la cible et de l'auteur en objet tel qu'attendu par ModerationPanel
  * et AdminDashboard : { id, cible, motif, auteur, date, status }.
+ *
+ * `targetOwnerId` est l'id du compte utilisateur à suspendre pour ce
+ * signalement : pour un signalement "utilisateur" c'est directement
+ * `dto.targetId` (client ou vendeur) ; pour un signalement "produit"
+ * c'est l'id du vendeur propriétaire du produit (à fournir par
+ * l'appelant, qui seul connaît la fiche produit).
  */
-export function mapSignalementPourAffichage(dto, cibleNom, auteurNom) {
+export function mapSignalementPourAffichage(dto, cibleNom, auteurNom, targetOwnerId) {
   return {
     id: dto.id,
     type: dto.type === 'PRODUIT' ? 'produit' : 'utilisateur',
     cible: cibleNom || `#${dto.targetId}`,
+    targetId: dto.targetId,
+    targetOwnerId: targetOwnerId ?? (dto.type !== 'PRODUIT' ? dto.targetId : undefined),
     motif: dto.raison,
     auteur: auteurNom || `Utilisateur #${dto.reporterId}`,
     date: dto.dateCreation,

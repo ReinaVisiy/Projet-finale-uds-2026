@@ -90,6 +90,18 @@ public class ProduitController {
     }
 
     /**
+     * DELETE /api/produits/{id}/admin (rôle admin) — suppression d'un
+     * produit signalé depuis le panneau de modération, sans vérification
+     * de propriété.
+     */
+    @DeleteMapping("/{id}/admin")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> supprimerParAdmin(@PathVariable Long id) {
+        produitService.supprimerParAdmin(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * PUT /api/produits/{id}/decrementer-stock (rôle admin / service interne)
      * Appelé par commande-service lorsqu'une commande est payée, pour
      * répercuter la vente sur le stock réel du produit.

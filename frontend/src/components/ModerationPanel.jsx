@@ -1,16 +1,31 @@
 import { useState } from 'react';
-import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, UserX, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import ConfirmActionModal from './ConfirmActionModal';
 
 
 export default function ModerationPanel({
   signalements = [],  // ← VALEUR PAR DÉFAUT
   onResolve,
   onReject,
+  onSuspendUtilisateur,
+  onSupprimerProduit,
   onBack,
 }) {
   const { t } = useTranslation();
   const [filter, setFilter] = useState('all');
+  // Signalement ciblé par l'action en cours : { id, type: 'suspend' | 'delete', label }
+  const [pendingAction, setPendingAction] = useState(null);
+
+  const handleConfirmAction = (jours) => {
+    if (!pendingAction) return;
+    if (pendingAction.type === 'suspend') {
+      onSuspendUtilisateur && onSuspendUtilisateur(pendingAction.targetOwnerId, jours);
+    } else if (pendingAction.type === 'delete') {
+      onSupprimerProduit && onSupprimerProduit(pendingAction.targetId, pendingAction.targetOwnerId, pendingAction.label);
+    }
+    setPendingAction(null);
+  };
 
   const filtered = signalements.filter(s =>
     filter === 'all' ? true : s.status === filter
@@ -78,6 +93,32 @@ export default function ModerationPanel({
                       <button style={styles.rejectBtn} onClick={() => onReject(s.id)}>
                         <XCircle size={14} /> {t('moderation.reject')}
                       </button>
+                      {s.type === 'utilisateur' && (
+                        <button
+                          style={styles.suspendBtn}
+                          onClick={() => setPendingAction({ type: 'suspend', reportType: 'utilisateur', targetOwnerId: s.targetOwnerId, label: s.cible })}
+                        >
+                          <UserX size={14} /> {t('moderation.suspendUser')}
+                        </button>
+                      )}
+                      {s.type === 'produit' && (
+                        <>
+                          {s.targetOwnerId != null && (
+                            <button
+                              style={styles.suspendBtn}
+                              onClick={() => setPendingAction({ type: 'suspend', reportType: 'produit', targetOwnerId: s.targetOwnerId, label: s.cible })}
+                            >
+                              <UserX size={14} /> {t('moderation.suspendVendor')}
+                            </button>
+                          )}
+                          <button
+                            style={styles.deleteBtn}
+                            onClick={() => setPendingAction({ type: 'delete', targetId: s.targetId, targetOwnerId: s.targetOwnerId, label: s.cible })}
+                          >
+                            <Trash2 size={14} /> {t('moderation.deleteProduct')}
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -85,6 +126,20 @@ export default function ModerationPanel({
             );
           })}
         </div>
+      )}
+
+      {pendingAction && (
+        <ConfirmActionModal
+          mode={pendingAction.type === 'suspend' ? 'suspend' : 'delete'}
+          title={pendingAction.type === 'suspend' ? t('moderation.suspendConfirmTitle') : t('moderation.deleteProductConfirmTitle')}
+          message={pendingAction.type === 'suspend'
+            ? (pendingAction.reportType === 'produit' ? t('moderation.suspendVendorMessage') : t('moderation.suspendUserMessage'))
+            : t('moderation.deleteProductMessage')}
+          targetLabel={pendingAction.label}
+          confirmLabel={pendingAction.type === 'suspend' ? t('moderation.suspendUser') : t('moderation.deleteProduct')}
+          onConfirm={handleConfirmAction}
+          onCancel={() => setPendingAction(null)}
+        />
       )}
     </div>
   );
@@ -115,4 +170,6 @@ const styles = {
   actions: { display: 'flex', gap: '8px' },
   resolveBtn: { display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', backgroundColor: '#2d6a4f', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' },
   rejectBtn: { display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', backgroundColor: '#fdf1ed', color: '#e07a5f', border: '1px solid #f5d4c8', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' },
+  suspendBtn: { display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', backgroundColor: '#fff4e0', color: '#b8720a', border: '1px solid #f5d99a', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' },
+  deleteBtn: { display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', backgroundColor: '#fdecea', color: '#c0392b', border: '1px solid #f3c2bb', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' },
 };

@@ -185,7 +185,8 @@
     "colVendor": "Producer",
     "colCategory": "Category",
     "colPrice": "Price",
-    "colStock": "Stock"
+    "colStock": "Stock",
+    "suspendConfirmTitle": "Suspend this account"
   },
   "signalement": {
     "motifs": [
@@ -254,7 +255,16 @@
     "noSignalements": "No reports in this category",
     "by": "by",
     "resolve": "Resolve",
-    "reject": "Reject"
+    "reject": "Reject",
+    "suspendUser": "Suspend user",
+    "suspendVendor": "Suspend vendor",
+    "deleteProduct": "Delete product",
+    "suspendConfirmTitle": "Suspend this account",
+    "suspendUserMessage": "This account will be suspended and unable to log in for the chosen duration.",
+    "suspendVendorMessage": "This vendor will be suspended and unable to log in for the chosen duration.",
+    "deleteProductConfirmTitle": "Delete this product",
+    "deleteProductMessage": "This action is permanent and will remove the product from the catalogue.",
+    "actionSuccess": "Action completed successfully."
   },
   "orderManagementAdmin": {
     "back": "Back",
@@ -1095,5 +1105,11 @@
   "categories": {
     "agriculture": "Farming",
     "elevage": "Livestock"
+  },
+  "confirmActionModal": {
+    "invalidDays": "Please enter a valid number of days.",
+    "daysLabel": "Number of days",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   }
 }

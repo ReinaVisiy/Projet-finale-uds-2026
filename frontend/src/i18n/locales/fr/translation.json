@@ -185,7 +185,8 @@
     "colVendor": "Producteur",
     "colCategory": "Catégorie",
     "colPrice": "Prix",
-    "colStock": "Stock"
+    "colStock": "Stock",
+    "suspendConfirmTitle": "Suspendre ce compte"
   },
   "signalement": {
     "motifs": [
@@ -254,7 +255,16 @@
     "noSignalements": "Aucun signalement dans cette catégorie",
     "by": "par",
     "resolve": "Résoudre",
-    "reject": "Rejeter"
+    "reject": "Rejeter",
+    "suspendUser": "Suspendre l'utilisateur",
+    "suspendVendor": "Suspendre le vendeur",
+    "deleteProduct": "Supprimer le produit",
+    "suspendConfirmTitle": "Suspendre ce compte",
+    "suspendUserMessage": "Ce compte sera suspendu et ne pourra plus se connecter pendant la durée choisie.",
+    "suspendVendorMessage": "Ce vendeur sera suspendu et ne pourra plus se connecter pendant la durée choisie.",
+    "deleteProductConfirmTitle": "Supprimer ce produit",
+    "deleteProductMessage": "Cette action est définitive et retirera le produit du catalogue.",
+    "actionSuccess": "Action effectuée avec succès."
   },
   "orderManagementAdmin": {
     "back": "Retour",
@@ -1095,5 +1105,11 @@
   "categories": {
     "agriculture": "Agricole",
     "elevage": "Élevage"
+  },
+  "confirmActionModal": {
+    "invalidDays": "Veuillez saisir un nombre de jours valide.",
+    "daysLabel": "Nombre de jours",
+    "cancel": "Annuler",
+    "confirm": "Confirmer"
   }
 }

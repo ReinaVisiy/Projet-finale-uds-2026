@@ -43,6 +43,13 @@ export const modifierProduit = (id, produitRequest) =>
 /** Delete a product. Requires auth (must be the owner). */
 export const supprimerProduit = (id) => httpDelete(BASE, `/api/produits/${id}`);
 
+/**
+ * Delete a product as an admin (moderation panel), bypassing the
+ * ownership check. Requires auth (role ADMIN).
+ * DELETE /api/produits/{id}/admin
+ */
+export const supprimerProduitAdmin = (id) => httpDelete(BASE, `/api/produits/${id}/admin`);
+
 // ---- Catégories ----
 
 export const getCategories = () => httpGet(BASE, '/api/categories', { auth: false });

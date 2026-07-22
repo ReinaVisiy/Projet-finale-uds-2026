@@ -326,10 +326,12 @@ export default function App() {
       const enrichis = await Promise.all(
         (dtos || []).map(async (dto) => {
           let cibleNom;
+          let targetOwnerId;
           try {
             if (dto.type === 'PRODUIT') {
               const produit = await produitApi.getProduitById(dto.targetId);
               cibleNom = produit?.nom;
+              targetOwnerId = produit?.producteurId; // vendeur à suspendre si besoin
             } else {
               const utilisateur = await utilisateurApi.getUtilisateurById(dto.targetId);
               cibleNom = utilisateur?.nom;
@@ -344,7 +346,7 @@ export default function App() {
           } catch {
             auteurNom = undefined;
           }
-          return mapSignalementPourAffichage(dto, cibleNom, auteurNom);
+          return mapSignalementPourAffichage(dto, cibleNom, auteurNom, targetOwnerId);
         })
       );
       setSignalements(enrichis);
@@ -968,21 +970,42 @@ export default function App() {
       alert(err?.message || "Le rejet a échoué.");
     }
   };
-  const handleToggleUserBlocked = async (userId) => {
+  // `joursSaisis` est déjà saisi via la fenêtre de confirmation intégrée
+  // (ConfirmActionModal) côté appelant : plus de window.prompt() ici.
+  const handleToggleUserBlocked = async (userId, joursSaisis) => {
     const user = registeredUsers.find(u => u.id === userId);
-    if (!user) return;
     let jours = 0;
-    if (!user.suspendu) {
-      const saisie = window.prompt('Suspendre ce compte pendant combien de jours ?', '7');
-      if (saisie === null) return; // annulé
-      jours = parseInt(saisie, 10);
+    if (!user || !user.suspendu) {
+      jours = parseInt(joursSaisis, 10);
       if (!jours || jours <= 0) { alert('Veuillez saisir un nombre de jours valide.'); return; }
     }
     try {
       await utilisateurApi.suspendreUtilisateur(userId, jours);
       await chargerUtilisateurs();
+      await chargerSignalements();
     } catch (err) {
       alert(err?.message || "Le changement de statut a échoué.");
+    }
+  };
+
+  // Suppression d'un produit signalé par l'admin depuis le panneau de
+  // modération (endpoint admin dédié, sans vérification de propriété).
+  // Le vendeur reçoit une notification l'informant du retrait, avec le
+  // motif, plutôt que de découvrir la disparition sans explication.
+  const handleSupprimerProduitSignalement = async (produitId, vendeurId, nomProduit) => {
+    try {
+      await produitApi.supprimerProduitAdmin(produitId);
+      if (vendeurId) {
+        addNotification(
+          vendeurId,
+          'error',
+          `Votre produit${nomProduit ? ` « ${nomProduit} »` : ''} a été supprimé par un administrateur pour non-respect des règles d'intégrité de la plateforme (signalement confirmé).`,
+          '/my-products'
+        );
+      }
+      await chargerSignalements();
+    } catch (err) {
+      alert(err?.message || "La suppression du produit a échoué.");
     }
   };
 
@@ -1401,6 +1424,8 @@ export default function App() {
               alert(err?.message || "La mise à jour du signalement a échoué.");
             }
           }}
+          onSuspendUtilisateur={handleToggleUserBlocked}
+          onSupprimerProduit={handleSupprimerProduitSignalement}
           onBack={() => navigate('admin-dashboard')}
         />;
       case 'vendor-verification':
