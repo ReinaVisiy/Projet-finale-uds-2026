@@ -25,8 +25,8 @@ export default function ModerationPanel({
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}><AlertTriangle size={24} /> {t('moderation.title')}</h2>
         <button style={styles.backBtn} onClick={onBack}>{t('moderation.back')}</button>
+        <h2 style={styles.title}><AlertTriangle size={24} /> {t('moderation.title')}</h2>
       </div>
 
       <div style={styles.filters}>
@@ -92,7 +92,7 @@ export default function ModerationPanel({
 
 const styles = {
   container: { maxWidth: '900px', margin: '0 auto', padding: '30px 20px' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
+  header: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px', marginBottom: '24px' },
   title: { display: 'flex', alignItems: 'center', gap: '12px', fontSize: '24px', fontWeight: '900', color: '#212529', margin: 0 },
   backBtn: { padding: '10px 18px', backgroundColor: '#f1f3f5', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer' },
   filters: { display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' },
