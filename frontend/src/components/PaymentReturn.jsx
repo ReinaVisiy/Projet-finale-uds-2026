@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import * as paiementApi from '../services/api/paiementApi';
@@ -22,6 +22,25 @@ export default function PaymentReturn({ transactionId, onTermine, onPaiementConf
   const [abandonne, setAbandonne] = useState(false);
   const [verificationEnCours, setVerificationEnCours] = useState(false);
 
+  // onPaiementConfirme est une fonction inline recréée à chaque rendu du
+  // parent (App.jsx) : si elle figurait dans les dépendances de
+  // lancerSondage/useEffect ci-dessous, TOUT re-rendu du parent (ex. le
+  // polling des notifications/messages toutes les 30s, ou l'appel de
+  // onPaiementConfirme lui-même qui déclenche un setNotifications côté
+  // parent) relançait un nouveau sondage. Comme la transaction était déjà
+  // PAYE, ce nouveau sondage rappelait immédiatement onPaiementConfirme,
+  // qui re-render le parent, qui relançait un sondage... Une boucle
+  // infinie créant des dizaines de notifications "paiement confirmé"
+  // identiques. On stocke donc la callback dans une ref à jour, jamais
+  // dans les dépendances, et on n'appelle plus onPaiementConfirme qu'une
+  // seule fois par transaction (cf. dejaConfirmeRef plus bas).
+  const onPaiementConfirmeRef = useRef(onPaiementConfirme);
+  useEffect(() => {
+    onPaiementConfirmeRef.current = onPaiementConfirme;
+  }, [onPaiementConfirme]);
+
+  const dejaConfirmeRef = useRef(false);
+
   const lancerSondage = useCallback(() => {
     let annule = false;
     let tentative = 0;
@@ -37,8 +56,9 @@ export default function PaymentReturn({ transactionId, onTermine, onPaiementConf
         if (transaction.statut !== 'EN_ATTENTE') {
           setStatut(transaction.statut);
           setVerificationEnCours(false);
-          if (transaction.statut === 'PAYE' && onPaiementConfirme) {
-            onPaiementConfirme(transaction);
+          if (transaction.statut === 'PAYE' && !dejaConfirmeRef.current) {
+            dejaConfirmeRef.current = true;
+            onPaiementConfirmeRef.current?.(transaction);
           }
           return;
         }
@@ -64,7 +84,7 @@ export default function PaymentReturn({ transactionId, onTermine, onPaiementConf
 
     sonder();
     return () => { annule = true; };
-  }, [transactionId, onPaiementConfirme, t]);
+  }, [transactionId, t]);
 
   useEffect(() => {
     if (!transactionId) {

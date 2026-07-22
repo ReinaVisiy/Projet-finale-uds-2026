@@ -99,23 +99,33 @@ export default function App() {
   // les comptes utilisés sur le même appareil).
   const [notifications, setNotifications] = useState([]);
   const addNotification = (userId, type, message, lien = null) => {
-    // Mise à jour optimiste : l'utilisateur voit la notification
-    // apparaître immédiatement, sans attendre le réseau.
-    const newNotif = {
-      id: `notif-${Date.now()}`,
-      utilisateurId: userId,
-      type: type,
-      message,
-      lien,
-      lu: false,
-      dateCreation: new Date().toISOString(),
-    };
-    setNotifications(prev => [newNotif, ...prev]);
+    // Mise à jour optimiste : uniquement si la notification concerne
+    // l'utilisateur actuellement connecté sur CE navigateur. Avant ce
+    // correctif, setNotifications() s'exécutait pour TOUT appel, même
+    // quand userId visait un tiers (le vendeur d'une commande, les
+    // admins d'un signalement...) : le client qui déclenchait l'action
+    // voyait alors apparaître, dans sa propre cloche, une notification
+    // qui ne lui était pas destinée.
+    if (userId === currentUser?.id) {
+      const newNotif = {
+        id: `notif-${Date.now()}`,
+        utilisateurId: userId,
+        type: type,
+        message,
+        lien,
+        lu: false,
+        dateCreation: new Date().toISOString(),
+      };
+      setNotifications(prev => [newNotif, ...prev]);
+    }
 
-    // Envoi réel au backend, en arrière-plan. On avale volontairement
-    // l'erreur : une notification qui échoue à se créer ne doit jamais
-    // faire échouer l'action métier qui l'a déclenchée (commande,
-    // paiement, inscription, etc.).
+    // Envoi réel au backend. On avale volontairement l'erreur : une
+    // notification qui échoue à se créer ne doit jamais faire échouer
+    // l'action métier qui l'a déclenchée (commande, paiement,
+    // inscription, etc.). On RENVOIE toutefois la promesse : certains
+    // appelants (ex. handleCheckout, qui enchaîne avec une redirection
+    // window.location.href) doivent pouvoir l'attendre pour éviter que
+    // la navigation n'annule la requête réseau avant son envoi.
     //
     // Note : on vérifie la session JWT via getSession() plutôt que la
     // variable currentUser du closure, car addNotification est parfois
@@ -123,12 +133,12 @@ export default function App() {
     // handleRegisterSuccess) — à cet instant currentUser n'a pas encore
     // été mis à jour (setState est asynchrone), alors que le token JWT,
     // lui, a déjà été sauvegardé de façon synchrone par authApi.login.
-    if (!getSession()) return; // pas de JWT disponible avant connexion
+    if (!getSession()) return Promise.resolve(); // pas de JWT disponible avant connexion
     // On transmet directement "type" (la sévérité UI choisie par
     // l'appelant : info/success/warning/error) au backend en tant que
     // "niveau" — plus besoin de la redeviner au chargement, puisque
     // notification-service la stocke désormais telle quelle.
-    notificationApi
+    return notificationApi
       .creerNotification(construireNotificationRequest(userId, message, lien, type))
       .catch((err) => console.error('Notification non persistée côté serveur :', err));
   };
@@ -682,8 +692,12 @@ export default function App() {
     // Notifie le vendeur dès la création de la commande (et non après la
     // redirection NotchPay ci-dessous, qui quitte la page immédiatement
     // via window.location.href et rendait ce code plus bas inatteignable
-    // en pratique — cf. groupe H, point 19).
-    addNotification(vendeurId, 'info', `Nouvelle commande #${commande.id} de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client'}`, '/vendeur-orders');
+    // en pratique — cf. groupe H, point 19). On ATTEND la requête réseau
+    // ici (await) : sans ça, window.location.href plus bas déclenche la
+    // navigation avant que le navigateur n'ait eu le temps d'envoyer la
+    // requête POST /api/notifications, qui se retrouvait annulée — le
+    // vendeur ne recevait alors jamais cette notification.
+    await addNotification(vendeurId, 'info', `Nouvelle commande #${commande.id} de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client'}`, '/vendeur-orders');
 
     const transaction = await paiementApi.initierPaiement({
       typeReference: 'COMMANDE',
