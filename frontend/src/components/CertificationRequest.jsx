@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, CheckCircle, Shield, Clock, AlertCircle, XCircle, Image as ImageIcon } from 'lucide-react';
-import { certificationApi } from '../services/api';
+import { certificationApi, paiementApi } from '../services/api';
 import useIsMobile from '../hooks/useIsMobile';
 
 // Durées proposées et montant correspondant (FCFA). Le backend accepte
@@ -29,7 +29,6 @@ export default function CertificationRequest({ onBack }) {
   }));
   // certification: dernière demande du producteur (ou null si aucune)
   const [certification, setCertification] = useState(null);
-  const [paymentInfo, setPaymentInfo] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -38,23 +37,23 @@ export default function CertificationRequest({ onBack }) {
   const [idVerso, setIdVerso] = useState(null);
   const [photoUtilisateur, setPhotoUtilisateur] = useState(null);
   const [dureeMois, setDureeMois] = useState(DUREES[0].mois);
-  const [moyenPaiement, setMoyenPaiement] = useState('MTN_MOMO');
-  const [numeroPaiement, setNumeroPaiement] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // Paiement en cours de redirection vers NotchPay (bouton "Payer maintenant"
+  // sur une demande deja soumise mais pas encore payee).
+  const [payingCertificationId, setPayingCertificationId] = useState(null);
 
   const rectoRef = useRef(null);
   const versoRef = useRef(null);
   const photoRef = useRef(null);
 
   useEffect(() => {
-    Promise.all([certificationApi.getMesCertifications(), certificationApi.getPaymentInformation()])
-      .then(([mesCertifications, infos]) => {
+    certificationApi.getMesCertifications()
+      .then((mesCertifications) => {
         // On affiche la demande la plus récente s'il y en a une.
         const derniere = [...mesCertifications].sort(
           (a, b) => new Date(b.dateDemande) - new Date(a.dateDemande)
         )[0];
         setCertification(derniere || null);
-        setPaymentInfo(infos);
       })
       .catch((err) => setError(err.message || t('certificationRequest.loadStatusError')))
       .finally(() => setLoading(false));
@@ -67,10 +66,37 @@ export default function CertificationRequest({ onBack }) {
   };
 
   const montantSelectionne = DUREES.find(d => d.mois === dureeMois)?.montant || 0;
-  const numeroReception = paymentInfo.find(p => p.operateur === moyenPaiement)?.numeroPaiement;
+
+  // Initie le paiement NotchPay pour une certification deja creee
+  // (soumission initiale OU nouvelle tentative depuis l'ecran "en attente"
+  // si le paiement precedent a echoue/ete abandonne) et redirige le
+  // producteur vers la page de paiement NotchPay, exactement comme pour le
+  // paiement d'une commande (cf. App.jsx#handleCheckout). Tout l'argent va
+  // integralement au portefeuille de la plateforme : aucun vendeur, aucun
+  // numero a saisir.
+  const lancerPaiement = async (certif) => {
+    setError('');
+    setPayingCertificationId(certif.id);
+    try {
+      const transaction = await paiementApi.initierPaiement({
+        typeReference: 'CERTIFICATION',
+        referenceId: certif.id,
+        montant: certif.montant,
+      });
+      if (transaction?.notchpayCheckoutUrl) {
+        window.location.href = transaction.notchpayCheckoutUrl;
+        return;
+      }
+      setError(t('certificationRequest.payFailed'));
+    } catch (err) {
+      setError(err.message || t('certificationRequest.payFailed'));
+    } finally {
+      setPayingCertificationId(null);
+    }
+  };
 
   const handleSubmit = () => {
-    if (!idRecto || !idVerso || !photoUtilisateur || !numeroPaiement.trim()) {
+    if (!idRecto || !idVerso || !photoUtilisateur) {
       setError(t('certificationRequest.submitMissingFields'));
       return;
     }
@@ -83,10 +109,13 @@ export default function CertificationRequest({ onBack }) {
       photoUtilisateur,
       dureeMois,
       montant: montantSelectionne,
-      moyenPaiement,
-      numeroPaiement: numeroPaiement.trim(),
     })
-      .then((response) => setCertification(response))
+      .then((response) => {
+        setCertification(response);
+        // Enchaine directement sur le paiement NotchPay : pas d'etape
+        // manuelle intermediaire.
+        return lancerPaiement(response);
+      })
       .catch((err) => setError(err.message || t('certificationRequest.submitFailed')))
       .finally(() => setSubmitting(false));
   };
@@ -130,6 +159,16 @@ export default function CertificationRequest({ onBack }) {
               </span>
             </div>
           </div>
+          {error && <p style={styles.errorText}>{error}</p>}
+          {certification.statutPaiement !== 'PAYE' && (
+            <button
+              style={styles.submitBtn}
+              onClick={() => lancerPaiement(certification)}
+              disabled={payingCertificationId === certification.id}
+            >
+              <Shield size={18} /> {payingCertificationId === certification.id ? t('certificationRequest.payingRedirect') : t('certificationRequest.payNow')}
+            </button>
+          )}
           <button style={styles.backToStatusBtn} onClick={onBack}>{t('certificationRequest.backToDashboard')}</button>
         </div>
       </div>
@@ -248,32 +287,11 @@ export default function CertificationRequest({ onBack }) {
               </div>
             </div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>{t('certificationRequest.paymentMethod')}</label>
-              <select style={styles.input} value={moyenPaiement} onChange={(e) => setMoyenPaiement(e.target.value)}>
-                <option value="MTN_MOMO">MTN Mobile Money</option>
-                <option value="ORANGE_MONEY">Orange Money</option>
-              </select>
-            </div>
-
-            {numeroReception && (
-              <div style={styles.infoBox}>
-                <AlertCircle size={16} color="#e07a5f" />
-                <span style={styles.infoText}>
-                  {t('certificationRequest.payAt')} <strong>{montantSelectionne} {t('certificationRequest.payAtMiddle')} {numeroReception}</strong>{t('certificationRequest.payAtEnd')}
-                </span>
-              </div>
-            )}
-
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>{t('certificationRequest.yourPaymentNumber')}</label>
-              <input
-                type="tel"
-                placeholder={t('certificationRequest.phonePlaceholder')}
-                style={styles.input}
-                value={numeroPaiement}
-                onChange={(e) => setNumeroPaiement(e.target.value)}
-              />
+            <div style={styles.infoBox}>
+              <AlertCircle size={16} color="#e07a5f" />
+              <span style={styles.infoText}>
+                {t('certificationRequest.notchpayNotice', { amount: montantSelectionne })}
+              </span>
             </div>
 
             {error && <p style={styles.errorText}>{error}</p>}

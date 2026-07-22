@@ -162,10 +162,15 @@ export default function AdminDashboard({
   const totalOrders = adminOrders.length;
   // "Revenu total" (Accueil) : uniquement les commandes reellement payees
   // (avant, on sommait order.amount pour TOUTES les commandes, y compris
-  // celles jamais payees ou annulees).
+  // celles jamais payees ou annulees), plus les frais de certification
+  // payes (integralement un revenu plateforme, cf. paiement-service
+  // #confirmerPaiementInterne, aucun partage vendeur pour ce type).
+  const revenuCertifications = vendorVerifications
+    .filter(v => v.statutPaiement === 'PAYE')
+    .reduce((sum, v) => sum + (v.montant || 0), 0);
   const totalRevenue = adminOrders
     .filter(o => o.paye)
-    .reduce((sum, o) => sum + (o.amount || 0), 0);
+    .reduce((sum, o) => sum + (o.amount || 0), 0) + revenuCertifications;
   // Onglet "Ventes" (section dediee) : une commande n'est une vente
   // effective que si elle est a la fois payee ET livree (pas simplement
   // "en attente" ou "en cours"). Cf. issue #12.

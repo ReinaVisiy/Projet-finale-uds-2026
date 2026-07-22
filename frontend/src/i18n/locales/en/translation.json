@@ -977,7 +977,11 @@
       "RECIPISSE": "Receipt"
     },
     "loadStatusError": "Unable to load your certification status",
-    "submitMissingFields": "Please provide the front/back of your ID, your photo, and the number used for payment.",
+    "submitMissingFields": "Please provide the front/back of your ID and your photo.",
+    "notchpayNotice": "After sending, you'll be redirected to NotchPay to securely pay {{amount}} FCFA.",
+    "payNow": "Pay now",
+    "payingRedirect": "Redirecting...",
+    "payFailed": "Unable to start payment. Please try again.",
     "submitFailed": "Failed to send the certification request",
     "loadingStatus": "Loading your certification status...",
     "pendingTitle": "Request under review ⏳",

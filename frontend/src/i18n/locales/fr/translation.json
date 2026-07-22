@@ -977,7 +977,11 @@
       "RECIPISSE": "Récépissé"
     },
     "loadStatusError": "Impossible de charger votre statut de certification",
-    "submitMissingFields": "Veuillez fournir le recto/verso de votre pièce, votre photo, et le numéro utilisé pour le paiement.",
+    "submitMissingFields": "Veuillez fournir le recto/verso de votre pièce et votre photo.",
+    "notchpayNotice": "Après l'envoi, vous serez redirigé vers NotchPay pour payer {{amount}} FCFA en toute sécurité.",
+    "payNow": "Payer maintenant",
+    "payingRedirect": "Redirection en cours...",
+    "payFailed": "Impossible d'initier le paiement. Réessayez.",
     "submitFailed": "Échec de l'envoi de la demande de certification",
     "loadingStatus": "Chargement de votre statut de certification...",
     "pendingTitle": "Demande en cours d'examen ⏳",

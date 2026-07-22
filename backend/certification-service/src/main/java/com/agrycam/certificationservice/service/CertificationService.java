@@ -36,7 +36,13 @@ public class CertificationService {
         certification.setDureeMois(request.getDureeMois());
         certification.setMontant(request.getMontant());
         certification.setMoyenPaiement(request.getMoyenPaiement());
-        certification.setNumeroPaiement(request.getNumeroPaiement());
+        // numero_paiement est NOT NULL en base (saisi manuellement du temps
+        // du paiement mobile money manuel). Le paiement passe desormais par
+        // NotchPay (redirection, aucun numero a saisir cote producteur) :
+        // on met donc un marqueur plutot que de toucher a la contrainte de
+        // colonne sur une table deja peuplee.
+        String numero = request.getNumeroPaiement();
+        certification.setNumeroPaiement((numero != null && !numero.isBlank()) ? numero : "NOTCHPAY");
         certification.setStatut(StatutCertification.EN_ATTENTE);
         certification.setStatutPaiement(StatutPaiement.EN_ATTENTE);
 
