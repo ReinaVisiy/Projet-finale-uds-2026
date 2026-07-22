@@ -18,6 +18,9 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
   const [search, setSearch] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectBox, setShowRejectBox] = useState(false);
+  // Permet de refermer le panneau de detail (bouton fleche) sans devoir
+  // ouvrir une autre demande pour changer de vue.
+  const [detailClosed, setDetailClosed] = useState(false);
 
   const filtered = pendingVerifications.filter(v => {
     const q = search.toLowerCase();
@@ -134,7 +137,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
                       ...styles.listItem,
                       ...(isSelected ? styles.listItemActive : {}),
                     }}
-                    onClick={() => { setSelectedId(v.id); setShowRejectBox(false); }}
+                    onClick={() => { setSelectedId(v.id); setShowRejectBox(false); setDetailClosed(false); }}
                   >
                     <div style={styles.listItemAvatar}>
                       {v.prenom?.[0]?.toUpperCase()}{v.nom?.[0]?.toUpperCase()}
@@ -154,7 +157,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
 
           {/* Détail de la demande */}
           <div style={styles.detailPanel}>
-            {!selected ? (
+            {!selected || detailClosed ? (
               <div style={styles.emptyState}>
                 <ShieldCheck size={48} color="#dee2e6" />
                 <p>{t('vendorVerificationAdmin.selectRequest')}</p>
@@ -162,6 +165,14 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
             ) : (
               <>
                 <div style={styles.detailHeader}>
+                  <button
+                    type="button"
+                    onClick={() => setDetailClosed(true)}
+                    title={t('vendorVerificationAdmin.closeDetail')}
+                    style={styles.closeDetailBtn}
+                  >
+                    <ArrowLeft size={18} />
+                  </button>
                   <div style={styles.detailAvatar}>
                     {selected.prenom?.[0]?.toUpperCase()}{selected.nom?.[0]?.toUpperCase()}
                   </div>
@@ -349,6 +360,7 @@ const styles = {
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', color: '#adb5bd', fontSize: '14px', padding: '80px 0' },
 
   detailHeader: { display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px' },
+  closeDetailBtn: { background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d', padding: '6px', marginRight: '2px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   detailAvatar: { width: '52px', height: '52px', borderRadius: '50%', backgroundColor: '#2d6a4f', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800', flexShrink: 0 },
   detailName: { fontSize: '19px', fontWeight: '900', color: '#212529', margin: '0 0 6px 0' },
   statusPill: { fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '20px' },

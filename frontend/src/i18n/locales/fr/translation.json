@@ -1043,6 +1043,7 @@
     "searchPlaceholder": "Rechercher un vendeur...",
     "noRequestsFound": "Aucune demande trouvée.",
     "selectRequest": "Sélectionnez une demande pour voir les détails",
+    "closeDetail": "Fermer",
     "idDocument": "Pièce d'identité",
     "front": "Recto",
     "back_side": "Verso",

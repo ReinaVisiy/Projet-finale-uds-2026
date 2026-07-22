@@ -1043,6 +1043,7 @@
     "searchPlaceholder": "Search for a seller...",
     "noRequestsFound": "No requests found.",
     "selectRequest": "Select a request to view its details",
+    "closeDetail": "Close",
     "idDocument": "Identity document",
     "front": "Front",
     "back_side": "Back",
