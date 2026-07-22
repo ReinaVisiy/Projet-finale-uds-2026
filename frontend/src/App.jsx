@@ -591,7 +591,10 @@ export default function App() {
     if (currentUser?.id) {
       chargerMesNotifications();
       chargerMessagesNonLus();
-      const interval = setInterval(chargerMessagesNonLus, 30000);
+      const interval = setInterval(() => {
+        chargerMesNotifications();
+        chargerMessagesNonLus();
+      }, 30000);
       return () => clearInterval(interval);
     } else {
       setNotifications([]);
@@ -676,6 +679,12 @@ export default function App() {
       lignesCommande,
     });
 
+    // Notifie le vendeur dès la création de la commande (et non après la
+    // redirection NotchPay ci-dessous, qui quitte la page immédiatement
+    // via window.location.href et rendait ce code plus bas inatteignable
+    // en pratique — cf. groupe H, point 19).
+    addNotification(vendeurId, 'info', `Nouvelle commande #${commande.id} de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client'}`, '/vendeur-orders');
+
     const transaction = await paiementApi.initierPaiement({
       typeReference: 'COMMANDE',
       referenceId: commande.id,
@@ -694,7 +703,6 @@ export default function App() {
       return;
     }
 
-    addNotification(vendeurId, 'info', `Nouvelle commande #${commande.id} de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client'}`, '/vendeur-orders');
     addNotification(currentUser.id, 'success', `Commande #${commande.id} confirmée !`, '/orders');
     await chargerMesCommandes();
     navigate('orders');
