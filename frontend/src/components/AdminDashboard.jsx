@@ -187,13 +187,29 @@ export default function AdminDashboard({
   // Commission de 5% : prelevee des qu'une transaction est payee (et
   // conservee meme si la commande est ensuite annulee/remboursee, cf.
   // paiement-service). Frais d'annulation de 10% : retenus uniquement
-  // sur les commandes annulees avant expedition.
+  // sur les commandes annulees avant expedition. Detail affiche sous
+  // la carte KPI uniquement (calcule cote frontend a partir des
+  // transactions brutes).
   const commissionTotale = transactions
     .filter(tr => tr.statut === 'PAYE' || tr.statut === 'REMBOURSEE')
     .reduce((sum, tr) => sum + Number(tr.commission || 0), 0);
   const fraisAnnulationTotal = transactions
     .reduce((sum, tr) => sum + Number(tr.fraisAnnulation || 0), 0);
-  const revenuPlateforme = commissionTotale + fraisAnnulationTotal;
+  // Le chiffre affiche sur la carte KPI vient directement du portefeuille
+  // plateforme (paiement-service, soldePlateforme.totalGagne) plutot que
+  // d'un recalcul cote frontend : cela garantit que la carte "Revenu
+  // plateforme" de l'accueil et le montant "Fonds disponibles" de
+  // l'onglet Retrait proviennent toujours de la meme source et
+  // englobent toutes les sources de revenu (commissions commandes,
+  // frais d'annulation, ET frais de certification - avant, seul ce
+  // dernier apparaissait cote retrait car soldePlateforme n'etait pas
+  // encore charge/utilise a l'accueil). Tant qu'aucun retrait
+  // plateforme n'a ete effectue, les deux montants sont strictement
+  // identiques ; totalGagne ne diminue jamais, contrairement a
+  // soldeDisponible qui baisse a chaque retrait.
+  const revenuPlateforme = soldePlateforme
+    ? Number(soldePlateforme.totalGagne || 0)
+    : commissionTotale + fraisAnnulationTotal;
 
   // ===== LITIGES (section 3) =====
   const litigesNonLivre = litiges.filter(l => l.type === 'PRODUIT_NON_LIVRE');
@@ -285,12 +301,16 @@ export default function AdminDashboard({
   const lastSignalements = signalements.slice(-3).reverse();
 
   // ===== MOIS POUR LE GRAPHIQUE (basé sur les commandes) =====
+  // Toutes les commandes de la plateforme, tous mois/années confondus
+  // (auparavant restreint a l'annee en cours, ce qui laissait le
+  // graphique vide des que les commandes testees dataient d'une autre
+  // annee).
   const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
   const monthlyOrders = months.map((_, idx) => {
     const count = adminOrders.filter(o => {
       if (!o.dateISO) return false;
       const d = new Date(o.dateISO);
-      return d.getMonth() === idx && d.getFullYear() === new Date().getFullYear();
+      return d.getMonth() === idx;
     }).length;
     return count;
   });
