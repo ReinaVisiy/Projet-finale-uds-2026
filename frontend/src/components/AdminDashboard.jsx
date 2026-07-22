@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw, LogOut, Home, Search, ChevronDown } from 'lucide-react';
+import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw, LogOut, Home, Search, ChevronDown, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 import useProduits from '../hooks/useProduits';
@@ -448,6 +448,9 @@ export default function AdminDashboard({
               </button>
               {showUserMenu && (
                 <div style={styles.userDropdown}>
+                  <button style={styles.userDropdownItem} onClick={() => { setShowUserMenu(false); onNavigate && onNavigate('user-profile'); }}>
+                    <User size={15} /> {t('navigation.myProfile')}
+                  </button>
                   <button style={styles.userDropdownItemDanger} onClick={() => { setShowUserMenu(false); onLogout && onLogout(); }}>
                     <LogOut size={15} /> {t('navigation.logout')}
                   </button>
@@ -1153,6 +1156,7 @@ const styles = {
   userName: { fontSize: '13px', fontWeight: '700', color: '#212529' },
   roleBadge: { fontSize: '10.5px', fontWeight: '700', color: '#6c757d' },
   userDropdown: { position: 'absolute', top: 'calc(100% + 8px)', right: 0, backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e9ecef', boxShadow: '0 12px 28px rgba(0,0,0,0.12)', minWidth: '180px', padding: '6px', zIndex: 100 },
+  userDropdownItem: { display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 12px', borderRadius: '8px', border: 'none', backgroundColor: 'transparent', color: '#212529', fontSize: '13px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' },
   userDropdownItemDanger: { display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 12px', borderRadius: '8px', border: 'none', backgroundColor: 'transparent', color: '#e07a5f', fontSize: '13px', fontWeight: '700', cursor: 'pointer', textAlign: 'left' },
   content: { flex: 1, overflow: 'auto', padding: '24px 28px' },
   pageTitle: { marginBottom: '20px' },
