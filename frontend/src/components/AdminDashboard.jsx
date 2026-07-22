@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 import useProduits from '../hooks/useProduits';
 import ConfirmActionModal from './ConfirmActionModal';
+import { paiementApi } from '../services/api';
 
 
 function getNavItems(t) {
@@ -16,6 +17,7 @@ function getNavItems(t) {
     { id: 'disputes', label: t('adminDashboard.disputes'), icon: <AlertOctagon size={18} /> },
     { id: 'users', label: t('adminDashboard.users'), icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
     { id: 'sales', label: t('adminDashboard.sales'), icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> },
+    { id: 'retrait', label: t('adminDashboard.retrait'), icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> },
     { id: 'admins', label: t('adminDashboard.admins'), icon: <ShieldCheck size={18} /> },
   ];
 }
@@ -94,6 +96,64 @@ export default function AdminDashboard({
   const [adminFormErrors, setAdminFormErrors] = useState({});
   const [adminFormLoading, setAdminFormLoading] = useState(false);
   const [adminFormSuccess, setAdminFormSuccess] = useState('');
+
+  // ===== RETRAIT PLATEFORME (onglet "Retrait", paiement-service) =====
+  // Portefeuille de la plateforme (commissions + frais d'annulation) et
+  // historique des retraits deja effectues par un admin.
+  const [soldePlateforme, setSoldePlateforme] = useState(null);
+  const [retraitsPlateforme, setRetraitsPlateforme] = useState([]);
+  const [montantRetraitPlateforme, setMontantRetraitPlateforme] = useState('');
+  const [methodeRetraitPlateforme, setMethodeRetraitPlateforme] = useState('MOMO');
+  const [numeroRetraitPlateforme, setNumeroRetraitPlateforme] = useState('');
+  const [retraitPlateformeEnCours, setRetraitPlateformeEnCours] = useState(false);
+  const [retraitPlateformeError, setRetraitPlateformeError] = useState('');
+  const [retraitPlateformeSuccess, setRetraitPlateformeSuccess] = useState('');
+
+  const chargerSoldePlateforme = () => {
+    paiementApi.getSoldePlateforme().then(setSoldePlateforme).catch(() => setSoldePlateforme(null));
+    paiementApi.getRetraitsPlateforme().then(setRetraitsPlateforme).catch(() => setRetraitsPlateforme([]));
+  };
+
+  useEffect(() => {
+    chargerSoldePlateforme();
+  }, []);
+
+  // Aucune coordonnee de paiement n'existait nulle part au prealable dans
+  // le systeme : on les demande donc ici, juste avant le retrait, uniquement
+  // a des fins de simulation d'un virement Mobile Money / Orange Money.
+  const handleDemanderRetraitPlateforme = async () => {
+    const montant = parseFloat(montantRetraitPlateforme);
+    setRetraitPlateformeError('');
+    setRetraitPlateformeSuccess('');
+    if (!montant || montant <= 0) {
+      setRetraitPlateformeError(t('adminDashboard.platformWithdrawInvalidAmount'));
+      return;
+    }
+    if (soldePlateforme && montant > Number(soldePlateforme.soldeDisponible)) {
+      setRetraitPlateformeError(t('adminDashboard.platformWithdrawInsufficientFunds'));
+      return;
+    }
+    if (!/^6\d{8}$/.test(numeroRetraitPlateforme)) {
+      setRetraitPlateformeError(t('adminDashboard.platformWithdrawInvalidNumber'));
+      return;
+    }
+    setRetraitPlateformeEnCours(true);
+    try {
+      await paiementApi.demanderRetraitPlateforme({
+        montant,
+        methode: methodeRetraitPlateforme,
+        numero: numeroRetraitPlateforme,
+      });
+      setRetraitPlateformeSuccess(t('adminDashboard.platformWithdrawSuccess'));
+      setMontantRetraitPlateforme('');
+      setNumeroRetraitPlateforme('');
+      chargerSoldePlateforme();
+    } catch (err) {
+      setRetraitPlateformeError(err?.message || t('adminDashboard.platformWithdrawError'));
+    } finally {
+      setRetraitPlateformeEnCours(false);
+    }
+  };
 
   // ===== STATISTIQUES =====
   const totalUsers = registeredUsers.length;
@@ -786,6 +846,138 @@ export default function AdminDashboard({
             </>
           )}
 
+          {/* ===== VUE RETRAIT PLATEFORME ===== */}
+          {activeNav === 'retrait' && (
+            <>
+              <div style={styles.pageTitle}>
+                <h2 style={styles.pageTitleText}>{t('adminDashboard.retrait')}</h2>
+                <p style={styles.pageTitleSub}>{t('adminDashboard.platformWithdrawalsSub')}</p>
+              </div>
+
+              <div style={styles.kpiGrid}>
+                <div style={styles.kpiCard}>
+                  <div style={styles.kpiTop}>
+                    <div style={{ ...styles.kpiIcon, backgroundColor: '#e0f0ff' }}>🏦</div>
+                  </div>
+                  <p style={styles.kpiLabel}>{t('adminDashboard.platformTotalEarned')}</p>
+                  <p style={styles.kpiValue}>{Number(soldePlateforme?.totalGagne || 0).toLocaleString('fr-FR')} FCFA</p>
+                </div>
+                <div style={styles.kpiCard}>
+                  <div style={styles.kpiTop}>
+                    <div style={{ ...styles.kpiIcon, backgroundColor: '#e9f5ee' }}>💵</div>
+                  </div>
+                  <p style={styles.kpiLabel}>{t('adminDashboard.platformAvailableBalance')}</p>
+                  <p style={styles.kpiValue}>{Number(soldePlateforme?.soldeDisponible || 0).toLocaleString('fr-FR')} FCFA</p>
+                </div>
+              </div>
+
+              <div style={styles.withdrawFormCard}>
+                <h3 style={styles.cardTitle}>{t('adminDashboard.platformWithdrawFormTitle')}</h3>
+                <p style={styles.cardSub}>{t('adminDashboard.platformWithdrawFormSub')}</p>
+
+                <div style={styles.field}>
+                  <label style={styles.label}>{t('adminDashboard.platformWithdrawMethodLabel')}</label>
+                  <div style={styles.methodRow}>
+                    <button
+                      type="button"
+                      style={methodeRetraitPlateforme === 'MOMO' ? styles.methodBtnActive : styles.methodBtn}
+                      onClick={() => setMethodeRetraitPlateforme('MOMO')}
+                      disabled={retraitPlateformeEnCours}
+                    >
+                      {t('adminDashboard.platformWithdrawMethodMomo')}
+                    </button>
+                    <button
+                      type="button"
+                      style={methodeRetraitPlateforme === 'ORANGE_MONEY' ? styles.methodBtnActive : styles.methodBtn}
+                      onClick={() => setMethodeRetraitPlateforme('ORANGE_MONEY')}
+                      disabled={retraitPlateformeEnCours}
+                    >
+                      {t('adminDashboard.platformWithdrawMethodOM')}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={styles.withdrawFormRow}>
+                  <div style={styles.withdrawInputWrap}>
+                    <label style={styles.label}>{t('adminDashboard.platformWithdrawNumberLabel')}</label>
+                    <input
+                      type="tel"
+                      placeholder={t('adminDashboard.platformWithdrawNumberPlaceholder')}
+                      value={numeroRetraitPlateforme}
+                      onChange={(e) => setNumeroRetraitPlateforme(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                      style={styles.withdrawInput}
+                      disabled={retraitPlateformeEnCours}
+                    />
+                  </div>
+                  <div style={styles.withdrawInputWrap}>
+                    <label style={styles.label}>{t('adminDashboard.platformWithdrawAmountLabel')}</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder={t('adminDashboard.platformWithdrawAmountPlaceholder')}
+                      value={montantRetraitPlateforme}
+                      onChange={(e) => setMontantRetraitPlateforme(e.target.value)}
+                      style={styles.withdrawInput}
+                      disabled={retraitPlateformeEnCours}
+                    />
+                  </div>
+                  <button
+                    style={{ ...styles.adminFormSubmit, opacity: retraitPlateformeEnCours ? 0.7 : 1, alignSelf: 'flex-end' }}
+                    onClick={handleDemanderRetraitPlateforme}
+                    disabled={retraitPlateformeEnCours}
+                  >
+                    {retraitPlateformeEnCours ? t('adminDashboard.platformWithdrawInProgress') : t('adminDashboard.platformWithdrawSubmit')}
+                  </button>
+                </div>
+
+                {retraitPlateformeError && (
+                  <p style={styles.adminFormError}>{retraitPlateformeError}</p>
+                )}
+                {retraitPlateformeSuccess && (
+                  <p style={{ ...styles.adminFormError, color: '#2d6a4f' }}>{retraitPlateformeSuccess}</p>
+                )}
+              </div>
+
+              <div style={styles.salesTableCard}>
+                <h3 style={styles.cardTitle}>{t('adminDashboard.platformWithdrawHistoryTitle')}</h3>
+                {retraitsPlateforme.length === 0 ? (
+                  <div style={styles.emptyState}>
+                    <ShieldCheck size={40} color="#adb5bd" />
+                    <p>{t('adminDashboard.platformWithdrawHistoryEmpty')}</p>
+                  </div>
+                ) : (
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>{t('adminDashboard.platformWithdrawHistoryDate')}</th>
+                        <th style={styles.th}>{t('adminDashboard.platformWithdrawHistoryAmount')}</th>
+                        <th style={styles.th}>{t('adminDashboard.platformWithdrawHistoryMethod')}</th>
+                        <th style={styles.th}>{t('adminDashboard.platformWithdrawHistoryNumber')}</th>
+                        <th style={styles.th}>{t('adminDashboard.platformWithdrawHistoryReference')}</th>
+                        <th style={styles.th}>{t('adminDashboard.status')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {retraitsPlateforme.map(r => (
+                        <tr key={r.id} style={styles.tr}>
+                          <td style={styles.td}>{r.dateDemande ? new Date(r.dateDemande).toLocaleDateString('fr-FR') : '—'}</td>
+                          <td style={styles.td}>{Number(r.montant || 0).toLocaleString('fr-FR')} FCFA</td>
+                          <td style={styles.td}>{r.methode === 'MOMO' ? t('adminDashboard.platformWithdrawMethodMomo') : t('adminDashboard.platformWithdrawMethodOM')}</td>
+                          <td style={styles.td}>{r.numero || '—'}</td>
+                          <td style={styles.td}>{r.referencePaiement || '—'}</td>
+                          <td style={styles.td}>
+                            <span style={{ ...styles.statusBadge, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{r.statut}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </>
+          )}
+
           {/* ===== VUE ADMINISTRATEURS (inscription d'un nouvel admin) ===== */}
           {activeNav === 'admins' && (
             <>
@@ -969,6 +1161,16 @@ const styles = {
   orderAmount: { fontSize: '13px', fontWeight: '800', color: '#e07a5f' },
   orderStatus: { fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '20px' },
   salesTableCard: { backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #e9ecef', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', overflowX: 'auto' },
+  // Onglet "Retrait" (portefeuille plateforme) : memes proportions que le
+  // formulaire de retrait vendeur (SellerDashboard), adaptees aux styles
+  // deja definis ici (cardTitle/cardSub, label, adminFormSubmit...).
+  withdrawFormCard: { backgroundColor: '#ffffff', padding: '20px', borderRadius: '14px', border: '1px solid #e9ecef', marginBottom: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' },
+  withdrawFormRow: { display: 'flex', gap: '14px', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '12px' },
+  withdrawInputWrap: { flex: 1, minWidth: '200px' },
+  withdrawInput: { width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1.5px solid #dee2e6', fontSize: '14px', fontWeight: '600', color: '#212529', backgroundColor: '#f8f9fa', boxSizing: 'border-box', outline: 'none' },
+  methodRow: { display: 'flex', gap: '10px', marginTop: '4px' },
+  methodBtn: { padding: '10px 18px', borderRadius: '10px', border: '1.5px solid #dee2e6', backgroundColor: '#ffffff', color: '#6c757d', fontSize: '13px', fontWeight: '700', cursor: 'pointer' },
+  methodBtnActive: { padding: '10px 18px', borderRadius: '10px', border: '1.5px solid #1b4d3e', backgroundColor: '#1b4d3e', color: '#ffffff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' },
   adminFormCard: { backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #e9ecef', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', marginBottom: '28px', maxWidth: '560px' },
   adminFormTitle: { fontSize: '15px', fontWeight: '800', color: '#1b4d3e', margin: '0 0 16px 0' },
   adminFormAlertError: { backgroundColor: '#fdecea', color: '#c0392b', padding: '10px 14px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', marginBottom: '14px' },
