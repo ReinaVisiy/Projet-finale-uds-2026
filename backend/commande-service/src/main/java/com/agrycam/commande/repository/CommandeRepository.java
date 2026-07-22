@@ -23,4 +23,9 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
     // Commandes expediees depuis plus de 72h, encore en attente de
     // confirmation client : cibles du job d'auto-confirmation.
     List<Commande> findByStatutAndDateExpeditionBefore(StatutCommande statut, LocalDateTime seuil);
+
+    // Toutes les commandes dans un statut donne : utilise par
+    // ReconciliationScheduler pour retrouver les commandes LIVREE dont le
+    // sequestre n'a pas encore ete libere (cf. groupe B, point 6).
+    List<Commande> findByStatut(StatutCommande statut);
 }

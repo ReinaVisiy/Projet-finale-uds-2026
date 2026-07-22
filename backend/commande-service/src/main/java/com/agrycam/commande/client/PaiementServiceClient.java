@@ -33,27 +33,48 @@ public class PaiementServiceClient {
     @Value("${paiement.service.url}")
     private String paiementServiceUrl;
 
+    private static final int TENTATIVES_MAX = 3;
+    private static final long DELAI_ENTRE_TENTATIVES_MS = 500;
+
     /**
      * Notifie paiement-service qu'une commande vient d'etre livree, pour
      * qu'il transfere le montant sequestre vers le solde disponible du
-     * vendeur. Best-effort : un echec est journalise mais ne remonte pas,
-     * la commande reste LIVREE independamment (le solde pourra etre
-     * reconcilie manuellement si besoin).
+     * vendeur. Reessaie quelques fois en cas d'echec transitoire ; si tout
+     * echoue, c'est journalise en erreur mais ne remonte pas (la commande
+     * reste LIVREE independamment). ReconciliationScheduler rattrape
+     * ensuite periodiquement les cas ou meme ces tentatives ont echoue
+     * (cf. groupe B, point 6 : solde vendeur bloque en sequestre).
      */
     public void notifierLivraison(Long commandeId) {
-        try {
-            String url = paiementServiceUrl + "/api/paiements/commandes/" + commandeId + "/liberer";
+        String url = paiementServiceUrl + "/api/paiements/commandes/" + commandeId + "/liberer";
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(jwtUtil.genererTokenServiceInterne());
-            HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(jwtUtil.genererTokenServiceInterne());
+        HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
 
-            log.info("Notification de paiement-service : liberation du sequestre pour la commande #{}", commandeId);
-            restTemplate.exchange(url, HttpMethod.PUT, httpEntity, Void.class);
-        } catch (Exception e) {
-            log.error("Echec de la notification de liberation du sequestre pour la commande #{} : {}",
-                    commandeId, e.getMessage());
+        for (int tentative = 1; tentative <= TENTATIVES_MAX; tentative++) {
+            try {
+                restTemplate.exchange(url, HttpMethod.PUT, httpEntity, Void.class);
+                log.info("Notification de paiement-service : liberation du sequestre pour la commande #{} [tentative {}/{}]",
+                        commandeId, tentative, TENTATIVES_MAX);
+                return;
+            } catch (Exception e) {
+                log.warn("Echec de la liberation du sequestre pour la commande #{} [tentative {}/{}] : {}",
+                        commandeId, tentative, TENTATIVES_MAX, e.getMessage());
+                if (tentative < TENTATIVES_MAX) {
+                    try {
+                        Thread.sleep(DELAI_ENTRE_TENTATIVES_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
         }
+
+        log.error("Impossible de liberer le sequestre pour la commande #{} apres {} tentatives. "
+                        + "ReconciliationScheduler retentera lors de son prochain passage.",
+                commandeId, TENTATIVES_MAX);
     }
 
     /**
