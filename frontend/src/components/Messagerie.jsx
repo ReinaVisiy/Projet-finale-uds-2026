@@ -72,9 +72,16 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
   const [loadingProfile, setLoadingProfile] = useState(false);
 
   // Dynamic Name Resolution Helper
-  const getPartnerName = (convo) => {
-    if (!convo) return t('messagerie.user');
-    return userNames[convo.partnerId] || convo.partnerName || t('messagerie.userWithId', { id: convo.partnerId });
+  // partnerIdHint permet de resoudre un nom meme quand aucune conversation
+  // n'existe encore (avant l'envoi du tout premier message), par exemple
+  // dans l'en-tete de la discussion.
+  const getPartnerName = (convo, partnerIdHint) => {
+    const id = convo?.partnerId ?? partnerIdHint;
+    if (id == null) return t('messagerie.user');
+    if (userNames[id]) return userNames[id];
+    if (convo?.partnerName) return convo.partnerName;
+    if (vendor?.id === id && vendor?.name) return vendor.name;
+    return t('messagerie.userWithId', { id });
   };
 
   // Refs
@@ -957,16 +964,16 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
                     fontWeight: '700',
                     fontSize: '14px'
                   }}>
-                    {getPartnerName(conversations.find(c => c.partnerId === selectedPartnerId)) === t('messagerie.user') ? (
+                    {getPartnerName(conversations.find(c => c.partnerId === selectedPartnerId), selectedPartnerId) === t('messagerie.user') ? (
                       <User size={16} />
                     ) : (
-                      getPartnerName(conversations.find(c => c.partnerId === selectedPartnerId)).charAt(0).toUpperCase() || '?'
+                      getPartnerName(conversations.find(c => c.partnerId === selectedPartnerId), selectedPartnerId).charAt(0).toUpperCase() || '?'
                     )}
                   </div>
 
                   <div>
                     <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'white' }}>
-                      {getPartnerName(conversations.find(c => c.partnerId === selectedPartnerId))}
+                      {getPartnerName(conversations.find(c => c.partnerId === selectedPartnerId), selectedPartnerId)}
                     </h3>
                   </div>
                 </div>

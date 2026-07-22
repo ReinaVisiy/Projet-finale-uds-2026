@@ -42,7 +42,14 @@ public class Message {
     // ligne pour ne pas casser l'ordre/l'historique de la conversation,
     // mais on vide contenu/imageData : le frontend affiche alors un
     // placeholder "Message supprime".
-    @Column(name = "est_supprime", nullable = false)
+    // columnDefinition avec DEFAULT false : indispensable pour que Hibernate
+    // (ddl-auto=update) puisse ajouter cette colonne NOT NULL a la table
+    // "message" existante SANS echouer. Sans valeur par defaut, Postgres
+    // refuse un ALTER TABLE ADD COLUMN ... NOT NULL des que la table
+    // contient deja des lignes (aucune valeur a leur assigner) : le service
+    // ne demarrait plus du tout, d'ou l'echec systematique de l'envoi de
+    // message.
+    @Column(name = "est_supprime", nullable = false, columnDefinition = "boolean default false")
     private Boolean estSupprime = false;
 
     @Column(name = "id_expediteur", nullable = false)
