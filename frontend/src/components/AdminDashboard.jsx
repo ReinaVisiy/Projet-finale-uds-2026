@@ -381,6 +381,9 @@ export default function AdminDashboard({
                 {!sidebarCollapsed && item.id === 'certifications' && pendingCertifications > 0 && (
                   <span style={styles.navBadge}>{pendingCertifications}</span>
                 )}
+                {!sidebarCollapsed && item.id === 'signalements' && pendingSignalements > 0 && (
+                  <span style={styles.navBadge}>{pendingSignalements}</span>
+                )}
                 {!sidebarCollapsed && item.id === 'orders' && totalOrders > 0 && (
                   <span style={styles.navBadge}>{totalOrders}</span>
                 )}
