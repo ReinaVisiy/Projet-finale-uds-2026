@@ -26,3 +26,6 @@ export const compterNonLus = () => httpGet(BASE, '/api/messages/non-lus');
 /** Delete an entire conversation with another user. */
 export const supprimerConversation = (autreUserId) =>
   httpDelete(BASE, `/api/messages/conversation/${autreUserId}`);
+
+/** Delete a single message (sender-only; soft delete, keeps the row as a placeholder). */
+export const supprimerMessage = (messageId) => httpDelete(BASE, `/api/messages/${messageId}`);

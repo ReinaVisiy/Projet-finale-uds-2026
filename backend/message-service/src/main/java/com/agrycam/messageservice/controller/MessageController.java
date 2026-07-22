@@ -74,6 +74,13 @@ public class MessageController {
         return ResponseEntity.ok("Conversation supprimee avec succes");
     }
 
+    @DeleteMapping("/{messageId}")
+    public ResponseEntity<MessageResponse> supprimerMessage(@PathVariable Long messageId, Authentication authentication) {
+        Long currentUserId = (Long) authentication.getPrincipal();
+        MessageResponse response = messageService.supprimerMessage(messageId, currentUserId);
+        return ResponseEntity.ok(response);
+    }
+
     private String fetchNom(Long uid) {
         try {
             String url = utilisateurServiceUrl + "/api/utilisateurs/" + uid;

@@ -28,8 +28,7 @@ import AdminDashboard from './components/AdminDashboard';
 import EditProfile from './components/EditProfile';
 import FAQPage from './components/FAQPage';
 import LoginPage from './components/LoginPage';
-import MessagePage from './components/messagepage';
-import MessagesInbox from './components/MessagesInbox';
+import Messagerie from './components/Messagerie';
 import ModerationPanel from './components/ModerationPanel';
 import MyProducts from './components/MyProducts';
 import NotificationsCenter from './components/NotificationsCenter';
@@ -1229,13 +1228,16 @@ export default function App() {
           onBackHome={() => navigate('home')}
         />;
       case 'messages-inbox':
-        return <MessagesInbox
+        return <Messagerie
           currentUser={currentUser}
-          onOpenConversation={(vendor) => { setPreviousScreen(screen); setSelectedVendor(vendor); setScreen('message'); }}
+          vendor={null}
           onBack={() => navigate(previousScreen)}
+          onMessageEnvoye={(destinataireId) => {
+            addNotification(destinataireId, 'info', `Vous avez reçu un message de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'un utilisateur'}`, '/messages-inbox');
+          }}
         />;
       case 'message':
-        return <MessagePage
+        return <Messagerie
           vendor={selectedVendor}
           currentUser={currentUser}
           onBack={() => navigate(previousScreen)}

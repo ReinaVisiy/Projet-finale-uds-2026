@@ -103,6 +103,28 @@ public class MessageService {
         messageRepository.deleteAll(conversation);
     }
 
+    // Suppression individuelle : seul l'expediteur peut supprimer son propre
+    // message (comme sur WhatsApp "supprimer pour tous"). On conserve la
+    // ligne (date, participants) mais on vide contenu/imageData et on passe
+    // estSupprime a true ; le frontend affiche alors un placeholder a la
+    // place du contenu original.
+    public MessageResponse supprimerMessage(Long messageId, Long currentUserId) {
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new RuntimeException("Message non trouvé avec l'id : " + messageId));
+
+        if (!message.getExpediteurId().equals(currentUserId)) {
+            throw new RuntimeException("Vous ne pouvez supprimer que vos propres messages");
+        }
+
+        message.setEstSupprime(true);
+        // contenu est NOT NULL en base (cf. Message#contenu) : on vide avec
+        // une chaine vide plutot que null. imageData, lui, est nullable.
+        message.setContenu("");
+        message.setImageData(null);
+        Message savedMessage = messageRepository.save(message);
+        return toResponse(savedMessage);
+    }
+
     private MessageResponse toResponse(Message message) {
         return new MessageResponse(
                 message.getId(),
@@ -111,6 +133,7 @@ public class MessageService {
                 message.getDateEnvoi(),
                 message.getEstLu(),
                 message.getEstDelivre(),
+                message.getEstSupprime(),
                 message.getExpediteurId(),
                 message.getExpediteurNom(),
                 message.getDestinataireId(),

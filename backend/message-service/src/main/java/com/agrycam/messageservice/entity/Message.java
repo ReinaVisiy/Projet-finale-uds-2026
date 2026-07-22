@@ -36,6 +36,15 @@ public class Message {
     @Column(name = "est_delivre", nullable = false)
     private Boolean estDelivre = false;
 
+    // Suppression individuelle d'un message (cote expediteur uniquement,
+    // cf. MessageService#supprimerMessage). Contrairement a
+    // supprimerConversation (suppression definitive en base), on garde la
+    // ligne pour ne pas casser l'ordre/l'historique de la conversation,
+    // mais on vide contenu/imageData : le frontend affiche alors un
+    // placeholder "Message supprime".
+    @Column(name = "est_supprime", nullable = false)
+    private Boolean estSupprime = false;
+
     @Column(name = "id_expediteur", nullable = false)
     private Long expediteurId;
 
@@ -58,6 +67,9 @@ public class Message {
         }
         if (this.estDelivre == null) {
             this.estDelivre = false;
+        }
+        if (this.estSupprime == null) {
+            this.estSupprime = false;
         }
     }
 }
