@@ -38,8 +38,12 @@ export const getMonSolde = () => httpGet(BASE, '/api/paiements/mon-solde');
 /** Historique des transactions du vendeur connecté (rôle vendeur). */
 export const getMesTransactions = () => httpGet(BASE, '/api/paiements/mes-transactions');
 
-/** Demande de retrait de fonds (rôle vendeur). montant: number. */
-export const demanderRetrait = (montant) => httpPost(BASE, '/api/paiements/retrait', { montant });
+/**
+ * Demande de retrait de fonds (rôle vendeur). dto: { montant, methode, numero }.
+ * methode et numero sont demandés au moment du retrait (simulation Mobile
+ * Money / Orange Money), sur le même principe que le retrait plateforme.
+ */
+export const demanderRetrait = (dto) => httpPost(BASE, '/api/paiements/retrait', dto);
 
 /** Historique des retraits du vendeur connecté (rôle vendeur). */
 export const getMesRetraits = () => httpGet(BASE, '/api/paiements/mes-retraits');

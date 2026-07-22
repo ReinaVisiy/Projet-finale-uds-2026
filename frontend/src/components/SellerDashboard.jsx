@@ -56,6 +56,8 @@ export default function SellerDashboard({
   const [solde, setSolde] = useState(null);
   const [mesRetraits, setMesRetraits] = useState([]);
   const [montantRetrait, setMontantRetrait] = useState('');
+  const [methodeRetrait, setMethodeRetrait] = useState('MOMO');
+  const [numeroRetrait, setNumeroRetrait] = useState('');
   const [retraitEnCours, setRetraitEnCours] = useState(false);
   const [retraitError, setRetraitError] = useState('');
   const [retraitSuccess, setRetraitSuccess] = useState('');
@@ -96,11 +98,16 @@ export default function SellerDashboard({
       setRetraitError(t('sellerDashboard.withdrawInsufficientFunds'));
       return;
     }
+    if (!/^6\d{8}$/.test(numeroRetrait)) {
+      setRetraitError(t('sellerDashboard.withdrawInvalidNumber'));
+      return;
+    }
     setRetraitEnCours(true);
     try {
-      await paiementApi.demanderRetrait(montant);
+      await paiementApi.demanderRetrait({ montant, methode: methodeRetrait, numero: numeroRetrait });
       setRetraitSuccess(t('sellerDashboard.withdrawSuccess'));
       setMontantRetrait('');
+      setNumeroRetrait('');
       chargerSoldeEtRetraits();
     } catch (err) {
       setRetraitError(err?.message || t('sellerDashboard.withdrawError'));
@@ -446,7 +453,40 @@ export default function SellerDashboard({
         <h3 style={styles.chartTitle}>{t('sellerDashboard.withdrawFormTitle')}</h3>
         <p style={styles.certFormSub}>{t('sellerDashboard.withdrawFormSub')}</p>
 
+        <div style={styles.field}>
+          <label style={styles.certLabel}>{t('sellerDashboard.withdrawMethodLabel')}</label>
+          <div style={styles.methodRow}>
+            <button
+              type="button"
+              style={methodeRetrait === 'MOMO' ? styles.methodBtnActive : styles.methodBtn}
+              onClick={() => setMethodeRetrait('MOMO')}
+              disabled={retraitEnCours}
+            >
+              {t('sellerDashboard.withdrawMethodMomo')}
+            </button>
+            <button
+              type="button"
+              style={methodeRetrait === 'ORANGE_MONEY' ? styles.methodBtnActive : styles.methodBtn}
+              onClick={() => setMethodeRetrait('ORANGE_MONEY')}
+              disabled={retraitEnCours}
+            >
+              {t('sellerDashboard.withdrawMethodOM')}
+            </button>
+          </div>
+        </div>
+
         <div style={styles.withdrawFormRow}>
+          <div style={styles.withdrawInputWrap}>
+            <label style={styles.certLabel}>{t('sellerDashboard.withdrawNumberLabel')}</label>
+            <input
+              type="tel"
+              placeholder={t('sellerDashboard.withdrawNumberPlaceholder')}
+              value={numeroRetrait}
+              onChange={(e) => setNumeroRetrait(e.target.value.replace(/\D/g, '').slice(0, 9))}
+              style={styles.withdrawInput}
+              disabled={retraitEnCours}
+            />
+          </div>
           <div style={styles.withdrawInputWrap}>
             <label style={styles.certLabel}>{t('sellerDashboard.withdrawAmountLabel')}</label>
             <input
@@ -497,6 +537,8 @@ export default function SellerDashboard({
               <tr>
                 <th style={styles.th}>{t('sellerDashboard.withdrawHistoryDate')}</th>
                 <th style={styles.th}>{t('sellerDashboard.withdrawHistoryAmount')}</th>
+                <th style={styles.th}>{t('sellerDashboard.withdrawHistoryMethod')}</th>
+                <th style={styles.th}>{t('sellerDashboard.withdrawHistoryNumber')}</th>
                 <th style={styles.th}>{t('sellerDashboard.withdrawHistoryReference')}</th>
                 <th style={styles.th}>{t('sellerDashboard.status')}</th>
               </tr>
@@ -506,6 +548,8 @@ export default function SellerDashboard({
                 <tr key={r.id}>
                   <td style={styles.td}>{r.dateDemande ? new Date(r.dateDemande).toLocaleDateString() : '—'}</td>
                   <td style={styles.td}>{Number(r.montant || 0).toLocaleString()} FCFA</td>
+                  <td style={styles.td}>{r.methode === 'MOMO' ? t('sellerDashboard.withdrawMethodMomo') : (r.methode === 'ORANGE_MONEY' ? t('sellerDashboard.withdrawMethodOM') : '—')}</td>
+                  <td style={styles.td}>{r.numero || '—'}</td>
                   <td style={styles.td}>{r.referencePaiement || '—'}</td>
                   <td style={styles.td}>
                     <span style={{
@@ -699,6 +743,10 @@ const styles = {
   certFormSub: { fontSize: '14px', color: '#6c757d', margin: '0 0 20px 0' },
   certField: { marginBottom: '16px' },
   certLabel: { display: 'block', fontSize: '14px', fontWeight: '700', color: '#212529', marginBottom: '6px' },
+  field: { marginBottom: '16px' },
+  methodRow: { display: 'flex', gap: '10px', marginTop: '4px' },
+  methodBtn: { padding: '10px 18px', borderRadius: '10px', border: '1.5px solid #dee2e6', backgroundColor: '#ffffff', color: '#6c757d', fontSize: '13px', fontWeight: '700', cursor: 'pointer' },
+  methodBtnActive: { padding: '10px 18px', borderRadius: '10px', border: '1.5px solid #1b4d3e', backgroundColor: '#1b4d3e', color: '#ffffff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' },
   certHint: { fontSize: '12px', color: '#6c757d', margin: '0 0 6px 0' },
   certUpload: { display: 'flex', alignItems: 'center', gap: '10px' },
   uploadLabel: { padding: '10px 16px', backgroundColor: '#f8f9fa', border: '1px dashed #dee2e6', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', color: '#495057', display: 'flex', alignItems: 'center', gap: '8px' },

@@ -157,30 +157,34 @@ public class PaiementController {
     /**
      * POST /api/paiements/retrait (rôle vendeur)
      * Effectue un retrait de fonds simule depuis le solde disponible du vendeur.
+     * Les coordonnees de paiement (methode + numero) sont demandees ici, au
+     * moment du retrait, sur le meme principe que le retrait plateforme
+     * (aucune coordonnee de paiement n'existe ailleurs dans le systeme).
      * Decremente le solde et genere un recu de retrait contenant une reference de virement factice.
      */
     @PostMapping("/retrait")
     @PreAuthorize("hasRole('PRODUCTEUR')")
-    public ResponseEntity<RetraitDTO> demanderRetrait(@RequestBody Map<String, BigDecimal> request) {
+    public ResponseEntity<RetraitDTO> demanderRetrait(@RequestBody com.agrycam.paiementservice.dto.DemandeRetraitDTO dto) {
         Long vendeurId = getConnecteUserId();
-        BigDecimal montant = request.get("montant");
-        if (montant == null) {
+        if (dto.getMontant() == null) {
             throw new IllegalArgumentException("Le champ 'montant' est obligatoire.");
         }
-        
-        Retrait retrait = paiementService.demanderRetrait(vendeurId, montant);
-        
+
+        Retrait retrait = paiementService.demanderRetrait(vendeurId, dto.getMontant(), dto.getMethode(), dto.getNumero());
+
         // Mapping vers le DTO de retour
-        RetraitDTO dto = RetraitDTO.builder()
+        RetraitDTO reponse = RetraitDTO.builder()
                 .id(retrait.getId())
                 .vendeurId(retrait.getVendeurId())
                 .montant(retrait.getMontant())
+                .methode(retrait.getMethode())
+                .numero(retrait.getNumero())
                 .referencePaiement(retrait.getReferencePaiement())
                 .statut(retrait.getStatut())
                 .dateDemande(retrait.getDateDemande())
                 .build();
-                
-        return ResponseEntity.ok(dto);
+
+        return ResponseEntity.ok(reponse);
     }
 
     /**

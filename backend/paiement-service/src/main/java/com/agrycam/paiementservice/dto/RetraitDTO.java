@@ -22,7 +22,11 @@ public class RetraitDTO {
     private Long vendeurId;
     
     private BigDecimal montant; // Montant debite
-    
+
+    private String methode; // "MOMO" ou "ORANGE_MONEY"
+
+    private String numero; // Numero de telephone beneficiaire (simulation)
+
     private String referencePaiement; // ex. "PAYOUT-" + UUID
     
     private String statut; // ex. "COMPLETE"

@@ -11,6 +11,10 @@ import java.time.LocalDateTime;
 
 /**
  * Entite représentant un retrait de fonds simule effectue par un vendeur.
+ * Comme pour le retrait plateforme (RetraitPlateforme), aucune coordonnee
+ * de paiement n'existait auparavant nulle part dans le systeme pour le
+ * vendeur : on les demande donc ici (methode + numero), uniquement a des
+ * fins de simulation d'un virement Mobile Money / Orange Money.
  */
 @Entity
 @Table(name = "retraits")
@@ -29,6 +33,12 @@ public class Retrait {
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal montant;
+
+    @Column(nullable = false, length = 20)
+    private String methode; // "MOMO" (MTN Mobile Money) ou "ORANGE_MONEY"
+
+    @Column(nullable = false, length = 20)
+    private String numero; // Numero de telephone beneficiaire (simulation)
 
     @Column(name = "reference_paiement", nullable = false, unique = true)
     private String referencePaiement; // ex. "PAYOUT-" + UUID

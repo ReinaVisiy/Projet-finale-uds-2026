@@ -653,14 +653,27 @@ public class PaiementService {
 
     /**
      * Traite une demande de retrait d'un vendeur (retrait simule en base).
+     * Aucune coordonnee de paiement n'existait auparavant nulle part dans le
+     * systeme pour le vendeur : on les demande donc ici (methode + numero),
+     * sur le meme principe que le retrait plateforme (cf.
+     * demanderRetraitPlateforme), uniquement a des fins de simulation d'un
+     * virement Mobile Money / Orange Money.
      * Verifie le solde disponible, decremente, et enregistre l'historique de retrait.
      */
     @Transactional
-    public Retrait demanderRetrait(Long vendeurId, BigDecimal montant) {
-        log.info("Demande de retrait initiee par le vendeur {} pour un montant de {}", vendeurId, montant);
+    public Retrait demanderRetrait(Long vendeurId, BigDecimal montant, String methode, String numero) {
+        log.info("Demande de retrait initiee par le vendeur {} pour un montant de {} via {}",
+                vendeurId, montant, methode);
 
-        if (montant.compareTo(BigDecimal.ZERO) <= 0) {
+        if (montant == null || montant.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Le montant du retrait doit etre strictement superieur a 0.");
+        }
+        if (methode == null || !METHODES_RETRAIT_VALIDES.contains(methode.toUpperCase())) {
+            throw new IllegalArgumentException("La methode de retrait doit etre 'MOMO' ou 'ORANGE_MONEY'.");
+        }
+        if (numero == null || !numero.matches("^6\\d{8}$")) {
+            throw new IllegalArgumentException(
+                    "Le numero de telephone doit etre un numero mobile camerounais valide (9 chiffres, commence par 6).");
         }
 
         SoldeVendeur soldeVendeur = soldeVendeurRepository.findByVendeurId(vendeurId)
@@ -685,13 +698,15 @@ public class PaiementService {
         Retrait retrait = Retrait.builder()
                 .vendeurId(vendeurId)
                 .montant(montant)
+                .methode(methode.toUpperCase())
+                .numero(numero)
                 .referencePaiement(referencePaiement)
                 .statut("COMPLETE")
                 .build();
 
         retrait = retraitRepository.save(retrait);
-        log.info("Retrait de {} XAF enregistre avec succes pour le vendeur {}. Reference: {}",
-                montant, vendeurId, referencePaiement);
+        log.info("Retrait de {} XAF enregistre avec succes pour le vendeur {} vers le numero {} ({}). Reference: {}",
+                montant, vendeurId, numero, methode, referencePaiement);
 
         return retrait;
     }
