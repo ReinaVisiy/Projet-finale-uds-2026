@@ -75,7 +75,18 @@ export default function AdminDashboard({
 
   const totalVendeurs = registeredUsers.filter(u => u.role === 'vendeur').length;
   const totalOrders = adminOrders.length;
-  const totalRevenue = adminOrders.reduce((sum, o) => sum + (o.amount || 0), 0);
+  // "Revenu total" (Accueil) : uniquement les commandes reellement payees
+  // (avant, on sommait order.amount pour TOUTES les commandes, y compris
+  // celles jamais payees ou annulees).
+  const totalRevenue = adminOrders
+    .filter(o => o.paye)
+    .reduce((sum, o) => sum + (o.amount || 0), 0);
+  // Onglet "Ventes" (section dediee) : une commande n'est une vente
+  // effective que si elle est a la fois payee ET livree (pas simplement
+  // "en attente" ou "en cours"). Cf. issue #12.
+  const ventesPayeesLivrees = adminOrders.filter(o => o.paye && o.status === 'Livrée');
+  const totalVentes = ventesPayeesLivrees.length;
+  const revenuVentes = ventesPayeesLivrees.reduce((sum, o) => sum + (o.amount || 0), 0);
   const totalSignalements = signalements.length;
   const pendingSignalements = signalements.filter(s => s.status === 'pending').length;
   const pendingCertifications = vendorVerifications.filter(v => v.status === 'pending').length;
@@ -619,10 +630,10 @@ export default function AdminDashboard({
             <>
               <div style={styles.pageTitle}>
                 <h2 style={styles.pageTitleText}>{t('adminDashboard.salesTitle')}</h2>
-                <p style={styles.pageTitleSub}>{totalOrders} {t('adminDashboard.saleWord')} · {totalRevenue.toLocaleString('fr-FR')} FCFA {t('adminDashboard.totalRevenueOf')}</p>
+                <p style={styles.pageTitleSub}>{totalVentes} {t('adminDashboard.saleWord')} · {revenuVentes.toLocaleString('fr-FR')} FCFA {t('adminDashboard.totalRevenueOf')}</p>
               </div>
               <div style={styles.salesTableCard}>
-                {adminOrders.length === 0 ? (
+                {ventesPayeesLivrees.length === 0 ? (
                   <div style={styles.emptyState}><ShieldCheck size={40} color="#adb5bd" /><p>{t('adminDashboard.noSalesYet')}</p></div>
                 ) : (
                   <table style={styles.table}>
@@ -636,7 +647,7 @@ export default function AdminDashboard({
                       </tr>
                     </thead>
                     <tbody>
-                      {[...adminOrders].reverse().map((o) => (
+                      {[...ventesPayeesLivrees].reverse().map((o) => (
                         <tr key={o.id} style={styles.tr}>
                           <td style={styles.td}>#{o.id}</td>
                           <td style={styles.td}>{o.client}</td>
