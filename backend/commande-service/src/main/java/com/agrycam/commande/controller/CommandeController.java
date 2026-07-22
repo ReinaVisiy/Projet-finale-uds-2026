@@ -121,13 +121,22 @@ public class CommandeController {
      * service interne utilisé par paiement-service) contourne ces règles.
      * @param id L'ID de la commande à mettre à jour.
      * @param statut Le nouveau statut de la commande.
+     * @param paye Signal explicite envoyé par paiement-service lorsque cet
+     *             appel correspond à une confirmation de paiement (et non
+     *             une vraie transition de statut) : déclenche la
+     *             décrémentation du stock des produits, une seule fois
+     *             (cf. CommandeService#updateStatutCommande).
      * @return La commande mise à jour avec un statut HTTP 200, ou un statut HTTP 404 si non trouvée.
      */
     @PutMapping("/{id}/statut")
-    public ResponseEntity<CommandeResponse> updateStatutCommande(@PathVariable Long id, @RequestParam StatutCommande statut, Authentication authentication) {
+    public ResponseEntity<CommandeResponse> updateStatutCommande(
+            @PathVariable Long id,
+            @RequestParam StatutCommande statut,
+            @RequestParam(defaultValue = "false") boolean paye,
+            Authentication authentication) {
         Object principal = authentication.getPrincipal();
         Long uid = principal instanceof Long ? (Long) principal : null;
-        return commandeService.updateStatutCommande(id, statut, uid, estAdmin(authentication), estProducteur(authentication))
+        return commandeService.updateStatutCommande(id, statut, uid, estAdmin(authentication), estProducteur(authentication), paye)
                 .map(commande -> ResponseEntity.ok(convertToDto(commande)))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

@@ -1,6 +1,7 @@
 package com.agrycam.commande.service;
 
 import com.agrycam.commande.client.PaiementServiceClient;
+import com.agrycam.commande.client.ProduitServiceClient;
 import com.agrycam.commande.dto.ProduitInfoDTO;
 import com.agrycam.commande.dto.UtilisateurInfoDTO;
 import com.agrycam.commande.exception.AccesRefuseException;
@@ -40,6 +41,9 @@ public class CommandeService {
 
     @Autowired
     private PaiementServiceClient paiementServiceClient;
+
+    @Autowired
+    private ProduitServiceClient produitServiceClient;
 
     @Value("${produit.service.url}")
     private String produitServiceUrl;
@@ -201,6 +205,19 @@ public class CommandeService {
      */
     @Transactional
     public Optional<Commande> updateStatutCommande(Long id, StatutCommande nouveauStatut, Long uid, boolean estAdmin, boolean estProducteur) {
+        return updateStatutCommande(id, nouveauStatut, uid, estAdmin, estProducteur, false);
+    }
+
+    /**
+     * Variante avec le signal explicite "paye" utilise par paiement-service
+     * (cf. ServiceCommunicationClient#notifierCommande) : quand paye=true,
+     * decremente le stock des produits de la commande une seule fois
+     * (idempotent via Commande#stockDecremente), independamment du fait que
+     * le statut lui-meme change reellement ou non (le paiement confirme
+     * repose souvent EN_ATTENTE, qui est deja le statut initial).
+     */
+    @Transactional
+    public Optional<Commande> updateStatutCommande(Long id, StatutCommande nouveauStatut, Long uid, boolean estAdmin, boolean estProducteur, boolean paye) {
         return commandeRepository.findById(id).map(commande -> {
             if (!estAdmin) {
                 validerTransition(commande, nouveauStatut, uid, estProducteur);
@@ -218,6 +235,14 @@ public class CommandeService {
                 paiementServiceClient.notifierLivraison(sauvegardee.getId());
             } else if (nouveauStatut == StatutCommande.ANNULEE) {
                 paiementServiceClient.notifierAnnulation(sauvegardee.getId());
+            }
+
+            if (paye && !sauvegardee.isStockDecremente()) {
+                for (LigneCommande ligne : sauvegardee.getLignesCommande()) {
+                    produitServiceClient.decrementerStock(ligne.getProduitId(), ligne.getQuantite());
+                }
+                sauvegardee.setStockDecremente(true);
+                sauvegardee = commandeRepository.save(sauvegardee);
             }
 
             return sauvegardee;

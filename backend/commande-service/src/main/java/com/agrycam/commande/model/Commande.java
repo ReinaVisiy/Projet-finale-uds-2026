@@ -36,6 +36,11 @@ public class Commande {
     // depart au minuteur d'auto-confirmation de 72h (cf. LivraisonScheduler).
     private LocalDateTime dateExpedition;
 
+    // Empeche une double decrementation du stock si paiement-service
+    // notifie la confirmation de paiement plusieurs fois (retry, webhook
+    // + polling, etc.) : cf. CommandeService#confirmerPaiement.
+    private boolean stockDecremente = false;
+
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LigneCommande> lignesCommande = new ArrayList<>();
 
@@ -97,6 +102,14 @@ public class Commande {
 
     public void setDateExpedition(LocalDateTime dateExpedition) {
         this.dateExpedition = dateExpedition;
+    }
+
+    public boolean isStockDecremente() {
+        return stockDecremente;
+    }
+
+    public void setStockDecremente(boolean stockDecremente) {
+        this.stockDecremente = stockDecremente;
     }
 
     public List<LigneCommande> getLignesCommande() {

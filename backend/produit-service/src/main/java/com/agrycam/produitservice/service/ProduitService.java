@@ -38,6 +38,25 @@ public class ProduitService {
     @Value("${utilisateur.service.url}")
     private String utilisateurServiceUrl;
 
+    /**
+     * Decremente le stock d'un produit suite a une commande payee.
+     * Appelee par commande-service (token de service interne) quand une
+     * transaction de paiement est confirmee. Ne descend jamais sous 0 :
+     * si le stock reel est deja insuffisant (course entre deux clients,
+     * ou appel en double malgre l'idempotence cote appelant), on le fixe
+     * a 0 plutot que de planter ou de passer en negatif.
+     */
+    @Transactional
+    public void decrementerStock(Long produitId, int quantite) {
+        Produit produit = produitRepository.findById(produitId)
+                .orElseThrow(() -> new RuntimeException("Produit introuvable (ID: " + produitId + ")"));
+
+        int stockActuel = produit.getStock() != null ? produit.getStock() : 0;
+        int nouveauStock = Math.max(stockActuel - quantite, 0);
+        produit.setStock(nouveauStock);
+        produitRepository.save(produit);
+    }
+
     @Transactional
     public ProduitResponse publier(ProduitRequest request, Long producteurId) {
         Produit produit = new Produit();

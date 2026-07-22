@@ -88,4 +88,18 @@ public class ProduitController {
         produitService.supprimer(id, producteurId);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * PUT /api/produits/{id}/decrementer-stock (rôle admin / service interne)
+     * Appelé par commande-service lorsqu'une commande est payée, pour
+     * répercuter la vente sur le stock réel du produit.
+     */
+    @PutMapping("/{id}/decrementer-stock")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> decrementerStock(
+            @PathVariable Long id,
+            @RequestParam int quantite) {
+        produitService.decrementerStock(id, quantite);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -75,6 +75,9 @@ public class ServiceCommunicationClient {
         restTemplate.exchange(url, HttpMethod.PUT, httpEntity, Void.class);
     }
 
+    private static final int TENTATIVES_MAX = 3;
+    private static final long DELAI_ENTRE_TENTATIVES_MS = 500;
+
     private void notifierCommande(Long commandeId, boolean paye) {
         // EN_ATTENTE est le statut que la commande porte deja depuis sa
         // creation (avant meme le paiement) : on le repose ici surtout pour
@@ -83,15 +86,48 @@ public class ServiceCommunicationClient {
         // confirmation de paiement ne doit plus la definir elle-meme.
         String nouveauStatut = paye ? "EN_ATTENTE" : "ANNULEE";
 
+        // "paye=true" est le signal explicite qui declenche la
+        // decrementation du stock cote commande-service (voir
+        // CommandeService#updateStatutCommande) : distinct du statut
+        // lui-meme, qui ne change pas forcement (EN_ATTENTE -> EN_ATTENTE).
         String url = UriComponentsBuilder.fromHttpUrl(commandeServiceUrl + "/api/commandes/" + commandeId + "/statut")
                 .queryParam("statut", nouveauStatut)
+                .queryParam("paye", paye)
                 .toUriString();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(jwtUtil.genererTokenServiceInterne());
         HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
 
-        log.info("Notification de commande-service : commande #{} -> statut={}", commandeId, nouveauStatut);
-        restTemplate.exchange(url, HttpMethod.PUT, httpEntity, Void.class);
+        // Quelques tentatives avec un court delai : un echec silencieux ici
+        // laisserait la commande payee cote paiement-service sans que
+        // commande-service (et donc le stock) ne le sache jamais, sans
+        // aucun mecanisme de reconciliation pour ce cas precis.
+        for (int tentative = 1; tentative <= TENTATIVES_MAX; tentative++) {
+            try {
+                restTemplate.exchange(url, HttpMethod.PUT, httpEntity, Void.class);
+                log.info("Notification de commande-service : commande #{} -> statut={}, paye={} [tentative {}/{}]",
+                        commandeId, nouveauStatut, paye, tentative, TENTATIVES_MAX);
+                return;
+            } catch (Exception e) {
+                log.warn("Echec de la notification de commande-service pour la commande #{} [tentative {}/{}] : {}",
+                        commandeId, tentative, TENTATIVES_MAX, e.getMessage());
+                if (tentative < TENTATIVES_MAX) {
+                    try {
+                        Thread.sleep(DELAI_ENTRE_TENTATIVES_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Toutes les tentatives ont echoue : on relance pour que
+        // l'appelant (notifierStatutPaiement) le journalise a son tour,
+        // comme avant. La transaction de paiement reste correcte
+        // independamment (source de verite via GET /statut-reference).
+        throw new IllegalStateException(
+                "Impossible de notifier commande-service pour la commande #" + commandeId + " apres " + TENTATIVES_MAX + " tentatives.");
     }
 }
