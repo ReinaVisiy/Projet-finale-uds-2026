@@ -15,6 +15,7 @@ function getNavItems(t) {
     { id: 'disputes', label: t('adminDashboard.disputes'), icon: <AlertOctagon size={18} /> },
     { id: 'users', label: t('adminDashboard.users'), icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
     { id: 'sales', label: t('adminDashboard.sales'), icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> },
+    { id: 'admins', label: t('adminDashboard.admins'), icon: <ShieldCheck size={18} /> },
   ];
 }
 
@@ -40,6 +41,7 @@ export default function AdminDashboard({
   onRembourserLitige,
   onResoudreLitige,
   onLogout,
+  onCreateAdmin,
 }) {
   const { t } = useTranslation();
   const navItems = getNavItems(t);
@@ -69,6 +71,12 @@ export default function AdminDashboard({
   const [hoveredBar, setHoveredBar] = useState(null);
   const [disputeFilter, setDisputeFilter] = useState('tous'); // 'tous' | 'non_livre' | 'autres'
   const [litigeActionEnCours, setLitigeActionEnCours] = useState(null); // litigeId en cours de traitement
+
+  // ===== INSCRIPTION D'UN ADMIN (point : onglet "Administrateurs") =====
+  const [adminForm, setAdminForm] = useState({ nom: '', email: '', password: '', confirm: '' });
+  const [adminFormErrors, setAdminFormErrors] = useState({});
+  const [adminFormLoading, setAdminFormLoading] = useState(false);
+  const [adminFormSuccess, setAdminFormSuccess] = useState('');
 
   // ===== STATISTIQUES =====
   const totalUsers = registeredUsers.length;
@@ -144,6 +152,50 @@ export default function AdminDashboard({
     }
   };
 
+  const handleAdminFormChange = (e) => {
+    setAdminForm({ ...adminForm, [e.target.name]: e.target.value });
+    setAdminFormErrors({ ...adminFormErrors, [e.target.name]: '' });
+    setAdminFormSuccess('');
+  };
+
+  const validateAdminForm = () => {
+    const errors = {};
+    if (!adminForm.nom.trim()) errors.nom = t('adminDashboard.adminNameRequired');
+    if (!adminForm.email.trim()) errors.email = t('adminDashboard.adminEmailRequired');
+    else if (!/\S+@\S+\.\S+/.test(adminForm.email)) errors.email = t('adminDashboard.adminEmailInvalid');
+    if (!adminForm.password) errors.password = t('adminDashboard.adminPasswordRequired');
+    else if (adminForm.password.length < 6) errors.password = t('adminDashboard.adminPasswordMin');
+    if (adminForm.confirm !== adminForm.password) errors.confirm = t('adminDashboard.adminPasswordMismatch');
+    return errors;
+  };
+
+  const handleCreateAdminSubmit = async (e) => {
+    e.preventDefault();
+    const errors = validateAdminForm();
+    if (Object.keys(errors).length > 0) {
+      setAdminFormErrors(errors);
+      return;
+    }
+    setAdminFormLoading(true);
+    setAdminFormErrors({});
+    setAdminFormSuccess('');
+    try {
+      await onCreateAdmin && await onCreateAdmin({
+        nom: adminForm.nom.trim(),
+        email: adminForm.email.trim(),
+        password: adminForm.password,
+      });
+      setAdminForm({ nom: '', email: '', password: '', confirm: '' });
+      setAdminFormSuccess(t('adminDashboard.adminCreateSuccess'));
+      showToast(t('adminDashboard.adminCreateSuccess'));
+    } catch (err) {
+      const message = err?.message && err.message.length < 200 ? err.message : t('adminDashboard.adminCreateError');
+      setAdminFormErrors({ general: message });
+    } finally {
+      setAdminFormLoading(false);
+    }
+  };
+
   // ===== DERNIÈRES COMMANDES =====
   const lastOrders = adminOrders.slice(-3).reverse();
 
@@ -177,8 +229,8 @@ export default function AdminDashboard({
       onNavigateToVendorVerification && onNavigateToVendorVerification();
     } else if (item.id === 'signalements') {
       onNavigateToModeration && onNavigateToModeration();
-    } else if (item.id === 'users' || item.id === 'sales' || item.id === 'disputes' || item.id === 'products') {
-      // reste sur le dashboard : affiche l'onglet Utilisateurs/Ventes/Litiges/Produits ci-dessous
+    } else if (item.id === 'users' || item.id === 'sales' || item.id === 'disputes' || item.id === 'products' || item.id === 'admins') {
+      // reste sur le dashboard : affiche l'onglet Utilisateurs/Ventes/Litiges/Produits/Administrateurs ci-dessous
     } else if (item.id !== 'home') {
       showToast(`Navigation → ${item.label}`);
     }
@@ -665,6 +717,107 @@ export default function AdminDashboard({
             </>
           )}
 
+          {/* ===== VUE ADMINISTRATEURS (inscription d'un nouvel admin) ===== */}
+          {activeNav === 'admins' && (
+            <>
+              <div style={styles.pageTitle}>
+                <h2 style={styles.pageTitleText}>{t('adminDashboard.adminsTitle')}</h2>
+                <p style={styles.pageTitleSub}>{t('adminDashboard.adminsSub')}</p>
+              </div>
+
+              <div style={styles.adminFormCard}>
+                <h3 style={styles.adminFormTitle}>{t('adminDashboard.adminCreateTitle')}</h3>
+                {adminFormErrors.general && (
+                  <div style={styles.adminFormAlertError}>{adminFormErrors.general}</div>
+                )}
+                {adminFormSuccess && (
+                  <div style={styles.adminFormAlertSuccess}>{adminFormSuccess}</div>
+                )}
+                <form onSubmit={handleCreateAdminSubmit} style={styles.adminForm}>
+                  <div style={styles.adminFormField}>
+                    <label style={styles.adminFormLabel}>{t('adminDashboard.adminNameLabel')}</label>
+                    <input
+                      name="nom"
+                      type="text"
+                      value={adminForm.nom}
+                      onChange={handleAdminFormChange}
+                      style={{ ...styles.adminFormInput, borderColor: adminFormErrors.nom ? '#e07a5f' : '#dee2e6' }}
+                      placeholder={t('adminDashboard.adminNamePlaceholder')}
+                    />
+                    {adminFormErrors.nom && <span style={styles.adminFormError}>{adminFormErrors.nom}</span>}
+                  </div>
+                  <div style={styles.adminFormField}>
+                    <label style={styles.adminFormLabel}>{t('adminDashboard.adminEmailLabel')}</label>
+                    <input
+                      name="email"
+                      type="email"
+                      value={adminForm.email}
+                      onChange={handleAdminFormChange}
+                      style={{ ...styles.adminFormInput, borderColor: adminFormErrors.email ? '#e07a5f' : '#dee2e6' }}
+                      placeholder={t('adminDashboard.adminEmailPlaceholder')}
+                    />
+                    {adminFormErrors.email && <span style={styles.adminFormError}>{adminFormErrors.email}</span>}
+                  </div>
+                  <div style={{ ...styles.adminFormRow2, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
+                    <div style={styles.adminFormField}>
+                      <label style={styles.adminFormLabel}>{t('adminDashboard.adminPasswordLabel')}</label>
+                      <input
+                        name="password"
+                        type="password"
+                        value={adminForm.password}
+                        onChange={handleAdminFormChange}
+                        style={{ ...styles.adminFormInput, borderColor: adminFormErrors.password ? '#e07a5f' : '#dee2e6' }}
+                        placeholder={t('adminDashboard.adminPasswordPlaceholder')}
+                      />
+                      {adminFormErrors.password && <span style={styles.adminFormError}>{adminFormErrors.password}</span>}
+                    </div>
+                    <div style={styles.adminFormField}>
+                      <label style={styles.adminFormLabel}>{t('adminDashboard.adminConfirmLabel')}</label>
+                      <input
+                        name="confirm"
+                        type="password"
+                        value={adminForm.confirm}
+                        onChange={handleAdminFormChange}
+                        style={{ ...styles.adminFormInput, borderColor: adminFormErrors.confirm ? '#e07a5f' : '#dee2e6' }}
+                        placeholder={t('adminDashboard.adminConfirmPlaceholder')}
+                      />
+                      {adminFormErrors.confirm && <span style={styles.adminFormError}>{adminFormErrors.confirm}</span>}
+                    </div>
+                  </div>
+                  <button type="submit" style={{ ...styles.adminFormSubmit, opacity: adminFormLoading ? 0.7 : 1 }} disabled={adminFormLoading}>
+                    {adminFormLoading ? t('adminDashboard.adminCreating') : t('adminDashboard.adminCreateSubmit')}
+                  </button>
+                </form>
+              </div>
+
+              <div style={styles.pageTitle}>
+                <h2 style={styles.pageTitleText}>{t('adminDashboard.adminsListTitle')}</h2>
+              </div>
+              {registeredUsers.filter(u => u.role === 'admin').length === 0 ? (
+                <div style={styles.emptyState}><ShieldCheck size={40} color="#adb5bd" /><p>{t('adminDashboard.noAdmins')}</p></div>
+              ) : (
+                <div style={styles.certList}>
+                  {registeredUsers.filter(u => u.role === 'admin').map((u) => (
+                    <div key={u.id} style={styles.certCard}>
+                      <div style={styles.certLeft}>
+                        <div style={styles.certAvatar}>{u.prenom?.[0]?.toUpperCase()}{u.nom?.[0]?.toUpperCase()}</div>
+                        <div style={styles.certInfo}>
+                          <h4 style={styles.certFarm}>{u.prenom} {u.nom}</h4>
+                          <p style={styles.certVendeur}>✉️ {u.email}</p>
+                        </div>
+                      </div>
+                      <div style={styles.certRight}>
+                        <span style={{ ...styles.certStatus, color: '#1b4d3e', backgroundColor: '#e9f5ee' }}>
+                          <Shield size={12} style={{ marginRight: '4px', verticalAlign: 'text-bottom' }} /> {t('adminDashboard.adminTag')}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
         </div>
       </div>
     </div>
@@ -738,6 +891,17 @@ const styles = {
   orderAmount: { fontSize: '13px', fontWeight: '800', color: '#e07a5f' },
   orderStatus: { fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '20px' },
   salesTableCard: { backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #e9ecef', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', overflowX: 'auto' },
+  adminFormCard: { backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #e9ecef', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', marginBottom: '28px', maxWidth: '560px' },
+  adminFormTitle: { fontSize: '15px', fontWeight: '800', color: '#1b4d3e', margin: '0 0 16px 0' },
+  adminFormAlertError: { backgroundColor: '#fdecea', color: '#c0392b', padding: '10px 14px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', marginBottom: '14px' },
+  adminFormAlertSuccess: { backgroundColor: '#e9f5ee', color: '#1b4d3e', padding: '10px 14px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', marginBottom: '14px' },
+  adminForm: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  adminFormRow2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' },
+  adminFormField: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  adminFormLabel: { fontSize: '13px', fontWeight: '700', color: '#212529' },
+  adminFormInput: { padding: '12px 14px', border: '1.5px solid #dee2e6', borderRadius: '10px', fontSize: '14px', color: '#212529', outline: 'none', backgroundColor: '#f8f9fa' },
+  adminFormError: { fontSize: '12px', color: '#e07a5f', fontWeight: '600' },
+  adminFormSubmit: { padding: '13px', backgroundColor: '#1b4d3e', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', marginTop: '4px' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px' },
   th: { textAlign: 'left', padding: '8px 12px', fontSize: '10px', fontWeight: '700', color: '#868e96', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1.5px solid #f1f3f5', whiteSpace: 'nowrap' },
   tr: { borderBottom: '1px solid #f8f9fa' },

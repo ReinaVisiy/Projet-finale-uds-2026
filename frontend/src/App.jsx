@@ -920,6 +920,15 @@ export default function App() {
     }
   };
 
+  // Inscription d'un nouvel administrateur, depuis l'onglet "Administrateurs"
+  // du tableau de bord admin (POST /api/utilisateurs/admin/creer, reservé
+  // aux admins côté backend). Recharge la liste des utilisateurs pour que
+  // le nouvel admin apparaisse immédiatement.
+  const handleCreateAdmin = async ({ nom, email, password }) => {
+    await utilisateurApi.creerAdministrateur({ nom, email, password });
+    await chargerUtilisateurs();
+  };
+
   const handleSignalerProducteur = async (producteur, motif) => {
     try {
       await signalementApi.createSignalement({
@@ -1294,6 +1303,7 @@ export default function App() {
           onRembourserLitige={handleRembourserLitige}
           onResoudreLitige={handleResoudreLitige}
           onToggleUserBlocked={handleToggleUserBlocked}
+          onCreateAdmin={handleCreateAdmin}
         />;
       case 'order-management-admin':
         return <OrderManagementAdmin

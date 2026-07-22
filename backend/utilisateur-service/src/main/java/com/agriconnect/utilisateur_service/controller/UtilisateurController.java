@@ -63,7 +63,11 @@ public class UtilisateurController {
         return ResponseEntity.ok(utilisateurService.rechercherUtilisateursParNom(nom));
     }
 
+    // Reserve aux admins : sans cette garde, n'importe quel compte
+    // authentifie (client, vendeur...) pouvait s'auto-promouvoir admin en
+    // appelant directement cet endpoint.
     @PostMapping("/admin/creer")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UtilisateurDTO> creerAdministrateur(@RequestBody AjouterAdminRequest request) {
         return ResponseEntity.ok(utilisateurService.creerAdministrateur(
                 request.getNom(), request.getEmail(), request.getPassword()));

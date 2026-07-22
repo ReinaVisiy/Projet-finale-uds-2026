@@ -96,6 +96,9 @@ public class UtilisateurService {
     }
 
     public UtilisateurDTO creerAdministrateur(String nom, String email, String motDePasse) {
+        if (utilisateurRepository.findByEmail(email).isPresent()) {
+            throw new IllegalArgumentException("Un compte existe deja avec cet email.");
+        }
         Utilisateur admin = new Utilisateur();
         admin.setNom(nom);
         admin.setEmail(email);
