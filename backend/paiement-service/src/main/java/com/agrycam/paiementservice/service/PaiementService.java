@@ -87,20 +87,47 @@ public class PaiementService {
         BigDecimal commission = montantTotal.multiply(new BigDecimal("0.05")); // 5% de commission plateforme
         BigDecimal montantNet = montantTotal.subtract(commission); // 95% pour le vendeur
 
-        // 2. Creation de la transaction en statut EN_ATTENTE
-        Transaction transaction = Transaction.builder()
-                .clientId(clientId)
-                .montant(montantTotal)
-                .commission(commission)
-                .montantNet(montantNet)
-                .devise("XAF")
-                .typeReference(dto.getTypeReference())
-                .referenceId(dto.getReferenceId())
-                .vendeurId(dto.getVendeurId())
-                .statut(StatutTransaction.EN_ATTENTE)
-                .build();
+        // 2. Reutilisation d'une transaction existante si possible (retry du
+        // bouton "Payer") au lieu de creer systematiquement une nouvelle
+        // ligne : depuis la contrainte unique sur (type_reference,
+        // reference_id), une commande/certification ne peut de toute facon
+        // plus avoir qu'une seule ligne de transaction en base, jamais deux.
+        Transaction transaction = transactionRepository
+                .findByTypeReferenceAndReferenceId(dto.getTypeReference(), dto.getReferenceId())
+                .orElse(null);
 
-        // On sauvegarde temporairement pour obtenir l'ID de notre transaction locale
+        if (transaction != null) {
+            if (transaction.getStatut() == StatutTransaction.PAYE) {
+                throw new IllegalStateException(
+                        "Cette " + dto.getTypeReference() + " #" + dto.getReferenceId() + " a deja ete payee.");
+            }
+            // EN_ATTENTE (session precedente jamais finalisee), ECHOUE ou
+            // EXPIRE : on reutilise la meme ligne pour une nouvelle tentative,
+            // avec une nouvelle session NotchPay. On rafraichit les montants
+            // au cas ou ils auraient change entre deux tentatives.
+            log.info("Reutilisation de la transaction {} existante (statut precedent: {}) pour un nouveau paiement.",
+                    transaction.getId(), transaction.getStatut());
+            transaction.setMontant(montantTotal);
+            transaction.setCommission(commission);
+            transaction.setMontantNet(montantNet);
+            transaction.setVendeurId(dto.getVendeurId());
+            transaction.setStatut(StatutTransaction.EN_ATTENTE);
+        } else {
+            // Creation de la transaction en statut EN_ATTENTE (premiere tentative)
+            transaction = Transaction.builder()
+                    .clientId(clientId)
+                    .montant(montantTotal)
+                    .commission(commission)
+                    .montantNet(montantNet)
+                    .devise("XAF")
+                    .typeReference(dto.getTypeReference())
+                    .referenceId(dto.getReferenceId())
+                    .vendeurId(dto.getVendeurId())
+                    .statut(StatutTransaction.EN_ATTENTE)
+                    .build();
+        }
+
+        // On sauvegarde pour obtenir (ou confirmer) l'ID de notre transaction locale
         transaction = transactionRepository.save(transaction);
 
         // 3. Recuperation des infos client (NotchPay exige un email) aupres
@@ -126,7 +153,9 @@ public class PaiementService {
             throw new IllegalStateException("Le client ne dispose pas d'un email valide pour le paiement.");
         }
 
-        // 4. Appel a la passerelle de paiement NotchPay (sandbox)
+        // 4. Appel a la passerelle de paiement NotchPay (sandbox), avec une
+        // NOUVELLE session a chaque tentative (meme en cas de reutilisation
+        // de la ligne de transaction ci-dessus)
         String description = String.format("Paiement AgriConnect - %s #%d", dto.getTypeReference(), dto.getReferenceId());
 
         // URL de retour unique (NotchPay ne distingue pas succes/echec par URL

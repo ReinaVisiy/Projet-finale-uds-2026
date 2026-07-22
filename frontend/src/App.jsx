@@ -703,8 +703,9 @@ export default function App() {
   // par handleCheckout) mais n'a pas de transaction PAYE — soit le client
   // a fermé l'onglet NotchPay, soit un paiement précédent a échoué. On
   // réutilise initierPaiement avec la même referenceId (commande.id) : le
-  // backend crée une nouvelle Transaction (référence NotchPay unique via
-  // suffixe aléatoire, cf. PaiementService), sans dupliquer la commande.
+  // backend réutilise la MÊME ligne Transaction existante (nouvelle session
+  // NotchPay dessus, référence unique via suffixe aléatoire, cf.
+  // PaiementService) au lieu d'en créer une nouvelle à chaque tentative.
   const handlePayerCommandeExistante = async (order) => {
     const transaction = await paiementApi.initierPaiement({
       typeReference: 'COMMANDE',
