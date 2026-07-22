@@ -36,6 +36,7 @@ Les appels **entre microservices** (ex. `avis-service` → `utilisateur-service`
 - `message-service` → `utilisateur-service`
 - `avis-service` → `utilisateur-service`
 - `commande-service` → `produit-service`, `utilisateur-service` (validation du client et des produits, prix authentique)
+- `commande-service` → `paiement-service` (libération du séquestre vendeur quand une commande passe à `LIVREE`, remboursement d'annulation, remboursement de litige — token de service interne, cf. `PaiementServiceClient`)
 - `signalement-service` → `produit-service` ou `utilisateur-service` selon le type de signalement
 - `paiement-service` : n'appelle aucun autre microservice AgryCam pour l'instant (uniquement l'API externe NotchPay via `RestTemplate`) ; à l'inverse, il expose `GET /api/paiements/statut/{typeReference}/{referenceId}` pour que `commande-service` et `certification-service` puissent vérifier si une commande/certification a été payée — voir la section suivante
 - `notification-service` ne reçoit pour l'instant d'appels que du frontend (aucun autre microservice ne le déclenche encore automatiquement)
@@ -47,7 +48,7 @@ Ces URLs sont définies par des variables d'environnement, avec une valeur par d
 - Chaque service (sauf `auth-service`, qui n'a pas de base de données) valide les requêtes via un filtre JWT (`JwtAuthFilter` + `JwtUtil`), en lisant l'en-tête `Authorization: Bearer <token>`.
 - Le secret JWT partagé est `jwt.secret` dans chaque `application.properties` — **doit rester identique partout**, sinon la validation échoue silencieusement (un service rejettera des tokens valides émis par un autre).
 - Les endpoints `GET` publics (catalogue produit, avis, etc.) sont accessibles sans authentification ; tout le reste nécessite un token valide.
-- `certification-service` restreint en plus certains endpoints au rôle `ADMIN` via `@PreAuthorize`.
+- `certification-service`, `paiement-service` et `commande-service` (litiges) restreignent en plus certains endpoints par rôle via `@PreAuthorize` (`ADMIN`, `PRODUCTEUR`, ou simplement `isAuthenticated()` pour l'initiation d'un paiement — ouverte à tout utilisateur connecté, quel que soit son rôle).
 - Lorsqu'un service appelle un autre microservice (`RestTemplate` ou `FeignClient`), le token JWT présent dans la requête entrante est automatiquement propagé dans l'appel sortant, via un intercepteur (`JwtPropagationInterceptor` ou `FeignConfig`). Cela permet à un endpoint interne de devenir protégé sans casser la communication inter-services.
 
 ## ⚙️ Variables d'environnement
@@ -204,5 +205,5 @@ Le frontend appelle uniquement `api-gateway` (`http://localhost:8765`), qui rout
 | avis-service | `/api/avis` |
 | certification-service | `/api/certifications` |
 | paiement-service | `/api/paiements` |
-| commande-service | `/api/commandes` |
+| commande-service | `/api/commandes`, `/api/litiges` |
 | notification-service | `/api/notifications` |
