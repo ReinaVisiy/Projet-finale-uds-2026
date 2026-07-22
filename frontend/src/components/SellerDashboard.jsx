@@ -11,6 +11,7 @@ import VendeurOrders from './VendeurOrders';
 import ConfirmDialog from './ConfirmDialog';
 import { certificationApi, paiementApi } from '../services/api';
 import { useTranslation } from 'react-i18next';
+import useIsMobile from '../hooks/useIsMobile';
 
 
 function getMenuItems(t) {
@@ -39,6 +40,13 @@ export default function SellerDashboard({
   const menuItems = getMenuItems(t);
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const isMobile = useIsMobile(768);
+  // La sidebar (250px fixes) ne laissait quasiment plus de place au
+  // contenu sur mobile. Elle se replie desormais automatiquement sous
+  // 768px ; le vendeur garde la main et peut la rouvrir manuellement.
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
   const [confirmDeleteProduct, setConfirmDeleteProduct] = useState(null); // { name } | null
 
   const [certificationStatus, setCertificationStatus] = useState('none');
