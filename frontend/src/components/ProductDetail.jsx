@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Star, Share2, Shield, Truck, Package, Plus, Minus, ShoppingCart, MessageCircle, Flag, ChevronRight } from 'lucide-react';
 import { getAvisParProduit, getAvisStats, publierAvis, modifierAvis } from '../services/api/avisApi';
 import { useTranslation } from 'react-i18next';
+import useIsMobile from '../hooks/useIsMobile';
 
 
 export default function ProductDetail({ onBack, onAddToCart, onContactVendor, onNavigateToProducerProfile, onSignaler, currentUser, product: propProduct, onAvisPublie }) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile(768);
 
   // Avant : un faux "defaultProduct" (Banane Fraîche Premium) était affiché
   // silencieusement si aucun produit n'était transmis (rafraîchissement,
@@ -194,7 +196,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
       </div>
 
       <div style={styles.container}>
-        <div style={styles.mainGrid}>
+        <div style={{ ...styles.mainGrid, ...(isMobile && { gridTemplateColumns: '1fr', gap: '32px' }) }}>
 
           {/* Image */}
           <div style={styles.imageColumn}>
