@@ -46,3 +46,22 @@ export const getMesRetraits = () => httpGet(BASE, '/api/paiements/mes-retraits')
 
 /** Liste de toutes les transactions de la plateforme (rôle admin). */
 export const getToutesTransactionsAdmin = () => httpGet(BASE, '/api/paiements/admin/toutes-transactions');
+
+/**
+ * Etat courant du portefeuille de la plateforme (rôle admin) :
+ * { totalGagne, soldeDisponible, devise, dateMiseAJour }.
+ * totalGagne = cumul historique (commissions + frais d'annulation), ne
+ * diminue jamais. soldeDisponible = montant reellement retirable.
+ */
+export const getSoldePlateforme = () => httpGet(BASE, '/api/paiements/admin/solde-plateforme');
+
+/**
+ * Demande de retrait de fonds depuis le portefeuille plateforme (rôle admin).
+ * dto: { montant, methode: 'MOMO' | 'ORANGE_MONEY', numero }
+ * Aucune coordonnee de paiement n'existant nulle part au prealable, elles
+ * sont saisies ici, uniquement a des fins de simulation d'un virement.
+ */
+export const demanderRetraitPlateforme = (dto) => httpPost(BASE, '/api/paiements/admin/retrait', dto);
+
+/** Historique des retraits effectues sur le portefeuille plateforme (rôle admin). */
+export const getRetraitsPlateforme = () => httpGet(BASE, '/api/paiements/admin/retraits');
