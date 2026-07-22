@@ -423,6 +423,10 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#f4fbf7' }}>
       {/* Dynamic Navigation Bar with Back Arrow, Discussion Context Menu, and User Profile Info */}
+      {/* Masquee tant qu'aucun message n'a ete envoye (boite vide, aucune */}
+      {/* conversation en cours) : cette barre secondaire est redondante */}
+      {/* dans cet etat et n'apporte rien a l'utilisateur. */}
+      {!loading && conversations.length === 0 && selectedPartnerId === null ? null : (
       <header style={{
         backgroundColor: 'white',
         borderBottom: '1px solid #e9ecef',
@@ -624,6 +628,7 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
           )}
         </div>
       </header>
+      )}
 
       {/* Floating Status / Toast */}
       {toastMessage && (
