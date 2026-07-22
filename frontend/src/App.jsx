@@ -18,6 +18,7 @@ import StockAlerts from './components/StockAlerts';
 import UserProfile from './components/UserProfile';
 import CertificationRequest from './components/CertificationRequest';
 import SignalementModal from './components/SignalementModal';
+import LitigeModal from './components/LitigeModal';
 import VendorVerificationAdmin from './components/VendorVerificationAdmin';
 import ProducerProfile from './components/ProducerProfile';
 import ClientProfile from './components/ClientProfile';
@@ -206,7 +207,12 @@ export default function App() {
 
   // ===== AUTRES ÉTATS =====
   const [showSignalement, setShowSignalement] = useState(false);
-  const [signalementProduct, setSignalementProduct] = useState(null);
+  const [signalementTarget, setSignalementTarget] = useState(null);
+  const [signalementTargetType, setSignalementTargetType] = useState('produit'); // 'produit' | 'utilisateur'
+  const [signalementCibleLabel, setSignalementCibleLabel] = useState('');
+  const [showLitige, setShowLitige] = useState(false);
+  const [litigeOrder, setLitigeOrder] = useState(null);
+  const [mesLitiges, setMesLitiges] = useState([]);
   const [vendeurProducts, setVendeurProducts] = useState([]);
   const [vendorVerifications, setVendorVerifications] = useState([]);
   const [cartItems, setCartItems] = useState([]);
@@ -432,6 +438,18 @@ export default function App() {
     }
   };
 
+  // Litiges ouverts par le client connecté (module Litige) — pilote le
+  // bouton "Ouvrir un litige" / badge de statut sur "Mes commandes".
+  const chargerMesLitiges = async () => {
+    if (!currentUser?.id) return;
+    try {
+      const dtos = await litigeApi.getMesLitiges();
+      setMesLitiges(dtos || []);
+    } catch (err) {
+      console.error('Impossible de charger vos litiges :', err);
+    }
+  };
+
   // Interroge paiement-service pour savoir si une commande a été payée
   // (transaction.statut === PAYE). Utilisé pour afficher un badge "Payée"
   // côté admin, vendeur et client.
@@ -476,8 +494,10 @@ export default function App() {
   useEffect(() => {
     if (currentUser?.role === 'client') {
       chargerMesCommandes();
+      chargerMesLitiges();
     } else {
       setMesCommandes([]);
+      setMesLitiges([]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, currentUser?.role]);
@@ -742,11 +762,35 @@ export default function App() {
     }
   };
 
-  const openSignalement = (product) => {
+  const openSignalement = (target, targetType = 'produit', cibleLabel = '') => {
     requireLogin(() => {
-      setSignalementProduct(product);
+      setSignalementTarget(target);
+      setSignalementTargetType(targetType);
+      setSignalementCibleLabel(cibleLabel);
       setShowSignalement(true);
     });
+  };
+
+  const openLitige = (order) => {
+    requireLogin(() => {
+      setLitigeOrder(order);
+      setShowLitige(true);
+    });
+  };
+
+  const handleCreerLitige = async ({ type, description }) => {
+    try {
+      await litigeApi.creerLitige({
+        commandeId: litigeOrder.id,
+        type,
+        description,
+      });
+      notifierAdmins('error', `Nouveau litige ouvert sur la commande #${litigeOrder.id} par ${currentUser?.prenom || 'un client'}`, '/admin/moderation-panel');
+      await chargerMesLitiges();
+      if (currentUser?.role === 'admin') await chargerTousLesLitiges();
+    } catch (err) {
+      alert(err?.message || "L'ouverture du litige a échoué.");
+    }
   };
 
   // ===== CONNEXION =====
@@ -951,21 +995,6 @@ export default function App() {
     await chargerUtilisateurs();
   };
 
-  const handleSignalerProducteur = async (producteur, motif) => {
-    try {
-      await signalementApi.createSignalement({
-        type: TYPE_FRONTEND_TO_BACKEND.utilisateur,
-        targetId: producteur.id,
-        reporterId: currentUser.id,
-        raison: motif,
-      });
-      notifierAdmins('error', `Signalement de ${producteur.nom} par ${currentUser?.prenom || 'un client'}`, '/admin/moderation-panel');
-      if (currentUser?.role === 'admin') await chargerSignalements();
-    } catch (err) {
-      alert(err?.message || "L'envoi du signalement a échoué.");
-    }
-  };
-
   // ===== NAVIGATION =====
   const goToProduct = (product) => { setSelectedProduct(product); setScreen('product-detail'); };
   const goToMessage = (vendor) => requireLogin(() => { setPreviousScreen(screen); setSelectedVendor(vendor); setScreen('message'); });
@@ -1097,7 +1126,7 @@ export default function App() {
           onBack={() => navigate('home')}
           onAddToCart={(qty) => addToCart(selectedProduct, qty)}
           onContactVendor={goToMessage}
-          onSignaler={() => openSignalement(selectedProduct)}
+          onSignaler={() => openSignalement(selectedProduct, 'produit', selectedProduct?.name || selectedProduct?.nom)}
           onNavigateToProducerProfile={goToProducerProfile}
           currentUser={currentUser}
           onAvisPublie={(producteurId, product) => {
@@ -1158,6 +1187,8 @@ export default function App() {
       case 'orders':
         return <ClientOrders
           orders={mesCommandes}
+          litiges={mesLitiges}
+          onOpenLitige={openLitige}
           onBackHome={() => navigate('home')}
           onConfirmReception={async (orderId) => {
             await commandeApi.updateStatutCommande(orderId, 'LIVREE');
@@ -1388,7 +1419,7 @@ export default function App() {
           onContactVendor={goToMessage}
           onNavigateToProduct={goToProduct}
           onNavigateToLogin={() => navigate('login-page')}
-          onSignalerProducteur={(motif) => requireLogin(() => handleSignalerProducteur(selectedVendor, motif))}
+          onSignaler={() => openSignalement(selectedVendor, 'utilisateur', selectedVendor?.nom)}
         />;
       case 'client-profile':
         return <ClientProfile
@@ -1396,7 +1427,11 @@ export default function App() {
           onBack={() => navigate(previousScreen)}
           onContactVendor={goToMessage}
           onNavigateToProduct={goToProduct}
-          onSignalerUtilisateur={(motif) => requireLogin(() => handleSignalerProducteur(selectedProfileClient, motif))}
+          onSignaler={() => openSignalement(
+            selectedProfileClient,
+            'utilisateur',
+            selectedProfileClient?.prenom ? `${selectedProfileClient.prenom} ${selectedProfileClient.nom}` : selectedProfileClient?.nom
+          )}
         />;
       case 'user-search':
         return <UserSearchResults
@@ -1450,13 +1485,15 @@ export default function App() {
       <div style={styles.screenContainer}>{renderScreen()}</div>
       {showSignalement && (
         <SignalementModal
-          product={signalementProduct}
-          onClose={() => { setShowSignalement(false); setSignalementProduct(null); }}
+          target={signalementTarget}
+          targetType={signalementTargetType}
+          cibleLabel={signalementCibleLabel}
+          onClose={() => { setShowSignalement(false); setSignalementTarget(null); }}
           onSubmit={async (data) => {
             try {
               await signalementApi.createSignalement({
-                type: TYPE_FRONTEND_TO_BACKEND.produit,
-                targetId: signalementProduct.id,
+                type: TYPE_FRONTEND_TO_BACKEND[signalementTargetType],
+                targetId: signalementTarget.id,
                 reporterId: currentUser.id,
                 raison: construireRaison(data.motif, data.commentaire),
               });
@@ -1466,6 +1503,13 @@ export default function App() {
               alert(err?.message || "L'envoi du signalement a échoué.");
             }
           }}
+        />
+      )}
+      {showLitige && (
+        <LitigeModal
+          order={litigeOrder}
+          onClose={() => { setShowLitige(false); setLitigeOrder(null); }}
+          onSubmit={handleCreerLitige}
         />
       )}
     </div>

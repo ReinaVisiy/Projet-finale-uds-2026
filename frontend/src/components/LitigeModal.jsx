@@ -1,36 +1,30 @@
-// src/components/SignalementModal.jsx
+// src/components/LitigeModal.jsx
+// Modale d'ouverture d'un litige (module Litige, commande-service) sur une
+// commande livrée. Reprend le style et le comportement de SignalementModal
+// pour une expérience cohérente entre les deux flux de signalement/litige.
 import { useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { TYPES_LITIGE } from '../services/api/litigeApi';
 
-
-// targetType: 'produit' (défaut) | 'utilisateur'. cibleLabel : nom déjà
-// résolu de la cible à afficher (nom du produit, ou du producteur/client
-// signalé) — fourni par l'appelant, qui connaît la forme de son objet.
-export default function SignalementModal({ product, target, targetType = 'produit', cibleLabel, onClose, onSubmit }) {
+export default function LitigeModal({ order, onClose, onSubmit }) {
   const { t } = useTranslation();
-  const [motif, setMotif] = useState('');
-  const [commentaire, setCommentaire] = useState('');
+  const [type, setType] = useState('');
+  const [description, setDescription] = useState('');
 
-  // `product` reste supporté pour compatibilité (signalement produit historique) ;
-  // `target` est le nom générique pour un produit ou un utilisateur.
-  const cible = target || product;
-  const label = cibleLabel
-    || cible?.name || cible?.nom
-    || (targetType === 'utilisateur' ? t('signalement.unknownUser') : t('signalement.unknownProduct'));
+  const typeLabels = {
+    [TYPES_LITIGE.PRODUIT_NON_LIVRE]: t('litige.typeProduitNonLivre'),
+    [TYPES_LITIGE.PRODUIT_ENDOMMAGE]: t('litige.typeProduitEndommage'),
+    [TYPES_LITIGE.QUALITE_INSUFFISANTE]: t('litige.typeQualiteInsuffisante'),
+    [TYPES_LITIGE.QUANTITE_INCORRECTE]: t('litige.typeQuantiteIncorrecte'),
+    [TYPES_LITIGE.AUTRE]: t('litige.typeAutre'),
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!motif) { alert(t('signalement.selectMotif')); return; }
+    if (!type) { alert(t('litige.selectType')); return; }
     if (onSubmit) {
-      onSubmit({
-        type: targetType,
-        cible: label,
-        motif,
-        commentaire,
-        date: new Date().toISOString(),
-        status: 'pending',
-      });
+      onSubmit({ type, description });
     }
     onClose();
   };
@@ -40,34 +34,34 @@ export default function SignalementModal({ product, target, targetType = 'produi
       <div style={styles.modal} onClick={e => e.stopPropagation()}>
         <div style={styles.header}>
           <h3 style={styles.title}>
-            <AlertTriangle size={20} color="#e07a5f" /> {t('signalement.reportProblem')}
+            <AlertTriangle size={20} color="#e07a5f" /> {t('litige.openTitle')}
           </h3>
           <button style={styles.closeBtn} onClick={onClose}><X size={18} /></button>
         </div>
-        <p style={styles.subtitle}>
-          {targetType === 'utilisateur' ? t('signalement.user') : t('signalement.product')} : <strong>{label}</strong>
-        </p>
+        <p style={styles.subtitle}>{t('litige.order')} : <strong>#{order?.id}</strong></p>
         <form onSubmit={handleSubmit}>
           <div style={styles.field}>
-            <label style={styles.label}>{t('signalement.motifLabel')}</label>
-            <select value={motif} onChange={(e) => setMotif(e.target.value)} style={styles.select}>
-              <option value="">{t('signalement.selectPlaceholder')}</option>
-              {t('signalement.motifs', { returnObjects: true }).map(m => <option key={m} value={m}>{m}</option>)}
+            <label style={styles.label}>{t('litige.typeLabel')}</label>
+            <select value={type} onChange={(e) => setType(e.target.value)} style={styles.select}>
+              <option value="">{t('litige.selectPlaceholder')}</option>
+              {Object.values(TYPES_LITIGE).map(v => (
+                <option key={v} value={v}>{typeLabels[v]}</option>
+              ))}
             </select>
           </div>
           <div style={styles.field}>
-            <label style={styles.label}>{t('signalement.comment')}</label>
+            <label style={styles.label}>{t('litige.description')}</label>
             <textarea
               style={styles.textarea}
               rows="3"
-              placeholder={t('signalement.commentPlaceholder')}
-              value={commentaire}
-              onChange={(e) => setCommentaire(e.target.value)}
+              placeholder={t('litige.descriptionPlaceholder')}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
           <div style={styles.actions}>
-            <button type="button" style={styles.cancelBtn} onClick={onClose}>{t('signalement.cancel')}</button>
-            <button type="submit" style={styles.submitBtn}>{t('signalement.send')}</button>
+            <button type="button" style={styles.cancelBtn} onClick={onClose}>{t('litige.cancel')}</button>
+            <button type="submit" style={styles.submitBtn}>{t('litige.send')}</button>
           </div>
         </form>
       </div>

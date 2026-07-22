@@ -1,6 +1,6 @@
  // src/components/ClientOrders.jsx
 import { useState } from 'react';
-import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp, ThumbsUp, Ban } from 'lucide-react';
+import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp, ThumbsUp, Ban, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from './ConfirmDialog';
 import useIsMobile from '../hooks/useIsMobile';
@@ -10,7 +10,7 @@ import useIsMobile from '../hooks/useIsMobile';
 // cette vérification, ceci ne fait que masquer le bouton au bon moment).
 const STATUTS_ANNULABLES = ['En attente', 'Validée', 'En préparation'];
 
-export default function ClientOrders({ orders, onBackHome, onConfirmReception, onCancelOrder, onPayOrder }) {
+export default function ClientOrders({ orders, onBackHome, onConfirmReception, onCancelOrder, onPayOrder, litiges = [], onOpenLitige }) {
   const { t } = useTranslation();
   const isMobile = useIsMobile(768);
   const [expandedOrder, setExpandedOrder] = useState(null);
@@ -71,6 +71,14 @@ export default function ClientOrders({ orders, onBackHome, onConfirmReception, o
 
   const toggleExpand = (orderId) => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
+  };
+
+  const getLitigeForOrder = (orderId) => litiges.find((l) => l.commandeId === orderId);
+
+  const getLitigeBadgeStyle = (statut) => {
+    if (statut === 'RESOLU') return { label: t('clientOrders.litigeStatusResolu'), color: '#2d6a4f', bg: '#e9f5ee' };
+    if (statut === 'REJETE') return { label: t('clientOrders.litigeStatusRejete'), color: '#b3261e', bg: '#fdecea' };
+    return { label: t('clientOrders.litigeStatusOuvert'), color: '#f5b041', bg: '#fff3e0' };
   };
 
   return (
@@ -188,7 +196,7 @@ export default function ClientOrders({ orders, onBackHome, onConfirmReception, o
                       </div>
                     )}
 
-                    {(order.status === 'En livraison' || STATUTS_ANNULABLES.includes(order.status)) && (
+                    {(order.status === 'En livraison' || order.status === 'Livrée' || STATUTS_ANNULABLES.includes(order.status)) && (
                       <div style={styles.orderActions}>
                         {order.status === 'En livraison' && (
                           <button
@@ -214,6 +222,25 @@ export default function ClientOrders({ orders, onBackHome, onConfirmReception, o
                               : t('clientOrders.cancelOrder')}
                           </button>
                         )}
+                        {order.status === 'Livrée' && (() => {
+                          const litige = getLitigeForOrder(order.id);
+                          if (litige) {
+                            const badge = getLitigeBadgeStyle(litige.statut);
+                            return (
+                              <span style={{ ...styles.statusBadge, backgroundColor: badge.bg, color: badge.color }}>
+                                <AlertTriangle size={14} /> {badge.label}
+                              </span>
+                            );
+                          }
+                          return (
+                            <button
+                              style={styles.litigeBtn}
+                              onClick={() => onOpenLitige && onOpenLitige(order)}
+                            >
+                              <AlertTriangle size={16} /> {t('clientOrders.openLitige')}
+                            </button>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
@@ -361,5 +388,10 @@ const styles = {
     display: 'flex', alignItems: 'center', gap: '8px',
     padding: '10px 20px', backgroundColor: '#fdecea', color: '#b3261e',
     border: '1px solid #f5c2c7', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer',
+  },
+  litigeBtn: {
+    display: 'flex', alignItems: 'center', gap: '8px',
+    padding: '10px 20px', backgroundColor: '#fff3e0', color: '#f5b041',
+    border: '1px solid #ffe1b3', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer',
   },
 };

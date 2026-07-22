@@ -13,11 +13,9 @@ export default function ClientProfile({
   onBack,
   onContactVendor,
   onNavigateToProduct,
-  onSignalerUtilisateur, // (motif) => void
+  onSignaler, // () => void — ouvre la modale de signalement partagée
 }) {
   const { t } = useTranslation();
-  const [showReportBox, setShowReportBox] = useState(false);
-  const [reportReason, setReportReason] = useState('');
   const [avis, setAvis] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [chargeErreur, setChargeErreur] = useState(null);
@@ -47,13 +45,6 @@ export default function ClientProfile({
   }, [client?.id, t]);
 
   useEffect(() => { chargerAvis(); }, [chargerAvis]);
-
-  const handleSubmitReport = () => {
-    if (!reportReason.trim()) return;
-    onSignalerUtilisateur && onSignalerUtilisateur(reportReason);
-    setReportReason('');
-    setShowReportBox(false);
-  };
 
   const StarRow = ({ value, size = 14 }) => (
     <div style={{ display: 'flex', gap: '2px' }}>
@@ -103,28 +94,11 @@ export default function ClientProfile({
           )}
         </div>
 
-        {/* Signaler cet utilisateur */}
+        {/* Signaler cet utilisateur (même modale que "signaler produit") */}
         <div style={styles.reportRow}>
-          {!showReportBox ? (
-            <button style={styles.reportLink} onClick={() => setShowReportBox(true)}>
-              <Flag size={13} /> {t('clientProfile.reportUser')}
-            </button>
-          ) : (
-            <div style={styles.reportBox}>
-              <label style={styles.label}>{t('clientProfile.reportReason')}</label>
-              <textarea
-                style={styles.textarea}
-                rows="3"
-                placeholder={t('clientProfile.reportPlaceholder')}
-                value={reportReason}
-                onChange={(e) => setReportReason(e.target.value)}
-              />
-              <div style={styles.formActions}>
-                <button style={styles.cancelBtn} onClick={() => { setShowReportBox(false); setReportReason(''); }}>{t('clientProfile.cancel')}</button>
-                <button style={styles.reportSubmitBtn} onClick={handleSubmitReport}>{t('clientProfile.sendReport')}</button>
-              </div>
-            </div>
-          )}
+          <button style={styles.reportLink} onClick={() => onSignaler && onSignaler()}>
+            <Flag size={13} /> {t('clientProfile.reportUser')}
+          </button>
         </div>
 
         {chargeErreur && <div style={styles.errorBanner}>{chargeErreur}</div>}

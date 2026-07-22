@@ -14,7 +14,7 @@ export default function ProducerProfile({
   onContactVendor,
   onNavigateToLogin,
   onNavigateToProduct,
-  onSignalerProducteur, // (motif) => void
+  onSignaler, // () => void — ouvre la modale de signalement partagée
 }) {
   const { t } = useTranslation();
   const isMobile = useIsMobile(768);
@@ -24,8 +24,6 @@ export default function ProducerProfile({
   const [avisLaisses, setAvisLaisses] = useState([]);
   const [chargementAvisLaisses, setChargementAvisLaisses] = useState(false);
   const [avisLaissesCharges, setAvisLaissesCharges] = useState(false);
-  const [showReportBox, setShowReportBox] = useState(false);
-  const [reportReason, setReportReason] = useState('');
   const [note, setNote] = useState(0);
   const [hoverNote, setHoverNote] = useState(0);
   const [commentaire, setCommentaire] = useState('');
@@ -184,13 +182,6 @@ export default function ProducerProfile({
     }
   };
 
-  const handleSubmitReport = () => {
-    if (!reportReason.trim()) return;
-    onSignalerProducteur && onSignalerProducteur(reportReason);
-    setReportReason('');
-    setShowReportBox(false);
-  };
-
   const StarRow = ({ value, size = 16, interactive = false }) => (
     <div style={{ display: 'flex', gap: '2px' }}>
       {[1, 2, 3, 4, 5].map((i) => {
@@ -267,28 +258,11 @@ export default function ProducerProfile({
           )}
         </div>
 
-        {/* Signaler ce producteur */}
+        {/* Signaler ce producteur (même modale que "signaler produit") */}
         <div style={styles.reportRow}>
-          {!showReportBox ? (
-            <button style={styles.reportLink} onClick={() => setShowReportBox(true)}>
-              <Flag size={13} /> {t('producerProfile.reportThisProducer')}
-            </button>
-          ) : (
-            <div style={styles.reportBox}>
-              <label style={styles.label}>{t('producerProfile.reportReasonLabel')}</label>
-              <textarea
-                style={styles.textarea}
-                rows="3"
-                placeholder={t('producerProfile.reportPlaceholder')}
-                value={reportReason}
-                onChange={(e) => setReportReason(e.target.value)}
-              />
-              <div style={styles.formActions}>
-                <button style={styles.cancelBtn} onClick={() => { setShowReportBox(false); setReportReason(''); }}>{t('producerProfile.cancel')}</button>
-                <button style={styles.reportSubmitBtn} onClick={handleSubmitReport}>{t('producerProfile.sendReport')}</button>
-              </div>
-            </div>
-          )}
+          <button style={styles.reportLink} onClick={() => onSignaler && onSignaler()}>
+            <Flag size={13} /> {t('producerProfile.reportThisProducer')}
+          </button>
         </div>
 
         {chargeErreur && <div style={styles.errorBanner}>{chargeErreur}</div>}

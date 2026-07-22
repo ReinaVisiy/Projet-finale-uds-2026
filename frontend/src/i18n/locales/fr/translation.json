@@ -197,14 +197,32 @@
     ],
     "selectMotif": "Veuillez sélectionner un motif",
     "unknownProduct": "Produit inconnu",
+    "unknownUser": "Utilisateur inconnu",
     "reportProblem": "Signaler un problème",
     "product": "Produit",
+    "user": "Utilisateur",
     "motifLabel": "Motif *",
     "selectPlaceholder": "-- Sélectionnez --",
     "comment": "Commentaire (optionnel)",
     "commentPlaceholder": "Décrivez précisément le problème...",
     "cancel": "Annuler",
     "send": "Envoyer le signalement"
+  },
+  "litige": {
+    "openTitle": "Ouvrir un litige",
+    "order": "Commande",
+    "typeLabel": "Type de litige *",
+    "selectPlaceholder": "-- Sélectionnez --",
+    "selectType": "Veuillez sélectionner un type de litige",
+    "typeProduitNonLivre": "Produit non livré",
+    "typeProduitEndommage": "Produit endommagé",
+    "typeQualiteInsuffisante": "Qualité insuffisante",
+    "typeQuantiteIncorrecte": "Quantité incorrecte",
+    "typeAutre": "Autre",
+    "description": "Description (optionnel)",
+    "descriptionPlaceholder": "Décrivez précisément le problème...",
+    "cancel": "Annuler",
+    "send": "Envoyer le litige"
   },
   "userSearch": {
     "back": "Retour",
@@ -351,7 +369,12 @@
     "paid": "Payée",
     "payOrder": "Payer",
     "payOrderInProgress": "Redirection...",
-    "payOrderError": "Impossible d'initier le paiement."
+    "payOrderError": "Impossible d'initier le paiement.",
+    "openLitige": "Ouvrir un litige",
+    "litigeCreateError": "L'ouverture du litige a échoué.",
+    "litigeStatusOuvert": "Litige en cours",
+    "litigeStatusResolu": "Litige résolu",
+    "litigeStatusRejete": "Litige rejeté"
   },
   "register": {
     "firstNameRequired": "Le prénom est requis",

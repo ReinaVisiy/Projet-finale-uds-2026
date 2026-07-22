@@ -197,14 +197,32 @@
     ],
     "selectMotif": "Please select a reason",
     "unknownProduct": "Unknown product",
+    "unknownUser": "Unknown user",
     "reportProblem": "Report a problem",
     "product": "Product",
+    "user": "User",
     "motifLabel": "Reason *",
     "selectPlaceholder": "-- Select --",
     "comment": "Comment (optional)",
     "commentPlaceholder": "Describe the problem precisely...",
     "cancel": "Cancel",
     "send": "Send report"
+  },
+  "litige": {
+    "openTitle": "Open a dispute",
+    "order": "Order",
+    "typeLabel": "Dispute type *",
+    "selectPlaceholder": "-- Select --",
+    "selectType": "Please select a dispute type",
+    "typeProduitNonLivre": "Product not delivered",
+    "typeProduitEndommage": "Damaged product",
+    "typeQualiteInsuffisante": "Insufficient quality",
+    "typeQuantiteIncorrecte": "Incorrect quantity",
+    "typeAutre": "Other",
+    "description": "Description (optional)",
+    "descriptionPlaceholder": "Describe the problem precisely...",
+    "cancel": "Cancel",
+    "send": "Submit dispute"
   },
   "userSearch": {
     "back": "Back",
@@ -351,7 +369,12 @@
     "paid": "Paid",
     "payOrder": "Pay",
     "payOrderInProgress": "Redirecting...",
-    "payOrderError": "Could not start the payment."
+    "payOrderError": "Could not start the payment.",
+    "openLitige": "Open a dispute",
+    "litigeCreateError": "Failed to open the dispute.",
+    "litigeStatusOuvert": "Dispute in progress",
+    "litigeStatusResolu": "Dispute resolved",
+    "litigeStatusRejete": "Dispute rejected"
   },
   "register": {
     "firstNameRequired": "First name is required",
