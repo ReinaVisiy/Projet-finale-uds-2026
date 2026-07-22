@@ -205,4 +205,59 @@ public class PaiementController {
         List<Transaction> transactions = paiementService.recupererToutesTransactions();
         return ResponseEntity.ok(transactions);
     }
+
+    /**
+     * GET /api/paiements/admin/solde-plateforme (rôle admin)
+     * Renvoie l'etat courant du portefeuille de la plateforme : le cumul
+     * historique total gagne (commissions + frais d'annulation, ne diminue
+     * jamais) et le solde reellement disponible pour un retrait.
+     */
+    @GetMapping("/admin/solde-plateforme")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<com.agrycam.paiementservice.entity.SoldePlateforme> recupererSoldePlateforme() {
+        return ResponseEntity.ok(paiementService.recupererSoldePlateforme());
+    }
+
+    /**
+     * POST /api/paiements/admin/retrait (rôle admin)
+     * Effectue un retrait de fonds simule depuis le solde disponible de la
+     * plateforme. Comme aucune coordonnee de paiement n'existait au
+     * prealable dans le systeme, la methode (MOMO / ORANGE_MONEY) et le
+     * numero beneficiaire sont demandes ici, uniquement a des fins de
+     * simulation d'un virement (un identifiant de transaction factice est
+     * genere, sur le meme principe que le retrait vendeur).
+     */
+    @PostMapping("/admin/retrait")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<com.agrycam.paiementservice.dto.RetraitPlateformeDTO> demanderRetraitPlateforme(
+            @RequestBody com.agrycam.paiementservice.dto.DemandeRetraitPlateformeDTO dto) {
+        Long adminId = getConnecteUserId();
+
+        com.agrycam.paiementservice.entity.RetraitPlateforme retrait =
+                paiementService.demanderRetraitPlateforme(adminId, dto.getMontant(), dto.getMethode(), dto.getNumero());
+
+        com.agrycam.paiementservice.dto.RetraitPlateformeDTO reponse =
+                com.agrycam.paiementservice.dto.RetraitPlateformeDTO.builder()
+                        .id(retrait.getId())
+                        .montant(retrait.getMontant())
+                        .methode(retrait.getMethode())
+                        .numero(retrait.getNumero())
+                        .referencePaiement(retrait.getReferencePaiement())
+                        .statut(retrait.getStatut())
+                        .dateDemande(retrait.getDateDemande())
+                        .build();
+
+        return ResponseEntity.ok(reponse);
+    }
+
+    /**
+     * GET /api/paiements/admin/retraits (rôle admin)
+     * Renvoie l'historique des retraits effectues sur le portefeuille de
+     * la plateforme, du plus recent au plus ancien.
+     */
+    @GetMapping("/admin/retraits")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<com.agrycam.paiementservice.entity.RetraitPlateforme>> recupererRetraitsPlateforme() {
+        return ResponseEntity.ok(paiementService.recupererRetraitsPlateforme());
+    }
 }

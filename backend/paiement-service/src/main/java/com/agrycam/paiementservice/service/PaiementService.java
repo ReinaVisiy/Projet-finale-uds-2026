@@ -39,8 +39,14 @@ public class PaiementService {
     private final TransactionRepository transactionRepository;
     private final SoldeVendeurRepository soldeVendeurRepository;
     private final RetraitRepository retraitRepository;
+    private final com.agrycam.paiementservice.repository.SoldePlateformeRepository soldePlateformeRepository;
+    private final com.agrycam.paiementservice.repository.RetraitPlateformeRepository retraitPlateformeRepository;
     private final RestTemplate restTemplate;
     private final ServiceCommunicationClient serviceCommunicationClient;
+
+    // Methodes de retrait simulees acceptees pour le portefeuille plateforme.
+    private static final java.util.Set<String> METHODES_RETRAIT_VALIDES =
+            java.util.Set.of("MOMO", "ORANGE_MONEY");
 
     // Un verrou par transaction (et non un `synchronized` global sur le service) :
     // la verification d'une transaction A ne doit jamais faire attendre la
@@ -389,6 +395,12 @@ public class PaiementService {
         log.info("Sequestre du vendeur {} credite avec succes du montant net de {} XAF (Transaction #{}) - verrouille jusqu'a livraison",
                 vendeurId, montantNet, transaction.getId());
 
+        // Credite le portefeuille de la plateforme de la commission de 5%
+        // percue sur cette transaction : contrairement au sequestre vendeur,
+        // la commission plateforme est definitivement acquise des la
+        // confirmation du paiement (pas de sequestre pour la plateforme).
+        crediterRevenuPlateforme(transaction.getCommission());
+
         // Repercute la confirmation de paiement sur le service concerne
         // (commande-service ou certification-service), pour que son propre
         // statut (VALIDEE / paiement PAYE) reste synchronise avec la
@@ -507,6 +519,11 @@ public class PaiementService {
         transaction.setFraisAnnulation(fraisAnnulation);
         transaction.setStatut(StatutTransaction.REMBOURSEE);
         transactionRepository.save(transaction);
+
+        // Les 10% de frais d'annulation retenus viennent s'ajouter au
+        // portefeuille de la plateforme (en plus des 5% de commission deja
+        // credites lors de la confirmation du paiement).
+        crediterRevenuPlateforme(fraisAnnulation);
 
         log.info("Commande {} annulee : {} XAF a rembourser au client, {} XAF retenus par la plateforme (sequestre vendeur {} debite de {} XAF)",
                 commandeId, montantRembourseClient, fraisAnnulation, transaction.getVendeurId(), transaction.getMontantNet());
@@ -684,6 +701,118 @@ public class PaiementService {
      */
     public List<Retrait> recupererRetraitsVendeur(Long vendeurId) {
         return retraitRepository.findByVendeurId(vendeurId);
+    }
+
+    // ===================================================================
+    // PORTEFEUILLE PLATEFORME (revenu admin : commissions + frais annulation)
+    // ===================================================================
+
+    /**
+     * Recupere (ou cree si absente) l'unique ligne du portefeuille
+     * plateforme. Appelee en interne uniquement : les controleurs passent
+     * par recupererSoldePlateforme() / demanderRetraitPlateforme().
+     */
+    private com.agrycam.paiementservice.entity.SoldePlateforme recupererOuCreerSoldePlateforme() {
+        return soldePlateformeRepository.findFirstByOrderByIdAsc()
+                .orElseGet(() -> soldePlateformeRepository.save(
+                        com.agrycam.paiementservice.entity.SoldePlateforme.builder()
+                                .totalGagne(BigDecimal.ZERO)
+                                .soldeDisponible(BigDecimal.ZERO)
+                                .devise("XAF")
+                                .build()));
+    }
+
+    /**
+     * Credite le portefeuille plateforme d'un montant gagne (commission ou
+     * frais d'annulation) : incremente a la fois le cumul historique
+     * (totalGagne, ne diminue jamais) et le solde reellement retirable
+     * (soldeDisponible, qui lui diminue a chaque retrait).
+     */
+    @Transactional
+    public void crediterRevenuPlateforme(BigDecimal montant) {
+        if (montant == null || montant.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        com.agrycam.paiementservice.entity.SoldePlateforme solde = recupererOuCreerSoldePlateforme();
+        solde.setTotalGagne(solde.getTotalGagne().add(montant));
+        solde.setSoldeDisponible(solde.getSoldeDisponible().add(montant));
+        soldePlateformeRepository.save(solde);
+        log.info("Portefeuille plateforme credite de {} XAF (solde disponible desormais {} XAF, total gagne {} XAF)",
+                montant, solde.getSoldeDisponible(), solde.getTotalGagne());
+    }
+
+    /**
+     * Renvoie l'etat courant du portefeuille de la plateforme (role admin).
+     */
+    public com.agrycam.paiementservice.entity.SoldePlateforme recupererSoldePlateforme() {
+        return recupererOuCreerSoldePlateforme();
+    }
+
+    /**
+     * Effectue un retrait de fonds simule depuis le solde disponible de la
+     * plateforme (role admin). Contrairement au retrait vendeur, aucune
+     * coordonnee de paiement n'existait nulle part au prealable : on les
+     * demande donc ici (methode + numero), uniquement a des fins de
+     * simulation - un identifiant de transaction factice est genere comme
+     * si les fonds avaient reellement ete envoyes vers ce numero.
+     */
+    @Transactional
+    public com.agrycam.paiementservice.entity.RetraitPlateforme demanderRetraitPlateforme(
+            Long adminId, BigDecimal montant, String methode, String numero) {
+        log.info("Demande de retrait plateforme initiee par l'admin {} pour un montant de {} via {}",
+                adminId, montant, methode);
+
+        if (montant == null || montant.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Le montant du retrait doit etre strictement superieur a 0.");
+        }
+        if (methode == null || !METHODES_RETRAIT_VALIDES.contains(methode.toUpperCase())) {
+            throw new IllegalArgumentException("La methode de retrait doit etre 'MOMO' ou 'ORANGE_MONEY'.");
+        }
+        if (numero == null || !numero.matches("^6\\d{8}$")) {
+            throw new IllegalArgumentException(
+                    "Le numero de telephone doit etre un numero mobile camerounais valide (9 chiffres, commence par 6).");
+        }
+
+        com.agrycam.paiementservice.entity.SoldePlateforme solde = recupererOuCreerSoldePlateforme();
+        if (solde.getSoldeDisponible().compareTo(montant) < 0) {
+            throw new SoldeInsuffisantException(String.format(
+                    "Solde disponible insuffisant pour retirer %s XAF. Le solde disponible de la plateforme est de %s XAF.",
+                    montant, solde.getSoldeDisponible()));
+        }
+
+        // Decrementer uniquement le solde disponible : totalGagne (cumul
+        // historique) ne bouge jamais, un retrait n'efface pas ce que la
+        // plateforme a gagne.
+        solde.setSoldeDisponible(solde.getSoldeDisponible().subtract(montant));
+        soldePlateformeRepository.save(solde);
+
+        // Reference factice du recu de virement, sur le meme modele que le
+        // retrait vendeur (PAYOUT-<UUID>).
+        String referencePaiement = "PAYOUT-PLATEFORME-" + UUID.randomUUID().toString().toUpperCase();
+
+        com.agrycam.paiementservice.entity.RetraitPlateforme retrait =
+                com.agrycam.paiementservice.entity.RetraitPlateforme.builder()
+                        .adminId(adminId)
+                        .montant(montant)
+                        .methode(methode.toUpperCase())
+                        .numero(numero)
+                        .referencePaiement(referencePaiement)
+                        .statut("COMPLETE")
+                        .build();
+
+        retrait = retraitPlateformeRepository.save(retrait);
+        log.info("Retrait plateforme de {} XAF enregistre avec succes vers le numero {} ({}). Reference: {}",
+                montant, numero, methode, referencePaiement);
+
+        return retrait;
+    }
+
+    /**
+     * Recupere l'historique des retraits effectues sur le portefeuille
+     * de la plateforme (role admin), du plus recent au plus ancien.
+     */
+    public List<com.agrycam.paiementservice.entity.RetraitPlateforme> recupererRetraitsPlateforme() {
+        return retraitPlateformeRepository.findAllByOrderByDateDemandeDesc();
     }
 
     /**
