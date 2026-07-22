@@ -8,6 +8,7 @@ import { traduireNomCategorie } from '../services/productMapping';
 import { getStatsPubliques as getStatsUtilisateurs } from '../services/api/utilisateurApi';
 import { getStatsPubliques as getStatsCertifications } from '../services/api/certificationApi';
 import { getStatsPubliques as getStatsCommandes } from '../services/api/commandeApi';
+import CertifiedBadge from './CertifiedBadge';
 
 // Couleurs/images par défaut pour les vignettes de catégorie (le backend ne
 // fournit qu'un id + un nom, pas de style visuel). On associe l'image en se
@@ -250,7 +251,10 @@ export default function AgroMarketHome({
                       <h3 style={styles.prodName}>{prod.name}</h3>
                       <span style={styles.prodPrice}>{prod.price.toLocaleString()} FCFA</span>
                     </div>
-                    <p style={styles.prodFarm}>{prod.farm}</p>
+                    <div style={styles.prodFarmRow}>
+                      <p style={styles.prodFarm}>{prod.farm}</p>
+                      <CertifiedBadge isCertified={!!prod.certifie} label={t('producerProfile.certifiedBadge')} style={{ marginLeft: '6px' }} />
+                    </div>
                     <div style={styles.prodFooter}>
                       <div style={styles.stars}>
                         {[1,2,3,4,5].map(i => {
@@ -681,10 +685,17 @@ const styles = {
     fontWeight: '800',
     color: '#e07a5f',
   },
+  prodFarmRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    flexWrap: 'wrap',
+    marginBottom: '12px',
+  },
   prodFarm: {
     fontSize: '13px',
     color: '#6c757d',
-    margin: '0 0 12px 0',
+    margin: 0,
     fontWeight: '500',
   },
   prodFooter: {

@@ -31,6 +31,11 @@ foreach ($db in $Databases) {
         psql -U $PgUser -h $PgHost -p $PgPort -c "CREATE DATABASE $db;" | Out-Null
         Write-Host "CREE - $db créée avec succès" -ForegroundColor Green
     }
+
+    if ($db -eq "commande_db") {
+        psql -U $PgUser -h $PgHost -p $PgPort -d $db -c "ALTER TABLE IF EXISTS commandes ADD COLUMN IF NOT EXISTS stock_decremente BOOLEAN NOT NULL DEFAULT FALSE;" | Out-Null
+        Write-Host "PATCH - colonne stock_decremente vérifiée sur commandes" -ForegroundColor Cyan
+    }
 }
 
 Remove-Item Env:\PGPASSWORD

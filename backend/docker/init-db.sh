@@ -21,5 +21,13 @@ for db in "${DATABASES[@]}"; do
     SELECT 'CREATE DATABASE $db'
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$db')\gexec
 EOSQL
+
+  if [ "$db" = "commande_db" ]; then
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$db" <<-EOSQL
+      ALTER TABLE IF EXISTS commandes
+        ADD COLUMN IF NOT EXISTS stock_decremente BOOLEAN NOT NULL DEFAULT FALSE;
+EOSQL
+  fi
+
   echo "Base $db prete."
 done

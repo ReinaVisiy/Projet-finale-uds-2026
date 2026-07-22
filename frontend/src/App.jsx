@@ -62,10 +62,12 @@ export default function App() {
   const [screen, setScreen] = useState(detecterEcranInitial);
   const [paymentTransactionId] = useState(lireTransactionIdDepuisUrl);
   const [previousScreen, setPreviousScreen] = useState('home');
+  const [screenHistory, setScreenHistory] = useState(['home']);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [selectedProfileClient, setSelectedProfileClient] = useState(null);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [selectedOrderContext, setSelectedOrderContext] = useState(null);
 
   // Nettoie l'URL (chemin + query string) une fois le transactionId lu,
   // pour qu'un rafraîchissement de page ne rejoue pas l'écran de retour.
@@ -98,6 +100,13 @@ export default function App() {
   // navigateur (qui mélangeait auparavant les notifications de tous
   // les comptes utilisés sur le même appareil).
   const [notifications, setNotifications] = useState([]);
+  const sortByDateDesc = (items = [], fallbackDateField = 'dateISO') => {
+    return [...items].sort((a, b) => {
+      const aDate = a?.[fallbackDateField] || a?.date || a?.dateCreation || a?.createdAt || 0;
+      const bDate = b?.[fallbackDateField] || b?.date || b?.dateCreation || b?.createdAt || 0;
+      return new Date(bDate).getTime() - new Date(aDate).getTime();
+    });
+  };
   const addNotification = (userId, type, message, lien = null) => {
     // Mise à jour optimiste : uniquement si la notification concerne
     // l'utilisateur actuellement connecté sur CE navigateur. Avant ce
@@ -348,7 +357,7 @@ export default function App() {
           return mapSignalementPourAffichage(dto, cibleNom, auteurNom, targetOwnerId);
         })
       );
-      setSignalements(enrichis);
+      setSignalements(sortByDateDesc(enrichis, 'date'));
     } catch (err) {
       console.error('Impossible de charger les signalements :', err);
     }
@@ -399,7 +408,7 @@ export default function App() {
           return mapCertificationPourAdmin(dto, producteurInfo);
         })
       );
-      setVendorVerifications(enrichies);
+      setVendorVerifications(sortByDateDesc(enrichies, 'date'));
     } catch (err) {
       console.error('Impossible de charger les certifications :', err);
     }
@@ -407,33 +416,34 @@ export default function App() {
 
   // ===== COMMANDES (commande-service) =====
   // commande-service ne renvoie que des IDs (produitId, clientId) : on
-  // résout les noms de produits (et, pour le vendeur, les noms de clients)
-  // avant de transmettre aux écrans, qui attendent déjà ce format enrichi
-  // (voir commandeMapping.js).
-  const resoudreNomsProduits = async (commandes) => {
+  // résout les infos de produits (nom + image) ainsi que les noms de
+  // clients / vendeurs avant de transmettre les commandes aux écrans.
+  const resoudreInfosProduits = async (commandes) => {
     const idsUniques = [...new Set(
       commandes.flatMap((c) => (c.lignesCommande || []).map((lc) => lc.produitId))
     )];
-    const noms = new Map();
+    const infos = new Map();
     await Promise.all(idsUniques.map(async (id) => {
       try {
         const produit = await produitApi.getProduitById(id);
-        noms.set(id, produit?.nom);
+        infos.set(id, { nom: produit?.nom || `Produit #${id}`, imageUrl: produit?.imageUrl || '' });
       } catch {
         // produit supprimé entretemps : on gardera le repli "Produit #id"
+        infos.set(id, { nom: `Produit #${id}`, imageUrl: '' });
       }
     }));
-    return noms;
+    return infos;
   };
 
   const chargerMesCommandes = async () => {
     if (!currentUser?.id) return;
     try {
       const dtos = await commandeApi.getCommandesByClientId(currentUser.id);
-      const noms = await resoudreNomsProduits(dtos || []);
+      const infosProduits = await resoudreInfosProduits(dtos || []);
       const nomClient = joinNomComplet(currentUser.prenom, currentUser.nom);
-      const commandesMappees = (dtos || []).map((dto) => mapCommandePourAffichage(dto, nomClient, currentUser.email, noms));
-      setMesCommandes(await enrichirAvecStatutPaiement(commandesMappees));
+      const commandesMappees = (dtos || []).map((dto) => mapCommandePourAffichage(dto, nomClient, currentUser.email, infosProduits));
+      const commandesTriees = sortByDateDesc(await enrichirAvecStatutPaiement(commandesMappees));
+      setMesCommandes(commandesTriees);
     } catch (err) {
       console.error('Impossible de charger vos commandes :', err);
     }
@@ -471,29 +481,43 @@ export default function App() {
   const chargerToutesLesCommandes = async () => {
     try {
       const dtos = await commandeApi.getAllCommandes();
-      const noms = await resoudreNomsProduits(dtos || []);
+      const infosProduits = await resoudreInfosProduits(dtos || []);
       const idsClientsUniques = [...new Set((dtos || []).map((c) => c.clientId))];
+      const idsVendeursUniques = [...new Set((dtos || []).map((c) => c.producteurId))];
       const clients = new Map();
-      await Promise.all(idsClientsUniques.map(async (id) => {
-        try {
-          const utilisateur = await utilisateurApi.getUtilisateurById(id);
-          clients.set(id, utilisateur);
-        } catch {
-          // client supprimé entretemps : on gardera le repli "Client #id"
-        }
-      }));
+      const vendeurs = new Map();
+      await Promise.all([
+        ...idsClientsUniques.map(async (id) => {
+          try {
+            const utilisateur = await utilisateurApi.getUtilisateurById(id);
+            clients.set(id, utilisateur);
+          } catch {
+            // client supprimé entretemps : on gardera le repli "Client #id"
+          }
+        }),
+        ...idsVendeursUniques.map(async (id) => {
+          try {
+            const utilisateur = await utilisateurApi.getUtilisateurById(id);
+            vendeurs.set(id, utilisateur);
+          } catch {
+            // vendeur supprimé entretemps : on gardera le repli "Vendeur #id"
+          }
+        }),
+      ]);
       const commandesMappees = (dtos || []).map((dto) => {
         const client = clients.get(dto.clientId);
-        return mapCommandePourAffichage(dto, client?.nom, client?.email, noms);
+        const vendeur = vendeurs.get(dto.producteurId);
+        return mapCommandePourAffichage(dto, client?.nom, client?.email, infosProduits, vendeur?.nom);
       });
-      setToutesLesCommandes(await enrichirAvecStatutPaiement(commandesMappees));
+      const commandesTriees = sortByDateDesc(await enrichirAvecStatutPaiement(commandesMappees));
+      setToutesLesCommandes(commandesTriees);
     } catch (err) {
       console.error('Impossible de charger les commandes :', err);
     }
   };
 
   useEffect(() => {
-    if (currentUser?.role === 'client') {
+    if (currentUser?.role === 'client' || currentUser?.role === 'vendeur') {
       chargerMesCommandes();
       chargerMesLitiges();
     } else {
@@ -511,7 +535,7 @@ export default function App() {
     if (!currentUser?.id) return;
     try {
       const dtos = await commandeApi.getCommandesByProducteurId(currentUser.id);
-      const noms = await resoudreNomsProduits(dtos || []);
+      const infosProduits = await resoudreInfosProduits(dtos || []);
       const idsClientsUniques = [...new Set((dtos || []).map((c) => c.clientId))];
       const clients = new Map();
       await Promise.all(idsClientsUniques.map(async (id) => {
@@ -524,9 +548,10 @@ export default function App() {
       }));
       const commandesMappees = (dtos || []).map((dto) => {
         const client = clients.get(dto.clientId);
-        return mapCommandePourAffichage(dto, client?.nom, client?.email, noms);
+        return mapCommandePourAffichage(dto, client?.nom, client?.email, infosProduits, currentUser?.nom);
       });
-      setMesCommandesVendeur(await enrichirAvecStatutPaiement(commandesMappees));
+      const commandesTriees = sortByDateDesc(await enrichirAvecStatutPaiement(commandesMappees));
+      setMesCommandesVendeur(commandesTriees);
     } catch (err) {
       console.error('Impossible de charger vos commandes reçues :', err);
     }
@@ -1018,18 +1043,56 @@ export default function App() {
   };
 
   // ===== NAVIGATION =====
-  const goToProduct = (product) => { setSelectedProduct(product); setScreen('product-detail'); };
-  const goToMessage = (vendor) => requireLogin(() => { setPreviousScreen(screen); setSelectedVendor(vendor); setScreen('message'); });
-  const goToProducerProfile = (vendor) => { setSelectedVendor(vendor); setScreen('producer-profile'); };
+  const updateScreenHistory = (targetScreen) => {
+    setScreenHistory(prev => {
+      if (prev[prev.length - 1] === targetScreen) return prev;
+      return [...prev, targetScreen];
+    });
+  };
+  const goToProduct = (product) => {
+    setSelectedProduct(product);
+    updateScreenHistory('product-detail');
+    setScreen('product-detail');
+  };
+  const goToMessage = (vendor) => requireLogin(() => {
+    setSelectedVendor(vendor);
+    setSelectedOrderContext(null);
+    updateScreenHistory('message');
+    setScreen('message');
+  });
+  const goToOrderMessage = (order, recipientId, recipientName) => requireLogin(() => {
+    setSelectedVendor({ id: recipientId, name: recipientName });
+    setSelectedOrderContext(order);
+    updateScreenHistory('message');
+    setScreen('message');
+  });
+  const goToProducerProfile = (vendor) => {
+    setSelectedVendor(vendor);
+    updateScreenHistory('producer-profile');
+    setScreen('producer-profile');
+  };
   // Choisit le bon écran de profil public selon le rôle de l'utilisateur trouvé.
   const goToUserProfile = (utilisateur) => {
     if (utilisateur.role === 'vendeur') {
       setSelectedVendor({ id: utilisateur.id, prenom: utilisateur.prenom, nom: utilisateur.nom, photo: utilisateur.photo });
+      updateScreenHistory('producer-profile');
       setScreen('producer-profile');
     } else {
       setSelectedProfileClient(utilisateur);
+      updateScreenHistory('client-profile');
       setScreen('client-profile');
     }
+  };
+  const goBack = () => {
+    setScreenHistory(prev => {
+      if (prev.length <= 1) {
+        setScreen('home');
+        return prev;
+      }
+      const nextHistory = prev.slice(0, -1);
+      setScreen(nextHistory[nextHistory.length - 1] || 'home');
+      return nextHistory;
+    });
   };
 
   const clientOnlyScreens = ['cart', 'checkout-wizard', 'orders', 'purchases'];
@@ -1046,11 +1109,15 @@ export default function App() {
   const ecransCommandesVendeur = ['vendeur-orders', 'seller-dashboard', 'sales-history'];
 
   const navigate = (s) => {
+    if (s === 'back') {
+      goBack();
+      return;
+    }
     setPreviousScreen(screen);
     if (screen === 'messages-inbox' && s !== 'messages-inbox') {
       chargerMessagesNonLus();
     }
-    if (currentUser?.role === 'client' && ecransCommandesClient.includes(s)) {
+    if ((currentUser?.role === 'client' || (currentUser?.role === 'vendeur' && isClientMode)) && ecransCommandesClient.includes(s)) {
       chargerMesCommandes();
     }
     if (currentUser?.role === 'vendeur' && ecransCommandesVendeur.includes(s)) {
@@ -1058,7 +1125,10 @@ export default function App() {
     }
     const publicScreens = ['home', 'login-page', 'register', 'recovery', 'product-detail', 'faq', 'producer-profile', 'client-profile', 'user-search', 'catalogue'];
     if (!currentUser && !publicScreens.includes(s)) {
-      requireLogin(() => setScreen(s));
+      requireLogin(() => {
+        updateScreenHistory(s);
+        setScreen(s);
+      });
       return;
     }
     if (currentUser) {
@@ -1085,6 +1155,7 @@ export default function App() {
         }
       }
     }
+    updateScreenHistory(s);
     setScreen(s);
   };
 
@@ -1145,8 +1216,8 @@ export default function App() {
       case 'product-detail':
         return <ProductDetail
           product={selectedProduct}
-          onBack={() => navigate('home')}
-          onAddToCart={(qty) => addToCart(selectedProduct, qty)}
+          onBack={() => navigate('back')}
+          onAddToCart={(product, qty) => addToCart(product || selectedProduct, qty)}
           onContactVendor={goToMessage}
           onSignaler={() => openSignalement(selectedProduct, 'produit', selectedProduct?.name || selectedProduct?.nom)}
           onNavigateToProducerProfile={goToProducerProfile}
@@ -1221,6 +1292,7 @@ export default function App() {
             await chargerMesCommandes();
           }}
           onPayOrder={handlePayerCommandeExistante}
+          onContactVendor={(order) => goToOrderMessage(order, order.producteurId, order.producteurNom || 'Vendeur')}
         />;
       case 'purchases':
         return <ClientPurchases
@@ -1231,7 +1303,8 @@ export default function App() {
         return <Messagerie
           currentUser={currentUser}
           vendor={null}
-          onBack={() => navigate(previousScreen)}
+          orderContext={null}
+          onBack={() => navigate('back')}
           onMessageEnvoye={(destinataireId) => {
             addNotification(destinataireId, 'info', `Vous avez reçu un message de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'un utilisateur'}`, '/messages-inbox');
           }}
@@ -1239,8 +1312,9 @@ export default function App() {
       case 'message':
         return <Messagerie
           vendor={selectedVendor}
+          orderContext={selectedOrderContext}
           currentUser={currentUser}
-          onBack={() => navigate(previousScreen)}
+          onBack={() => navigate('back')}
           onMessageEnvoye={(destinataireId) => {
             addNotification(destinataireId, 'info', `Vous avez reçu un message de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'un utilisateur'}`, '/messages-inbox');
           }}
@@ -1296,7 +1370,7 @@ export default function App() {
         />;
       case 'notifications':
         return <NotificationsCenter
-          onBack={() => navigate('home')}
+          onBack={() => navigate('back')}
           currentUser={currentUser}
           notifications={notifications}
           onMarkAsRead={(id) => {
@@ -1312,22 +1386,25 @@ export default function App() {
             notificationApi.supprimerNotification(id).catch((err) => console.error('Échec suppression notification :', err));
           }}
           onNavigateToLink={(lien) => {
-            if (lien) {
-              if (lien.startsWith('/')) {
-                const target = lien.replace('/', '');
-                if (target === 'profil') navigate('user-profile');
-                else if (target === 'orders') navigate('orders');
-                else if (target === 'purchases') navigate('purchases');
-                else if (target === 'seller-dashboard') navigate('seller-dashboard');
-                else if (target === 'admin/dashboard') navigate('admin-dashboard');
-                else if (target === 'admin/order-management-admin') navigate('order-management-admin');
-                else if (target === 'admin/moderation-panel') navigate('moderation-panel');
-                else if (target === 'admin/vendor-verification') navigate('vendor-verification');
-                else navigate('home');
-              } else {
-                alert(`Redirection vers : ${lien}`);
-              }
+            if (!lien) return;
+            const normalized = lien.trim();
+            if (!normalized.startsWith('/')) {
+              alert(`Redirection vers : ${normalized}`);
+              return;
             }
+
+            const target = normalized.replace(/^\//, '');
+            if (target === 'profil' || target === 'profile') navigate('user-profile');
+            else if (target === 'orders') navigate('orders');
+            else if (target === 'purchases') navigate('purchases');
+            else if (target === 'vendeur-orders') navigate('vendeur-orders');
+            else if (target === 'messages-inbox' || target === 'message') navigate('messages-inbox');
+            else if (target === 'seller-dashboard') navigate('seller-dashboard');
+            else if (target === 'admin/dashboard') navigate('admin-dashboard');
+            else if (target === 'admin/order-management-admin') navigate('order-management-admin');
+            else if (target === 'admin/moderation-panel') navigate('moderation-panel');
+            else if (target === 'admin/vendor-verification') navigate('vendor-verification');
+            else navigate(previousScreen || 'home');
           }}
         />;
       case 'faq':
@@ -1339,6 +1416,7 @@ export default function App() {
           currentUser={currentUser}
           vendeurProducts={vendeurProducts}
           adminOrders={mesCommandesVendeur}
+          onContactClient={(order) => goToOrderMessage(order, order.id_client, order.client)}
           onUpdateOrderStatus={async (orderId, newStatus) => {
             try {
               const statutBackend = STATUT_FRANCAIS_TO_BACKEND[newStatus] || newStatus;
@@ -1382,6 +1460,18 @@ export default function App() {
           onResoudreLitige={handleResoudreLitige}
           onToggleUserBlocked={handleToggleUserBlocked}
           onCreateAdmin={handleCreateAdmin}
+          onResolveSignalement={async (id) => {
+            await signalementApi.updateStatutSignalement(id, 'RESOLU');
+            await chargerSignalements();
+          }}
+          onRejectSignalement={async (id) => {
+            await signalementApi.updateStatutSignalement(id, 'REJETE');
+            await chargerSignalements();
+          }}
+          onSuspendUtilisateur={handleToggleUserBlocked}
+          onSupprimerProduit={handleSupprimerProduitSignalement}
+          onConfirmerPaiementCertification={handleConfirmerPaiementVerification}
+          onViewOrderAdmin={(orderId) => { setSelectedOrderId(orderId); navigate('order-detail-admin'); }}
         />;
       case 'order-management-admin':
         return <OrderManagementAdmin
@@ -1442,7 +1532,7 @@ export default function App() {
         return <ProducerProfile
           producteur={selectedVendor}
           currentUser={currentUser}
-          onBack={() => navigate(previousScreen)}
+          onBack={() => navigate('back')}
           onContactVendor={goToMessage}
           onNavigateToProduct={goToProduct}
           onNavigateToLogin={() => navigate('login-page')}
@@ -1451,7 +1541,7 @@ export default function App() {
       case 'client-profile':
         return <ClientProfile
           client={selectedProfileClient}
-          onBack={() => navigate(previousScreen)}
+          onBack={() => navigate('back')}
           onContactVendor={goToMessage}
           onNavigateToProduct={goToProduct}
           onSignaler={() => openSignalement(
@@ -1462,12 +1552,13 @@ export default function App() {
         />;
       case 'user-search':
         return <UserSearchResults
-          onBack={() => navigate(previousScreen)}
+          onBack={() => navigate('back')}
           onSelectUser={goToUserProfile}
         />;
       case 'vendeur-orders':
         return <VendeurOrders
           orders={mesCommandesVendeur}
+          onContactClient={(order) => goToOrderMessage(order, order.id_client, order.client)}
           onUpdateOrderStatus={async (orderId, newStatus) => {
             try {
               const statutBackend = STATUT_FRANCAIS_TO_BACKEND[newStatus] || newStatus;

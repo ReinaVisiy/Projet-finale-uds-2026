@@ -5,6 +5,9 @@ import useIsMobile from '../hooks/useIsMobile';
 import useProduits from '../hooks/useProduits';
 import ConfirmActionModal from './ConfirmActionModal';
 import { paiementApi } from '../services/api';
+import OrderManagementAdmin from './OrderManagementAdmin';
+import VendorVerificationAdmin from './VendorVerificationAdmin';
+import ModerationPanel from './ModerationPanel';
 
 
 function getNavItems(t) {
@@ -45,6 +48,14 @@ export default function AdminDashboard({
   onResoudreLitige,
   onLogout,
   onCreateAdmin,
+  onResolveSignalement,
+  onRejectSignalement,
+  onSuspendUtilisateur,
+  onSupprimerProduit,
+  onApproveCertification,
+  onRejectCertification,
+  onConfirmerPaiementCertification,
+  onViewOrderAdmin,
 }) {
   const { t, i18n } = useTranslation();
   const navItems = getNavItems(t);
@@ -295,16 +306,18 @@ export default function AdminDashboard({
   };
 
   // ===== DERNIÈRES COMMANDES =====
-  const lastOrders = adminOrders.slice(-3).reverse();
+  const lastOrders = [...adminOrders]
+    .sort((a, b) => new Date(b.dateISO || b.date || 0) - new Date(a.dateISO || a.date || 0))
+    .slice(0, 3);
 
   // ===== DERNIERS SIGNALEMENTS =====
-  const lastSignalements = signalements.slice(-3).reverse();
+  const lastSignalements = [...signalements]
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+    .slice(0, 3);
 
   // ===== MOIS POUR LE GRAPHIQUE (basé sur les commandes) =====
-  // Toutes les commandes de la plateforme, tous mois/années confondus
-  // (auparavant restreint a l'annee en cours, ce qui laissait le
-  // graphique vide des que les commandes testees dataient d'une autre
-  // annee).
+  // On calcule ici le cumul mensuel des commandes pour forcer une
+  // courbe de croissance visible sur le dashboard admin.
   const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
   const monthlyOrders = months.map((_, idx) => {
     const count = adminOrders.filter(o => {
@@ -314,7 +327,10 @@ export default function AdminDashboard({
     }).length;
     return count;
   });
-  const maxMonthly = Math.max(1, ...monthlyOrders);
+  const cumulativeMonthlyOrders = monthlyOrders.map((_, idx) =>
+    monthlyOrders.slice(0, idx + 1).reduce((sum, value) => sum + value, 0)
+  );
+  const maxMonthly = Math.max(1, ...cumulativeMonthlyOrders);
 
   // ===== TOAST =====
   const showToast = (msg) => {
@@ -325,13 +341,7 @@ export default function AdminDashboard({
   // ===== NAVIGATION =====
   const handleNavClick = (item) => {
     setActiveNav(item.id);
-    if (item.id === 'orders') {
-      onNavigate && onNavigate('order-management-admin');
-    } else if (item.id === 'certifications') {
-      onNavigateToVendorVerification && onNavigateToVendorVerification();
-    } else if (item.id === 'signalements') {
-      onNavigateToModeration && onNavigateToModeration();
-    } else if (item.id === 'users' || item.id === 'sales' || item.id === 'disputes' || item.id === 'products' || item.id === 'admins') {
+    if (item.id === 'users' || item.id === 'sales' || item.id === 'disputes' || item.id === 'products' || item.id === 'admins' || item.id === 'orders' || item.id === 'certifications' || item.id === 'signalements') {
       // reste sur le dashboard : affiche l'onglet Utilisateurs/Ventes/Litiges/Produits/Administrateurs ci-dessous
     } else if (item.id !== 'home') {
       showToast(`Navigation → ${item.label}`);
@@ -568,13 +578,13 @@ export default function AdminDashboard({
                     </div>
                   </div>
                   <div style={styles.chartArea}>
-                    {monthlyOrders.map((val, i) => {
+                    {cumulativeMonthlyOrders.map((val, i) => {
                       const h = (val / maxMonthly) * 100;
                       const isHov = hoveredBar === i;
                       return (
                         <div key={i} style={styles.barGroup} onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)}>
                           {isHov && <div style={styles.tooltip}>{val} {t('adminDashboard.orderWord')}{val > 1 ? 's' : ''}</div>}
-                          <div style={{ ...styles.bar, height: `${h}%`, background: isHov ? 'linear-gradient(180deg, #1b4d3e 0%, #2d6a4f 100%)' : 'linear-gradient(180deg, #40916c 0%, #2d6a4f 100%)', opacity: isHov ? 1 : 0.75 }} />
+                          <div style={{ ...styles.bar, height: `${Math.max(8, h)}%`, background: isHov ? 'linear-gradient(180deg, #1b4d3e 0%, #2d6a4f 100%)' : 'linear-gradient(180deg, #40916c 0%, #2d6a4f 100%)', opacity: isHov ? 1 : 0.75 }} />
                           <span style={styles.barLabel}>{months[i].slice(0,3)}</span>
                         </div>
                       );
@@ -730,6 +740,35 @@ export default function AdminDashboard({
           )}
 
           {/* ===== VUE CERTIFICATIONS ===== */}
+          {activeNav === 'orders' && (
+            <OrderManagementAdmin
+              ordersData={adminOrders}
+              onViewOrder={onViewOrderAdmin}
+              onBack={() => setActiveNav('home')}
+            />
+          )}
+
+          {activeNav === 'certifications' && (
+            <VendorVerificationAdmin
+              pendingVerifications={vendorVerifications}
+              onApprove={onApproveCertification}
+              onReject={onRejectCertification}
+              onConfirmerPaiement={onConfirmerPaiementCertification}
+              onBack={() => setActiveNav('home')}
+            />
+          )}
+
+          {activeNav === 'signalements' && (
+            <ModerationPanel
+              signalements={signalements}
+              onResolve={onResolveSignalement}
+              onReject={onRejectSignalement}
+              onSuspendUtilisateur={onSuspendUtilisateur}
+              onSupprimerProduit={onSupprimerProduit}
+              onBack={() => setActiveNav('home')}
+            />
+          )}
+
           {/* ===== VUE PRODUITS ===== */}
           {activeNav === 'products' && (
             <>
@@ -847,30 +886,50 @@ export default function AdminDashboard({
                 {ventesPayeesLivrees.length === 0 ? (
                   <div style={styles.emptyState}><ShieldCheck size={40} color="#adb5bd" /><p>{t('adminDashboard.noSalesYet')}</p></div>
                 ) : (
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={styles.th}>{t('adminDashboard.order')}</th>
-                        <th style={styles.th}>{t('adminDashboard.client')}</th>
-                        <th style={styles.th}>{t('adminDashboard.date')}</th>
-                        <th style={styles.th}>{t('adminDashboard.amount')}</th>
-                        <th style={styles.th}>{t('adminDashboard.status')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[...ventesPayeesLivrees].reverse().map((o) => (
-                        <tr key={o.id} style={styles.tr}>
-                          <td style={styles.td}>#{o.id}</td>
-                          <td style={styles.td}>{o.client}</td>
-                          <td style={styles.td}>{o.dateISO ? new Date(o.dateISO).toLocaleDateString('fr-FR') : (o.date || '—')}</td>
-                          <td style={styles.td}>{(o.amount || 0).toLocaleString('fr-FR')} FCFA</td>
-                          <td style={styles.td}>
-                            <span style={{ ...styles.statusBadge, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{o.status}</span>
-                          </td>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          <th style={styles.th}>Commande</th>
+                          <th style={styles.th}>Produit</th>
+                          <th style={styles.th}>Quantité</th>
+                          <th style={styles.th}>Montant</th>
+                          <th style={styles.th}>Vendeur</th>
+                          <th style={styles.th}>Client</th>
+                          <th style={styles.th}>Date</th>
+                          <th style={styles.th}>Statut</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {[...ventesPayeesLivrees].sort((a, b) => new Date(b.dateISO || b.date || 0) - new Date(a.dateISO || a.date || 0)).map((o) => {
+                          const firstItem = o.items?.[0] || {};
+                          return (
+                            <tr key={o.id} style={styles.tr}>
+                              <td style={styles.td}>#{o.id}</td>
+                              <td style={styles.td}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  {firstItem.imageUrl ? (
+                                    <img src={firstItem.imageUrl} alt={firstItem.nomProduit || 'Produit'} style={{ width: '34px', height: '34px', borderRadius: '8px', objectFit: 'cover' }} />
+                                  ) : (
+                                    <div style={{ width: '34px', height: '34px', borderRadius: '8px', backgroundColor: '#e9f5ee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>🌿</div>
+                                  )}
+                                  <span>{firstItem.nomProduit || 'Produit'}</span>
+                                </div>
+                              </td>
+                              <td style={styles.td}>{firstItem.quantity || 0}</td>
+                              <td style={styles.td}>{(o.amount || 0).toLocaleString('fr-FR')} FCFA</td>
+                              <td style={styles.td}>{o.vendeur || '—'}</td>
+                              <td style={styles.td}>{o.client || '—'}</td>
+                              <td style={styles.td}>{o.dateISO ? new Date(o.dateISO).toLocaleDateString('fr-FR') : (o.date || '—')}</td>
+                              <td style={styles.td}>
+                                <span style={{ ...styles.statusBadge, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{o.status}</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             </>

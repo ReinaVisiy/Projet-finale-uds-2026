@@ -1,6 +1,6 @@
  // src/components/ClientOrders.jsx
 import { useState } from 'react';
-import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp, ThumbsUp, Ban, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp, ThumbsUp, Ban, AlertTriangle, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from './ConfirmDialog';
 import useIsMobile from '../hooks/useIsMobile';
@@ -10,7 +10,7 @@ import useIsMobile from '../hooks/useIsMobile';
 // cette vérification, ceci ne fait que masquer le bouton au bon moment).
 const STATUTS_ANNULABLES = ['En attente', 'Validée', 'En préparation'];
 
-export default function ClientOrders({ orders, onBackHome, onConfirmReception, onCancelOrder, onPayOrder, litiges = [], onOpenLitige }) {
+export default function ClientOrders({ orders, onBackHome, onConfirmReception, onCancelOrder, onPayOrder, litiges = [], onOpenLitige, onContactVendor }) {
   const { t } = useTranslation();
   const isMobile = useIsMobile(768);
   const [expandedOrder, setExpandedOrder] = useState(null);
@@ -196,6 +196,14 @@ export default function ClientOrders({ orders, onBackHome, onConfirmReception, o
                       </div>
                     )}
 
+                    <div style={styles.orderActions}>
+                      {order.producteurId && onContactVendor && (
+                        <button style={styles.contactBtn} onClick={() => onContactVendor(order)}>
+                          <MessageCircle size={16} /> {t('clientOrders.contactVendor')}
+                        </button>
+                      )}
+                    </div>
+
                     {(order.status === 'En livraison' || order.status === 'Livrée' || STATUTS_ANNULABLES.includes(order.status)) && (
                       <div style={styles.orderActions}>
                         {order.status === 'En livraison' && (
@@ -379,6 +387,7 @@ const styles = {
     fontWeight: '600',
   },
   orderActions: { display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' },
+  contactBtn: { display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '9px 14px', border: '1px solid #2d6a4f', borderRadius: '8px', backgroundColor: '#e9f5ee', color: '#1b4d3e', fontWeight: '700', cursor: 'pointer' },
   confirmBtn: {
     display: 'flex', alignItems: 'center', gap: '8px',
     padding: '10px 20px', backgroundColor: '#2d6a4f', color: '#ffffff',

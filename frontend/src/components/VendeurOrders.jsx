@@ -1,11 +1,11 @@
 // src/components/VendeurOrders.jsx
 import { useState } from 'react';
-import { Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 
 
-export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
+export default function VendeurOrders({ orders, onUpdateOrderStatus, onContactClient }) {
   const { t } = useTranslation();
   const isMobile = useIsMobile(768);
   const [expandedOrder, setExpandedOrder] = useState(null);
@@ -145,6 +145,11 @@ export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
                     </div>
 
                     <div style={styles.actionsSection}>
+                      {order.id_client && onContactClient && (
+                        <button style={styles.contactBtn} onClick={() => onContactClient(order)}>
+                          <MessageCircle size={16} /> {t('orderDetailAdmin.contactClient')}
+                        </button>
+                      )}
                       {order.status === 'En attente' && (
                         <button style={styles.primaryActionBtn} onClick={() => handleStatusChange(order.id, 'Validée')}>
                           <CheckCircle size={16} /> {t('vendeurOrders.acceptOrder')}
@@ -327,6 +332,11 @@ const styles = {
   },
   tr: {
     ':last-child td': { borderBottom: 'none' },
+  },
+  contactBtn: {
+    display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '9px 14px',
+    border: '1px solid #2d6a4f', borderRadius: '8px', backgroundColor: '#e9f5ee',
+    color: '#1b4d3e', fontWeight: '700', cursor: 'pointer',
   },
   actionsSection: {
     marginTop: '16px',

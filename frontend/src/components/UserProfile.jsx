@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Star, ShieldCheck, Package, Settings, Lock, Mail, Phone, User } from 'lucide-react';
 import { produitApi, avisApi, certificationApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
+import CertifiedBadge from './CertifiedBadge';
 
 // "Mon profil" : reprend la mise en page riche de ProducerProfile/ClientProfile
 // (en-tête, onglets produits/avis) mais pour l'utilisateur connecté lui-même,
@@ -140,9 +141,7 @@ export default function UserProfile({
             <div>
               <div style={styles.nameRow}>
                 <h1 style={styles.name}>{currentUser.prenom ? `${currentUser.prenom} ${currentUser.nom}` : currentUser.nom}</h1>
-                {estVendeur && certifie && (
-                  <span style={styles.verifiedBadge}><ShieldCheck size={14} /> {t('producerProfile.certifiedBadge')}</span>
-                )}
+                <CertifiedBadge isCertified={estVendeur && certifie} label={t('producerProfile.certifiedBadge')} />
                 {!estVendeur && <span style={styles.roleTag}>{roleTag}</span>}
               </div>
               {estVendeur && (
