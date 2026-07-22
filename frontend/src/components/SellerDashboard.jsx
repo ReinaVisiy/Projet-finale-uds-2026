@@ -138,7 +138,10 @@ export default function SellerDashboard({
       ).reduce((s, item) => s + (item.subtotal || 0), 0);
       return sum + (orderRevenue || 0);
     }, 0);
-  const lowStockItems = vendeurProducts.filter(p => p.stock <= 10);
+  // Seuil de stock critique aligne sur CRITICAL_THRESHOLD de StockAlerts.jsx
+  // (rupture imminente), et non le seuil "faible" de 10.
+  const CRITICAL_STOCK_THRESHOLD = 2;
+  const lowStockItems = vendeurProducts.filter(p => p.stock <= CRITICAL_STOCK_THRESHOLD);
 
   const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
   const monthlyRevenue = months.map((_, idx) => {
@@ -392,7 +395,7 @@ export default function SellerDashboard({
                 <tr key={p.id}>
                   <td style={styles.td}>{p.name}</td>
                   <td style={styles.td}>{p.stock}</td>
-                  <td style={styles.td}>10</td>
+                  <td style={styles.td}>{CRITICAL_STOCK_THRESHOLD}</td>
                   <td style={styles.td}>
                     <button style={styles.actionBtnSmall} onClick={() => onNavigate && onNavigate('add-product')}>
                       {t('sellerDashboard.restock')}
