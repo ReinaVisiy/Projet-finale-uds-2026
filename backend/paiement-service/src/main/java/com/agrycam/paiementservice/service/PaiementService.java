@@ -95,16 +95,33 @@ public class PaiementService {
         // vide" - un vendeur payé ne verrait jamais son solde disponible
         // augmenter, sans aucune erreur visible. On refuse desormais
         // explicitement plutot que de laisser ce cas silencieux se produire.
-        if (dto.getVendeurId() == null) {
+        // Ne s'applique qu'aux COMMANDE : une CERTIFICATION n'a pas de
+        // vendeur beneficiaire (les frais vont integralement a la
+        // plateforme) - on ne demande donc jamais de vendeurId au frontend
+        // pour ce type, et on renseigne la colonne (NOT NULL) avec l'id du
+        // client lui-meme, uniquement a titre d'audit/tracabilite.
+        Long vendeurId = dto.getVendeurId();
+        if (dto.getTypeReference() == TypeReference.CERTIFICATION) {
+            vendeurId = clientId;
+        } else if (vendeurId == null) {
             throw new IllegalArgumentException(
                     "vendeurId est obligatoire pour initier un paiement : impossible de determiner "
                             + "le portefeuille beneficiaire.");
         }
 
-        // 1. Calculs financiers
+        // 1. Calculs financiers. Une CERTIFICATION n'a pas de vendeur a
+        // remunerer : la totalite du montant est un revenu direct de la
+        // plateforme (pas de sequestre, pas de partage 95/5).
         BigDecimal montantTotal = dto.getMontant();
-        BigDecimal commission = montantTotal.multiply(new BigDecimal("0.05")); // 5% de commission plateforme
-        BigDecimal montantNet = montantTotal.subtract(commission); // 95% pour le vendeur
+        BigDecimal commission;
+        BigDecimal montantNet;
+        if (dto.getTypeReference() == TypeReference.CERTIFICATION) {
+            commission = montantTotal;
+            montantNet = BigDecimal.ZERO;
+        } else {
+            commission = montantTotal.multiply(new BigDecimal("0.05")); // 5% de commission plateforme
+            montantNet = montantTotal.subtract(commission); // 95% pour le vendeur
+        }
 
         // 2. Reutilisation d'une transaction existante si possible (retry du
         // bouton "Payer") au lieu de creer systematiquement une nouvelle
@@ -129,7 +146,7 @@ public class PaiementService {
             transaction.setMontant(montantTotal);
             transaction.setCommission(commission);
             transaction.setMontantNet(montantNet);
-            transaction.setVendeurId(dto.getVendeurId());
+            transaction.setVendeurId(vendeurId);
             transaction.setStatut(StatutTransaction.EN_ATTENTE);
         } else {
             // Creation de la transaction en statut EN_ATTENTE (premiere tentative)
@@ -141,7 +158,7 @@ public class PaiementService {
                     .devise("XAF")
                     .typeReference(dto.getTypeReference())
                     .referenceId(dto.getReferenceId())
-                    .vendeurId(dto.getVendeurId())
+                    .vendeurId(vendeurId)
                     .statut(StatutTransaction.EN_ATTENTE)
                     .build();
         }
@@ -374,32 +391,42 @@ public class PaiementService {
         transaction.setDateConfirmation(LocalDateTime.now());
         transactionRepository.save(transaction);
 
-        // Crediter le SEQUESTRE du vendeur (Montant net = 95%) : les fonds
-        // restent verrouilles tant que la commande n'est pas LIVREE. Ils ne
-        // deviennent retirables (soldeDisponible) qu'a la livraison
-        // confirmee (cf. libererFondsSequestre, declenche par commande-service).
-        Long vendeurId = transaction.getVendeurId();
-        BigDecimal montantNet = transaction.getMontantNet();
+        if (transaction.getTypeReference() == TypeReference.CERTIFICATION) {
+            // Pas de vendeur, pas de sequestre : les frais de certification
+            // sont un revenu direct et immediatement disponible pour la
+            // plateforme (contrairement a la commission sur COMMANDE, qui
+            // n'est que 5% du montant - ici c'est 100%, cf. initierPaiement).
+            crediterRevenuPlateforme(transaction.getMontant());
+            log.info("Certification #{} payee : {} XAF credites directement au portefeuille plateforme (Transaction #{})",
+                    transaction.getReferenceId(), transaction.getMontant(), transaction.getId());
+        } else {
+            // Crediter le SEQUESTRE du vendeur (Montant net = 95%) : les fonds
+            // restent verrouilles tant que la commande n'est pas LIVREE. Ils ne
+            // deviennent retirables (soldeDisponible) qu'a la livraison
+            // confirmee (cf. libererFondsSequestre, declenche par commande-service).
+            Long vendeurId = transaction.getVendeurId();
+            BigDecimal montantNet = transaction.getMontantNet();
 
-        SoldeVendeur solde = soldeVendeurRepository.findByVendeurId(vendeurId)
-                .orElseGet(() -> SoldeVendeur.builder()
-                        .vendeurId(vendeurId)
-                        .soldeSequestre(BigDecimal.ZERO)
-                        .soldeDisponible(BigDecimal.ZERO)
-                        .devise("XAF")
-                        .build());
+            SoldeVendeur solde = soldeVendeurRepository.findByVendeurId(vendeurId)
+                    .orElseGet(() -> SoldeVendeur.builder()
+                            .vendeurId(vendeurId)
+                            .soldeSequestre(BigDecimal.ZERO)
+                            .soldeDisponible(BigDecimal.ZERO)
+                            .devise("XAF")
+                            .build());
 
-        solde.setSoldeSequestre(solde.getSoldeSequestre().add(montantNet));
-        soldeVendeurRepository.save(solde);
+            solde.setSoldeSequestre(solde.getSoldeSequestre().add(montantNet));
+            soldeVendeurRepository.save(solde);
 
-        log.info("Sequestre du vendeur {} credite avec succes du montant net de {} XAF (Transaction #{}) - verrouille jusqu'a livraison",
-                vendeurId, montantNet, transaction.getId());
+            log.info("Sequestre du vendeur {} credite avec succes du montant net de {} XAF (Transaction #{}) - verrouille jusqu'a livraison",
+                    vendeurId, montantNet, transaction.getId());
 
-        // Credite le portefeuille de la plateforme de la commission de 5%
-        // percue sur cette transaction : contrairement au sequestre vendeur,
-        // la commission plateforme est definitivement acquise des la
-        // confirmation du paiement (pas de sequestre pour la plateforme).
-        crediterRevenuPlateforme(transaction.getCommission());
+            // Credite le portefeuille de la plateforme de la commission de 5%
+            // percue sur cette transaction : contrairement au sequestre vendeur,
+            // la commission plateforme est definitivement acquise des la
+            // confirmation du paiement (pas de sequestre pour la plateforme).
+            crediterRevenuPlateforme(transaction.getCommission());
+        }
 
         // Repercute la confirmation de paiement sur le service concerne
         // (commande-service ou certification-service), pour que son propre
