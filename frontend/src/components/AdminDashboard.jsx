@@ -469,7 +469,12 @@ export default function AdminDashboard({
 
               {/* Alertes */}
               {pendingCertifications > 0 && (
-                <div style={styles.certAlert} onClick={() => setActiveNav('certifications')}>
+                // Anciennement : setActiveNav('certifications') pointait vers un
+                // onglet interne jamais implémenté (aucun bloc de rendu pour
+                // activeNav === 'certifications'), donc le "Voir →" n'aboutissait
+                // nulle part. On réutilise la navigation déjà fonctionnelle de
+                // l'item de la barre latérale (cf. handleNavClick ci-dessus).
+                <div style={styles.certAlert} onClick={() => onNavigateToVendorVerification && onNavigateToVendorVerification()}>
                   <Shield size={20} color="#f5b041" />
                   <span style={styles.certAlertText}>
                     <strong>{pendingCertifications} {t('adminDashboard.pendingCertReq')}</strong> {t('adminDashboard.pendingCertRest')}
