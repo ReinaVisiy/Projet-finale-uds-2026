@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw } from 'lucide-react';
+import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 
@@ -38,6 +38,7 @@ export default function AdminDashboard({
   litiges = [],
   onRembourserLitige,
   onResoudreLitige,
+  onLogout,
 }) {
   const { t } = useTranslation();
   const navItems = getNavItems(t);
@@ -229,6 +230,15 @@ export default function AdminDashboard({
               {notifCount > 0 && <span style={styles.notifPip}>{notifCount}</span>}
             </button>
             <div style={styles.avatarSmall}>AD</div>
+            {/* Avant : aucun moyen de quitter le tableau de bord admin (la
+                navigation globale est volontairement masquee sur cet ecran,
+                cf. NavigationConsole.jsx). Bouton de deconnexion ajoute ici,
+                visible sur tous les onglets, pour permettre de revenir au
+                site public. */}
+            <button style={styles.logoutBtn} onClick={() => onLogout && onLogout()} title={t('navigation.logout')}>
+              <LogOut size={16} />
+              {!isMobile && <span>{t('navigation.logout')}</span>}
+            </button>
           </div>
         </header>
 
@@ -624,6 +634,7 @@ const styles = {
   topbarIconBtn: { position: 'relative', width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#495057' },
   notifPip: { position: 'absolute', top: '5px', right: '5px', width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#e07a5f', fontSize: '9px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   avatarSmall: { width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#1b4d3e', color: '#ffffff', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' },
+  logoutBtn: { display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '10px', border: '1px solid #f5d4c8', backgroundColor: '#fff5f2', color: '#e07a5f', fontSize: '13px', fontWeight: '700', cursor: 'pointer' },
   content: { flex: 1, overflow: 'auto', padding: '24px 28px' },
   pageTitle: { marginBottom: '20px' },
   pageTitleText: { fontSize: '22px', fontWeight: '800', color: '#212529', letterSpacing: '-0.02em', marginBottom: '2px' },
