@@ -34,10 +34,17 @@ public class Retrait {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal montant;
 
-    @Column(nullable = false, length = 20)
+    // columnDefinition avec DEFAULT : sans valeur par defaut, Postgres
+    // refuse d'ajouter une colonne NOT NULL a la table "retraits"
+    // existante (deja peuplee par les retraits precedents, avant que
+    // methode/numero n'existent). La migration Hibernate (ddl-auto=update)
+    // echouait donc silencieusement, laissant ces colonnes absentes en
+    // base -> "column methode of relation retraits does not exist" a
+    // chaque demande de retrait.
+    @Column(nullable = false, length = 20, columnDefinition = "varchar(20) default 'MOMO'")
     private String methode; // "MOMO" (MTN Mobile Money) ou "ORANGE_MONEY"
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 20, columnDefinition = "varchar(20) default ''")
     private String numero; // Numero de telephone beneficiaire (simulation)
 
     @Column(name = "reference_paiement", nullable = false, unique = true)
