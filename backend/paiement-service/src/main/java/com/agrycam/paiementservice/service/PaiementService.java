@@ -82,6 +82,19 @@ public class PaiementService {
         log.info("Initiation de paiement pour le client {}, type: {}, refId: {}, montant: {}",
                 clientId, dto.getTypeReference(), dto.getReferenceId(), dto.getMontant());
 
+        // Garde-fou (groupe E, point 15) : sans vendeurId, la transaction et
+        // le portefeuille associe seraient crees avec un vendeurId null,
+        // invisible depuis /mon-solde (qui interroge par le vrai vendeurId
+        // du vendeur connecte). Le montant serait alors credite "dans le
+        // vide" - un vendeur payé ne verrait jamais son solde disponible
+        // augmenter, sans aucune erreur visible. On refuse desormais
+        // explicitement plutot que de laisser ce cas silencieux se produire.
+        if (dto.getVendeurId() == null) {
+            throw new IllegalArgumentException(
+                    "vendeurId est obligatoire pour initier un paiement : impossible de determiner "
+                            + "le portefeuille beneficiaire.");
+        }
+
         // 1. Calculs financiers
         BigDecimal montantTotal = dto.getMontant();
         BigDecimal commission = montantTotal.multiply(new BigDecimal("0.05")); // 5% de commission plateforme
