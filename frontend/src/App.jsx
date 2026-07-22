@@ -65,6 +65,7 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [selectedProfileClient, setSelectedProfileClient] = useState(null);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
 
   // Nettoie l'URL (chemin + query string) une fois le transactionId lu,
   // pour qu'un rafraîchissement de page ne rejoue pas l'écran de retour.
@@ -1297,16 +1298,25 @@ export default function App() {
       case 'order-management-admin':
         return <OrderManagementAdmin
           ordersData={toutesLesCommandes}
-          onViewOrder={() => navigate('order-detail-admin')}
+          onViewOrder={(orderId) => { setSelectedOrderId(orderId); navigate('order-detail-admin'); }}
           onBack={() => navigate('admin-dashboard')}
         />;
-      case 'order-detail-admin':
+      case 'order-detail-admin': {
+        const commandeSelectionnee = toutesLesCommandes.find((c) => c.id === selectedOrderId) || null;
         return <OrderDetailAdmin
+          order={commandeSelectionnee}
           onBack={() => navigate('order-management-admin')}
-          onMarkAsDeliveredState={(id, newStatus) => {
-            setToutesLesCommandes(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+          onMarkAsDelivered={async (orderId) => {
+            try {
+              await commandeApi.updateStatutCommande(orderId, 'LIVREE');
+              await chargerToutesLesCommandes();
+            } catch (err) {
+              alert(err?.message || "La confirmation de livraison a échoué.");
+              throw err;
+            }
           }}
         />;
+      }
       case 'moderation-panel':
         return <ModerationPanel
           signalements={signalements}

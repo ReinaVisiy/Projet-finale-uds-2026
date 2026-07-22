@@ -2,40 +2,72 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 
-// Avant : aucune traduction ici, y compris pour le statut de commande qui
-// servait à la fois de donnée d'état ET de texte affiché ('Livrée', ...).
+// Avant : tout l'affichage (client, produit, adresse, montant, numéro de
+// suivi...) était codé en dur, donc identique et sans rapport avec la
+// commande réellement sélectionnée depuis "Gestion commandes". On affiche
+// maintenant les vraies données de la commande passée en prop (déjà
+// enrichie côté App.jsx via mapCommandePourAffichage), et on ne montre que
+// ce que commande-service sait réellement (pas d'adresse ou de
+// transporteur fictifs : cette donnée n'existe pas dans le modèle).
+//
 // On sépare la clé de statut stable ('livree', ...) de son libellé fr/en,
 // pour que la logique (comparaisons, désactivation du bouton) reste
 // correcte quelle que soit la langue affichée.
 const STEP_KEYS = ['confirmee', 'en_preparation', 'expediee', 'livree'];
 
+const STATUT_FR_TO_STEP_KEY = {
+  'Validée': 'confirmee',
+  'En préparation': 'en_preparation',
+  'En livraison': 'expediee',
+  'Livrée': 'livree',
+};
 
-export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
+export default function OrderDetailAdmin({ order, onBack, onMarkAsDelivered }) {
   const { t } = useTranslation();
-  const [statusKey, setStatusKey] = useState('en_preparation');
   const [notification, setNotification] = useState('');
+  const [confirmationEnCours, setConfirmationEnCours] = useState(false);
   const isNarrow = useIsMobile(576);
   const isTablet = useIsMobile(768);
 
-  const getStepIndex = (currentStatusKey) => {
-    return STEP_KEYS.indexOf(currentStatusKey);
-  };
+  if (!order) {
+    return (
+      <div style={styles.container} className="fade-in">
+        <div style={styles.header}>
+          <h2 style={styles.title}>{t('orderDetailAdmin.orderTitle', { id: '' })}</h2>
+          <button onClick={onBack} style={styles.backBtn}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px' }}>
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            {t('orderDetailAdmin.back')}
+          </button>
+        </div>
+        <p>{t('orderDetailAdmin.notFound')}</p>
+      </div>
+    );
+  }
 
-  const handleMarkAsDelivered = () => {
-    setStatusKey('livree');
-    setNotification(t('orderDetailAdmin.deliveredToast'));
-    if (onMarkAsDeliveredState) {
-      onMarkAsDeliveredState('001', 'livree');
+  const estAnnulee = order.status === 'Annulée';
+  const estLivree = order.status === 'Livrée';
+  const statusKey = STATUT_FR_TO_STEP_KEY[order.status];
+  const currentStepIdx = statusKey ? STEP_KEYS.indexOf(statusKey) : -1;
+
+  const handleMarkAsDelivered = async () => {
+    if (!onMarkAsDelivered) return;
+    setConfirmationEnCours(true);
+    try {
+      await onMarkAsDelivered(order.id);
+      setNotification(t('orderDetailAdmin.deliveredToast', { id: order.id }));
+      setTimeout(() => setNotification(''), 4000);
+    } finally {
+      setConfirmationEnCours(false);
     }
-    setTimeout(() => setNotification(''), 4000);
   };
 
   const handleContactClient = () => {
-    setNotification(t('orderDetailAdmin.contactToast'));
+    setNotification(t('orderDetailAdmin.contactToast', { client: order.client }));
     setTimeout(() => setNotification(''), 4000);
   };
-
-  const currentStepIdx = getStepIndex(statusKey);
 
   return (
     <div style={styles.container} className="fade-in">
@@ -48,7 +80,7 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
 
       {/* Header */}
       <div style={styles.header}>
-        <h2 style={styles.title}>{t('orderDetailAdmin.orderTitle')}</h2>
+        <h2 style={styles.title}>{t('orderDetailAdmin.orderTitle', { id: order.id })}</h2>
         <button onClick={onBack} style={styles.backBtn}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px' }}>
             <line x1="19" y1="12" x2="5" y2="12" />
@@ -58,9 +90,14 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
         </button>
       </div>
 
-      {/* Progress Timeline Tracker */}
+      {/* Progress Timeline Tracker (ou bandeau si la commande est annulée) */}
+      {estAnnulee ? (
+        <div style={{ ...styles.trackerCard, textAlign: 'center' }}>
+          <strong style={{ color: '#b3261e', fontSize: '15px' }}>{t('orderDetailAdmin.cancelledStatus')}</strong>
+        </div>
+      ) : (
       <div style={styles.trackerCard}>
-        <span style={styles.statusLabel}>{t('orderDetailAdmin.currentStatus')}<strong style={{ color: statusKey === 'livree' ? '#2d6a4f' : '#e07a5f' }}>{t('orderDetailAdmin.stepLabels', { returnObjects: true })[statusKey]}</strong></span>
+        <span style={styles.statusLabel}>{t('orderDetailAdmin.currentStatus')}<strong style={{ color: estLivree ? '#2d6a4f' : '#e07a5f' }}>{order.status}</strong></span>
         <div style={{ ...styles.timelineWrapper, ...(isNarrow ? styles.timelineWrapperNarrow : {}) }}>
           {STEP_KEYS.map((step, idx) => {
             const isCompleted = idx <= currentStepIdx;
@@ -104,6 +141,7 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
           })}
         </div>
       </div>
+      )}
 
       {/* Grid Layout (Left Content, Right Summary Card) */}
       <div style={{ ...styles.layoutGrid, ...(isTablet ? styles.layoutGridMobile : {}) }}>
@@ -113,14 +151,16 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
           {/* Section 1: Produits commandés */}
           <div style={styles.section}>
             <h3 style={styles.sectionTitle}>{t('orderDetailAdmin.orderedProducts')}</h3>
-            <div style={styles.productRow}>
-              <div style={styles.productAvatar}>🍌</div>
-              <div style={styles.productInfo}>
-                <h4 style={styles.productName}>{t('orderDetailAdmin.productName')}</h4>
-                <p style={styles.productMeta}>{t('orderDetailAdmin.productMeta')}</p>
+            {(order.items || []).map((item, idx) => (
+              <div key={idx} style={styles.productRow}>
+                <div style={styles.productAvatar}>🌾</div>
+                <div style={styles.productInfo}>
+                  <h4 style={styles.productName}>{item.nomProduit}</h4>
+                  <p style={styles.productMeta}>{item.quantity} × {item.prixUnitaire?.toLocaleString()} FCFA</p>
+                </div>
+                <div style={styles.productPrice}>{item.subtotal?.toLocaleString()} FCFA</div>
               </div>
-              <div style={styles.productPrice}>25,000 FCFA</div>
-            </div>
+            ))}
           </div>
 
           <div style={styles.divider}></div>
@@ -129,55 +169,56 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
           <div style={styles.section}>
             <h3 style={styles.sectionTitle}>{t('orderDetailAdmin.clientInfo')}</h3>
             <div style={styles.clientDetail}>
-              <p style={styles.detailName}>Flavier Dschang</p>
-              <p style={styles.detailContact}>flavier@gmail.com  |  +237 6XX XXX XXX</p>
+              <p style={styles.detailName}>{order.client}</p>
+              <p style={styles.detailContact}>{order.clientEmail || t('orderDetailAdmin.noEmail')}</p>
             </div>
           </div>
 
           <div style={styles.divider}></div>
 
-          {/* Section 3: Adresse de livraison */}
-          <div style={styles.section}>
-            <h3 style={styles.sectionTitle}>{t('orderDetailAdmin.deliveryAddress')}</h3>
-            <p style={styles.detailText}>{t('orderDetailAdmin.addressText')}</p>
-          </div>
-
-          <div style={styles.divider}></div>
-
-          {/* Section 4: Paiement */}
+          {/* Section 3: Paiement (pas d'adresse de livraison : commande-service ne stocke pas cette donnée) */}
           <div style={styles.section}>
             <h3 style={styles.sectionTitle}>{t('orderDetailAdmin.payment')}</h3>
             <div style={styles.paymentBadge}>
               <span style={styles.paymentMethod}>{t('orderDetailAdmin.paymentMethod')}</span>
-              <span style={styles.paymentAmount}>25,000 FCFA</span>
+              <span style={styles.paymentAmount}>{order.amount?.toLocaleString()} FCFA</span>
             </div>
+            <span style={{
+              ...styles.paymentStatusBadge,
+              backgroundColor: order.paye ? '#e9f5ee' : '#fdecea',
+              color: order.paye ? '#2d6a4f' : '#b3261e',
+            }}>
+              {order.paye ? t('orderDetailAdmin.paid') : t('orderDetailAdmin.unpaid')}
+            </span>
           </div>
 
           <div style={styles.divider}></div>
 
-          {/* Section 5: Date commande */}
+          {/* Section 4: Date commande */}
           <div style={styles.section}>
             <h3 style={styles.sectionTitle}>{t('orderDetailAdmin.orderDate')}</h3>
-            <p style={styles.detailText}>{t('orderDetailAdmin.orderDateText')}</p>
+            <p style={styles.detailText}>{order.date}</p>
           </div>
 
           {/* Action Buttons */}
           <div style={styles.buttonGroup}>
-            <button 
-              onClick={handleMarkAsDelivered} 
-              style={{
-                ...styles.btnPrimary,
-                ...(statusKey === 'livree' ? styles.btnDisabled : {})
-              }}
-              disabled={statusKey === 'livree'}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-              {statusKey === 'livree' ? t('orderDetailAdmin.deliveryValidated') : t('orderDetailAdmin.markDelivered')}
-            </button>
-            
+            {!estAnnulee && (
+              <button
+                onClick={handleMarkAsDelivered}
+                style={{
+                  ...styles.btnPrimary,
+                  ...(estLivree || confirmationEnCours ? styles.btnDisabled : {})
+                }}
+                disabled={estLivree || confirmationEnCours}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                {estLivree ? t('orderDetailAdmin.deliveryValidated') : t('orderDetailAdmin.markDelivered')}
+              </button>
+            )}
+
             <button onClick={handleContactClient} style={styles.btnSecondary}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -194,26 +235,26 @@ export default function OrderDetailAdmin({ onBack, onMarkAsDeliveredState }) {
           
           <div style={styles.summaryRow}>
             <span style={styles.summaryLabel}>{t('orderDetailAdmin.subtotal')}</span>
-            <span style={styles.summaryValue}>25,000 FCFA</span>
+            <span style={styles.summaryValue}>{order.amount?.toLocaleString()} FCFA</span>
           </div>
 
           <div style={styles.summaryDivider}></div>
 
           <div style={{ ...styles.summaryRow, marginBottom: '24px' }}>
             <span style={styles.totalLabel}>{t('orderDetailAdmin.total')}</span>
-            <span style={styles.totalValue}>25,000 FCFA</span>
+            <span style={styles.totalValue}>{order.amount?.toLocaleString()} FCFA</span>
           </div>
 
-          {/* Logistics metadata */}
+          {/* Métadonnées de commande (numéro + date, les seules données réellement disponibles) */}
           <div style={styles.logisticsBlock}>
             <div style={styles.logisticsItem}>
-              <span style={styles.logisticsLabel}>{t('orderDetailAdmin.trackingNumber')}</span>
-              <span style={styles.trackingLink}>AGM-2026-001-Z345</span>
+              <span style={styles.logisticsLabel}>{t('orderDetailAdmin.orderNumber')}</span>
+              <span style={styles.carrierVal}>#{order.id}</span>
             </div>
 
             <div style={styles.logisticsItem}>
-              <span style={styles.logisticsLabel}>{t('orderDetailAdmin.carrier')}</span>
-              <span style={styles.carrierVal}>{t('orderDetailAdmin.carrierValue')}</span>
+              <span style={styles.logisticsLabel}>{t('orderDetailAdmin.orderDate')}</span>
+              <span style={styles.carrierVal}>{order.date}</span>
             </div>
           </div>
         </div>
@@ -451,6 +492,14 @@ const styles = {
     fontSize: '14px',
     fontWeight: '700',
     color: '#495057',
+  },
+  paymentStatusBadge: {
+    display: 'inline-block',
+    marginTop: '10px',
+    padding: '4px 12px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '700',
   },
   // Action Buttons
   buttonGroup: {
