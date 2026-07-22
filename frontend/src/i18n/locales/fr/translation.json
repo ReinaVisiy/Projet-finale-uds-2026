@@ -205,6 +205,9 @@
     "selectPlaceholder": "-- Sélectionnez --",
     "comment": "Commentaire (optionnel)",
     "commentPlaceholder": "Décrivez précisément le problème...",
+    "commentLabelRequired": "Commentaire *",
+    "commentPlaceholderRequired": "Veuillez préciser le motif de votre signalement...",
+    "commentRequiredForOther": "Veuillez préciser votre motif dans le commentaire.",
     "cancel": "Annuler",
     "send": "Envoyer le signalement"
   },
@@ -221,6 +224,9 @@
     "typeAutre": "Autre",
     "description": "Description (optionnel)",
     "descriptionPlaceholder": "Décrivez précisément le problème...",
+    "descriptionLabelRequired": "Description *",
+    "descriptionPlaceholderRequired": "Veuillez préciser la nature de votre litige...",
+    "descriptionRequiredForOther": "Veuillez préciser la nature de votre litige dans la description.",
     "cancel": "Annuler",
     "send": "Envoyer le litige"
   },

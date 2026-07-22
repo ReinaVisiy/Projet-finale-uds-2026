@@ -20,9 +20,12 @@ export default function LitigeModal({ order, onClose, onSubmit }) {
     [TYPES_LITIGE.AUTRE]: t('litige.typeAutre'),
   };
 
+  const estAutre = type === TYPES_LITIGE.AUTRE;
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!type) { alert(t('litige.selectType')); return; }
+    if (estAutre && !description.trim()) { alert(t('litige.descriptionRequiredForOther')); return; }
     if (onSubmit) {
       onSubmit({ type, description });
     }
@@ -50,11 +53,13 @@ export default function LitigeModal({ order, onClose, onSubmit }) {
             </select>
           </div>
           <div style={styles.field}>
-            <label style={styles.label}>{t('litige.description')}</label>
+            <label style={styles.label}>
+              {estAutre ? t('litige.descriptionLabelRequired') : t('litige.description')}
+            </label>
             <textarea
               style={styles.textarea}
               rows="3"
-              placeholder={t('litige.descriptionPlaceholder')}
+              placeholder={estAutre ? t('litige.descriptionPlaceholderRequired') : t('litige.descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />

@@ -19,9 +19,16 @@ export default function SignalementModal({ product, target, targetType = 'produi
     || cible?.name || cible?.nom
     || (targetType === 'utilisateur' ? t('signalement.unknownUser') : t('signalement.unknownProduct'));
 
+  const motifsList = t('signalement.motifs', { returnObjects: true });
+  // "Autre" est toujours le dernier motif de la liste (fr/en) : sans lui
+  // demander un motif précis, ce choix seul ne dit rien à l'admin qui
+  // traite le signalement, le commentaire devient donc obligatoire.
+  const estAutre = motif === motifsList[motifsList.length - 1];
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!motif) { alert(t('signalement.selectMotif')); return; }
+    if (estAutre && !commentaire.trim()) { alert(t('signalement.commentRequiredForOther')); return; }
     if (onSubmit) {
       onSubmit({
         type: targetType,
@@ -56,11 +63,13 @@ export default function SignalementModal({ product, target, targetType = 'produi
             </select>
           </div>
           <div style={styles.field}>
-            <label style={styles.label}>{t('signalement.comment')}</label>
+            <label style={styles.label}>
+              {estAutre ? t('signalement.commentLabelRequired') : t('signalement.comment')}
+            </label>
             <textarea
               style={styles.textarea}
               rows="3"
-              placeholder={t('signalement.commentPlaceholder')}
+              placeholder={estAutre ? t('signalement.commentPlaceholderRequired') : t('signalement.commentPlaceholder')}
               value={commentaire}
               onChange={(e) => setCommentaire(e.target.value)}
             />

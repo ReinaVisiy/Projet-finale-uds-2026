@@ -205,6 +205,9 @@
     "selectPlaceholder": "-- Select --",
     "comment": "Comment (optional)",
     "commentPlaceholder": "Describe the problem precisely...",
+    "commentLabelRequired": "Comment *",
+    "commentPlaceholderRequired": "Please specify the reason for your report...",
+    "commentRequiredForOther": "Please specify your reason in the comment.",
     "cancel": "Cancel",
     "send": "Send report"
   },
@@ -221,6 +224,9 @@
     "typeAutre": "Other",
     "description": "Description (optional)",
     "descriptionPlaceholder": "Describe the problem precisely...",
+    "descriptionLabelRequired": "Description *",
+    "descriptionPlaceholderRequired": "Please specify the nature of your dispute...",
+    "descriptionRequiredForOther": "Please specify the nature of your dispute in the description.",
     "cancel": "Cancel",
     "send": "Submit dispute"
   },
