@@ -43,12 +43,12 @@ public class PaiementController {
     }
 
     /**
-     * POST /api/paiements/initier (rôle client)
+     * POST /api/paiements/initier (tous les utilisateurs authentifies)
      * Cree une Transaction EN_ATTENTE et initie un paiement avec NotchPay.
      * Renvoie l'URL de checkout a rediriger cote client.
      */
     @PostMapping("/initier")
-    @PreAuthorize("hasAnyRole('CLIENT', 'USER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Transaction> initierPaiement(@RequestBody InitiationPaiementDTO dto) {
         Long clientId = getConnecteUserId();
         Transaction transaction = paiementService.initierPaiement(dto, clientId);
