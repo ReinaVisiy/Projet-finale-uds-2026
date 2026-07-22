@@ -52,8 +52,13 @@ public class LitigeService {
             throw new AccesRefuseException("Seul le client de cette commande peut ouvrir un litige.");
         }
 
-        if (commande.getStatut() != StatutCommande.EXPEDIEE && commande.getStatut() != StatutCommande.LIVREE) {
-            throw new RuntimeException("Un litige ne peut etre ouvert que sur une commande expediee ou livree (statut actuel : " + commande.getStatut() + ").");
+        // Un litige ne peut etre ouvert que sur une commande EXPEDIEE (en
+        // livraison) : une fois LIVREE, le sequestre du vendeur est deja
+        // libere vers son solde disponible (cf. PaiementServiceClient
+        // #notifierLivraison, declenche au passage a LIVREE), donc il n'y
+        // a plus rien a bloquer/rembourser via un litige a ce stade.
+        if (commande.getStatut() != StatutCommande.EXPEDIEE) {
+            throw new RuntimeException("Un litige ne peut etre ouvert que sur une commande en livraison, avant confirmation de reception (statut actuel : " + commande.getStatut() + ").");
         }
 
         Litige litige = new Litige(commandeId, clientId, type, description);

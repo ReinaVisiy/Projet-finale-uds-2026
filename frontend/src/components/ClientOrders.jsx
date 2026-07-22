@@ -222,7 +222,7 @@ export default function ClientOrders({ orders, onBackHome, onConfirmReception, o
                               : t('clientOrders.cancelOrder')}
                           </button>
                         )}
-                        {order.status === 'Livrée' && (() => {
+                        {(order.status === 'En livraison' || getLitigeForOrder(order.id)) && (() => {
                           const litige = getLitigeForOrder(order.id);
                           if (litige) {
                             const badge = getLitigeBadgeStyle(litige.statut);
