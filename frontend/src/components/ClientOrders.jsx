@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp, ThumbsUp, Ban } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from './ConfirmDialog';
+import useIsMobile from '../hooks/useIsMobile';
 
 // Statuts pour lesquels le client peut encore annuler (avant EXPEDIEE,
 // cf. section 2 du cahier des charges — le backend refait de toute façon
@@ -11,6 +12,7 @@ const STATUTS_ANNULABLES = ['En attente', 'Validée', 'En préparation'];
 
 export default function ClientOrders({ orders, onBackHome, onConfirmReception, onCancelOrder, onPayOrder }) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile(768);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [confirmingOrderId, setConfirmingOrderId] = useState(null);
   const [cancelingOrderId, setCancelingOrderId] = useState(null);
@@ -139,7 +141,7 @@ export default function ClientOrders({ orders, onBackHome, onConfirmReception, o
 
                 {expandedOrder === order.id && (
                   <div style={styles.orderDetails}>
-                    <div style={styles.detailsGrid}>
+                    <div style={{ ...styles.detailsGrid, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
                       <div>
                         <p style={styles.detailLabel}>{t('clientOrders.client')}</p>
                         <p style={styles.detailValue}>{order.client}</p>
