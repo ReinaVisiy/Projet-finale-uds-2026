@@ -9,5 +9,6 @@ public enum StatutCommande {
     EN_PREPARATION,
     EXPEDIEE,
     LIVREE,
-    ANNULEE
+    ANNULEE,
+    REJETEE
 }

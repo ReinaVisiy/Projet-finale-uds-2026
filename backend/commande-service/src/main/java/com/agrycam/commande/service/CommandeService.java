@@ -235,6 +235,8 @@ public class CommandeService {
                 paiementServiceClient.notifierLivraison(sauvegardee.getId());
             } else if (nouveauStatut == StatutCommande.ANNULEE) {
                 paiementServiceClient.notifierAnnulation(sauvegardee.getId());
+            } else if (nouveauStatut == StatutCommande.REJETEE) {
+                paiementServiceClient.notifierRejet(sauvegardee.getId());
             }
 
             if (paye && !sauvegardee.isStockDecremente()) {
@@ -276,6 +278,10 @@ public class CommandeService {
                 if (actuel == StatutCommande.EXPEDIEE || actuel == StatutCommande.LIVREE || actuel == StatutCommande.ANNULEE) {
                     throw new RuntimeException("Cette commande ne peut plus être annulée une fois expédiée (statut actuel : " + actuel + ").");
                 }
+                break;
+            case REJETEE:
+                if (!estLeVendeur) throw new AccesRefuseException("Seul le vendeur de cette commande peut la rejeter.");
+                if (actuel != StatutCommande.EN_ATTENTE) throw new RuntimeException("Impossible de rejeter une commande déjà validée (statut actuel : " + actuel + ").");
                 break;
             case EN_ATTENTE:
                 throw new AccesRefuseException("Le statut EN_ATTENTE est défini automatiquement à la création ou par le service de paiement ; il ne peut pas être défini manuellement.");

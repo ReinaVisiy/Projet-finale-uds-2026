@@ -100,6 +100,30 @@ public class PaiementServiceClient {
     }
 
     /**
+     * Notifie paiement-service qu'une commande vient d'etre rejetee par le
+     * vendeur (avant validation), pour qu'il declenche le remboursement
+     * integral (100%) au client, debite le sequestre du vendeur, et reprenne
+     * la commission plateforme deja creditee sur cette transaction (la
+     * vente n'a jamais eu lieu). Best-effort, au meme titre que
+     * notifierAnnulation.
+     */
+    public void notifierRejet(Long commandeId) {
+        try {
+            String url = paiementServiceUrl + "/api/paiements/commandes/" + commandeId + "/rembourser-rejet";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(jwtUtil.genererTokenServiceInterne());
+            HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+
+            log.info("Notification de paiement-service : remboursement de rejet pour la commande #{}", commandeId);
+            restTemplate.exchange(url, HttpMethod.PUT, httpEntity, Void.class);
+        } catch (Exception e) {
+            log.error("Echec de la notification de remboursement de rejet pour la commande #{} : {}",
+                    commandeId, e.getMessage());
+        }
+    }
+
+    /**
      * Interroge paiement-service pour savoir si le sequestre d'une commande
      * a deja ete libere vers le solde disponible du vendeur. Utilise par
      * LitigeService pour calculer le flag "fonds deja retires" qui

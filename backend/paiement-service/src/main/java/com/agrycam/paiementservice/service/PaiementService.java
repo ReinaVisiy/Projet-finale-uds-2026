@@ -613,6 +613,70 @@ public class PaiementService {
     }
 
     /**
+     * Traite le remboursement lie au rejet d'une commande par le vendeur
+     * (avant qu'il ne la valide) : comme pour un litige, remboursement
+     * integral (100%) au client et debit du sequestre vendeur. A la
+     * difference du litige, la vente n'a jamais ete acceptee par le
+     * vendeur : la commission plateforme deja creditee sur cette
+     * transaction est donc elle aussi reprise (cf. debiterRevenuPlateforme).
+     * Idempotent comme les methodes de remboursement precedentes.
+     */
+    @Transactional
+    public void traiterRemboursementRejet(Long commandeId) {
+        Object verrou = verrousCommande.computeIfAbsent(commandeId, k -> new Object());
+        synchronized (verrou) {
+            try {
+                executerRemboursementRejet(commandeId);
+            } finally {
+                verrousCommande.remove(commandeId, verrou);
+            }
+        }
+    }
+
+    private void executerRemboursementRejet(Long commandeId) {
+        Transaction transaction = transactionRepository
+                .findByTypeReferenceAndReferenceId(TypeReference.COMMANDE, commandeId)
+                .orElseThrow(() -> new TransactionNotFoundException(
+                        "Aucune transaction de paiement trouvee pour la commande #" + commandeId));
+
+        if (transaction.getStatut() != StatutTransaction.PAYE) {
+            log.warn("Remboursement de rejet demande pour la commande {} dont la transaction n'est pas PAYE (statut: {}). Ignoree.",
+                    commandeId, transaction.getStatut());
+            return;
+        }
+
+        // Une commande LIVREE (fonds liberes) ne peut plus etre rejetee cote
+        // commande-service (le rejet n'est autorise qu'a partir de
+        // EN_ATTENTE) ; ce garde-fou est la pour ne jamais rembourser un
+        // vendeur deja paye, meme en cas d'appel direct/rejoue.
+        if (transaction.isFondsLiberes()) {
+            log.error("Remboursement de rejet refuse pour la commande {} : fonds deja liberes vers le solde disponible.",
+                    commandeId);
+            throw new SoldeInsuffisantException("Impossible de rembourser automatiquement : les fonds de cette commande ont deja ete liberes vers le solde disponible du vendeur.");
+        }
+
+        SoldeVendeur solde = soldeVendeurRepository.findByVendeurId(transaction.getVendeurId())
+                .orElseThrow(() -> new SoldeInsuffisantException(
+                        "Portefeuille introuvable pour le vendeur " + transaction.getVendeurId()));
+
+        solde.setSoldeSequestre(solde.getSoldeSequestre().subtract(transaction.getMontantNet()));
+        soldeVendeurRepository.save(solde);
+
+        transaction.setMontantRembourseClient(transaction.getMontant());
+        transaction.setFraisAnnulation(BigDecimal.ZERO);
+        transaction.setStatut(StatutTransaction.REMBOURSEE);
+        transactionRepository.save(transaction);
+
+        // La commande n'ayant jamais ete honoree par le vendeur, la
+        // commission de 5% creditee au moment du paiement n'est plus due :
+        // on la reprend integralement au portefeuille plateforme.
+        debiterRevenuPlateforme(transaction.getCommission());
+
+        log.info("Commande {} rejetee par le vendeur : remboursement integral de {} XAF au client, sequestre vendeur {} debite de {} XAF, commission plateforme de {} XAF reprise",
+                commandeId, transaction.getMontant(), transaction.getVendeurId(), transaction.getMontantNet(), transaction.getCommission());
+    }
+
+    /**
      * Traite le webhook passif envoye par NotchPay.
      * Valide le paiement de maniere securisee en interrogeant l'API NotchPay pour eviter tout spoofing de requete.
      */
@@ -780,6 +844,36 @@ public class PaiementService {
         solde.setSoldeDisponible(solde.getSoldeDisponible().add(montant));
         soldePlateformeRepository.save(solde);
         log.info("Portefeuille plateforme credite de {} XAF (solde disponible desormais {} XAF, total gagne {} XAF)",
+                montant, solde.getSoldeDisponible(), solde.getTotalGagne());
+    }
+
+    /**
+     * Reprend un montant precedemment credite au portefeuille plateforme
+     * (commission sur une commande finalement rejetee par le vendeur) :
+     * contrairement au retrait normal, c'est une annulation retroactive
+     * d'un gain qui n'aurait jamais du etre acquis. On decremente donc
+     * aussi bien totalGagne (le cumul historique) que soldeDisponible,
+     * puisque cette commission n'a en realite jamais ete "gagnee".
+     * Si soldeDisponible est deja inferieur au montant a reprendre (la
+     * commission a deja ete retiree par un admin), on refuse l'operation :
+     * ce cas ne devrait normalement jamais se produire puisqu'un rejet
+     * n'est possible qu'avant validation, bien avant tout retrait lie a
+     * cette commande.
+     */
+    @Transactional
+    public void debiterRevenuPlateforme(BigDecimal montant) {
+        if (montant == null || montant.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        com.agrycam.paiementservice.entity.SoldePlateforme solde = recupererOuCreerSoldePlateforme();
+        if (solde.getSoldeDisponible().compareTo(montant) < 0) {
+            throw new SoldeInsuffisantException(
+                    "Impossible de reprendre " + montant + " XAF de commission plateforme : ce montant a deja ete retire.");
+        }
+        solde.setTotalGagne(solde.getTotalGagne().subtract(montant));
+        solde.setSoldeDisponible(solde.getSoldeDisponible().subtract(montant));
+        soldePlateformeRepository.save(solde);
+        log.info("Portefeuille plateforme debite de {} XAF suite a un rejet de commande (solde disponible desormais {} XAF, total gagne {} XAF)",
                 montant, solde.getSoldeDisponible(), solde.getTotalGagne());
     }
 

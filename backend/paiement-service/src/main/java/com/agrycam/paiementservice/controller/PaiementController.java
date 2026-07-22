@@ -121,6 +121,22 @@ public class PaiementController {
     }
 
     /**
+     * PUT /api/paiements/commandes/{commandeId}/rembourser-rejet (rôle admin / service interne)
+     * Appele par commande-service lorsqu'un vendeur rejette une commande
+     * avant de la valider : rembourse 100% au client, debite le sequestre
+     * du vendeur, et reprend la commission plateforme deja creditee sur
+     * cette transaction (5%). Idempotent. Refuse (400, via
+     * SoldeInsuffisantException) si les fonds ont deja ete liberes vers le
+     * solde disponible, ou si la commission a deja ete retiree.
+     */
+    @PutMapping("/commandes/{commandeId}/rembourser-rejet")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> rembourserRejet(@PathVariable Long commandeId) {
+        paiementService.traiterRemboursementRejet(commandeId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * POST /api/paiements/webhook/notchpay (Public / Non protege par JWT)
      * Receptionne les notifications asynchrones de paiement de NotchPay.
      */
