@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, CheckCircle, Shield, Clock, AlertCircle, XCircle, Image as ImageIcon } from 'lucide-react';
 import { certificationApi } from '../services/api';
+import useIsMobile from '../hooks/useIsMobile';
 
 // Durées proposées et montant correspondant (FCFA). Le backend accepte
 // n'importe quel montant envoyé par le client (pas de grille tarifaire
@@ -21,6 +22,7 @@ const readAsDataUrl = (file) => new Promise((resolve, reject) => {
 
 export default function CertificationRequest({ onBack }) {
   const { t, i18n } = useTranslation();
+  const isMobile = useIsMobile(768);
   const TYPES_DOCUMENT = ['CARTE_IDENTITE', 'PASSEPORT', 'PERMIS_CONDUIRE', 'RECIPISSE'].map((value) => ({
     value,
     label: t(`certificationRequest.docTypes.${value}`),
@@ -191,7 +193,7 @@ export default function CertificationRequest({ onBack }) {
           </p>
         </div>
 
-        <div style={styles.grid}>
+        <div style={{ ...styles.grid, ...(isMobile && { gridTemplateColumns: '1fr', gap: '20px' }) }}>
 
           <div style={styles.formCard}>
 
@@ -204,7 +206,7 @@ export default function CertificationRequest({ onBack }) {
               </select>
             </div>
 
-            <div style={styles.row2}>
+            <div style={{ ...styles.row2, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
               <div style={styles.inputGroup}>
                 <label style={styles.label}>{t('certificationRequest.front')}</label>
                 <div style={styles.uploadZone} onClick={() => rectoRef.current.click()}>

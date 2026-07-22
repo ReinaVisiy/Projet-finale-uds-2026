@@ -4,6 +4,7 @@ import { ArrowLeft, Star, MessageCircle, ShieldCheck, Edit3, Trash2, Flag, Packa
 import { produitApi, avisApi, certificationApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
 import ConfirmDialog from './ConfirmDialog';
+import useIsMobile from '../hooks/useIsMobile';
 
 // Un avis (backend AvisResponse) : { id, note, commentaire, date, clientId, clientNom, produitId }
 export default function ProducerProfile({
@@ -16,6 +17,7 @@ export default function ProducerProfile({
   onSignalerProducteur, // (motif) => void
 }) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile(768);
   const [activeTab, setActiveTab] = useState('produits');
   const [produits, setProduits] = useState([]);
   const [certifie, setCertifie] = useState(false);
@@ -387,7 +389,7 @@ export default function ProducerProfile({
 
         {activeTab === 'avis-recus' && (
         <>
-        <div style={styles.grid}>
+        <div style={{ ...styles.grid, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
 
           {/* Répartition des notes */}
           <div style={styles.distribCard}>

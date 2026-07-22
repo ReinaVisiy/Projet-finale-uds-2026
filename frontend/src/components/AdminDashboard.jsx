@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import useIsMobile from '../hooks/useIsMobile';
 
 
 function getNavItems(t) {
@@ -40,8 +41,15 @@ export default function AdminDashboard({
 }) {
   const { t } = useTranslation();
   const navItems = getNavItems(t);
+  const isMobile = useIsMobile(768);
   const [activeNav, setActiveNav] = useState('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // La sidebar (220px fixes) ne laissait quasiment plus de place au
+  // contenu sur mobile. Elle se replie desormais automatiquement sous
+  // 768px ; l'utilisateur garde la main et peut la rouvrir manuellement.
+  useEffect(() => {
+    if (isMobile) setSidebarCollapsed(true);
+  }, [isMobile]);
   // Anciennement : const [notifCount, setNotifCount] = useState(3) — un
   // compteur figé, jamais connecté aux vraies notifications. Calculé
   // maintenant à partir des notifications réellement non lues de
@@ -321,7 +329,7 @@ export default function AdminDashboard({
               </div>
 
               {/* Graphique + Commandes récentes */}
-              <div style={styles.midGrid}>
+              <div style={{ ...styles.midGrid, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
                 <div style={styles.chartCard}>
                   <div style={styles.cardHeader}>
                     <div>
