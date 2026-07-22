@@ -527,7 +527,8 @@
     "vendorBadge": "🌾 Vendor",
     "adminBadge": "🛡️ Admin",
     "clientBadge": "🛒 Client",
-    "clientOnlySection": "You are in client mode, this section is reserved for vendors."
+    "clientOnlySection": "You are in client mode, this section is reserved for vendors.",
+    "backToSite": "Back to site"
   },
   "addProduct": {
     "loadCategoriesFailed": "Unable to load categories.",

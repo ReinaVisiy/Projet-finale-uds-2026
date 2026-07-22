@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw, LogOut } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw, LogOut, Home, Search, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 import useProduits from '../hooks/useProduits';
@@ -43,7 +43,7 @@ export default function AdminDashboard({
   onLogout,
   onCreateAdmin,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navItems = getNavItems(t);
   const isMobile = useIsMobile(768);
   // ===== VUE PRODUITS (item 9) =====
@@ -71,6 +71,19 @@ export default function AdminDashboard({
   const [hoveredBar, setHoveredBar] = useState(null);
   const [disputeFilter, setDisputeFilter] = useState('tous'); // 'tous' | 'non_livre' | 'autres'
   const [litigeActionEnCours, setLitigeActionEnCours] = useState(null); // litigeId en cours de traitement
+  // Menu utilisateur de la topbar (avatar + nom + rôle), même comportement
+  // que le menu déroulant de NavigationConsole (fermeture au clic extérieur).
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // ===== INSCRIPTION D'UN ADMIN (point : onglet "Administrateurs") =====
   const [adminForm, setAdminForm] = useState({ nom: '', email: '', password: '', confirm: '' });
@@ -292,6 +305,15 @@ export default function AdminDashboard({
             <p style={styles.dateText}>{t('adminDashboard.dashboardHeader')}</p>
           </div>
           <div style={styles.topbarRight}>
+            <button style={styles.topbarIconBtn} onClick={() => onNavigate && onNavigate('home')} title={t('navigation.backToSite')}>
+              <Home size={18} />
+            </button>
+            <button style={styles.topbarIconBtn} onClick={() => onNavigate && onNavigate('user-search')} title={t('navigation.searchTitle')}>
+              <Search size={18} />
+            </button>
+            <button style={styles.langBtn} onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}>
+              🌐 {i18n.language === 'fr' ? 'EN' : 'FR'}
+            </button>
             <button style={styles.topbarIconBtn} onClick={() => onNavigate && onNavigate('notifications')}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -299,16 +321,37 @@ export default function AdminDashboard({
               </svg>
               {notifCount > 0 && <span style={styles.notifPip}>{notifCount}</span>}
             </button>
-            <div style={styles.avatarSmall}>AD</div>
-            {/* Avant : aucun moyen de quitter le tableau de bord admin (la
-                navigation globale est volontairement masquee sur cet ecran,
-                cf. NavigationConsole.jsx). Bouton de deconnexion ajoute ici,
-                visible sur tous les onglets, pour permettre de revenir au
-                site public. */}
-            <button style={styles.logoutBtn} onClick={() => onLogout && onLogout()} title={t('navigation.logout')}>
-              <LogOut size={16} />
-              {!isMobile && <span>{t('navigation.logout')}</span>}
-            </button>
+            {/* Avant : simple badge "AD" + bouton Déconnexion, seul moyen de
+                quitter le tableau de bord admin (la navigation globale est
+                volontairement masquee sur cet ecran, cf. NavigationConsole.jsx).
+                Remplacé par les mêmes éléments que la navbar normale : icône
+                accueil, recherche, langue, notifications, et un menu
+                utilisateur (avatar + nom + rôle) avec la déconnexion dedans. */}
+            <div style={styles.userMenuWrap} ref={userMenuRef}>
+              <button style={styles.userPill} onClick={() => setShowUserMenu(!showUserMenu)}>
+                <span style={styles.avatarSmall}>
+                  {currentUser?.photo ? (
+                    <img src={currentUser.photo} alt="Photo" style={styles.avatarImageSmall} />
+                  ) : (
+                    currentUser?.prenom?.[0]?.toUpperCase() || currentUser?.nom?.[0]?.toUpperCase() || 'A'
+                  )}
+                </span>
+                {!isMobile && (
+                  <span style={styles.userInfo}>
+                    <span style={styles.userName}>{currentUser?.prenom || currentUser?.nom || currentUser?.email}</span>
+                    <span style={styles.roleBadge}>{t('navigation.adminBadge')}</span>
+                  </span>
+                )}
+                <ChevronDown size={14} color="#6c757d" />
+              </button>
+              {showUserMenu && (
+                <div style={styles.userDropdown}>
+                  <button style={styles.userDropdownItemDanger} onClick={() => { setShowUserMenu(false); onLogout && onLogout(); }}>
+                    <LogOut size={15} /> {t('navigation.logout')}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -852,8 +895,17 @@ const styles = {
   topbarRight: { display: 'flex', alignItems: 'center', gap: '8px' },
   topbarIconBtn: { position: 'relative', width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#495057' },
   notifPip: { position: 'absolute', top: '5px', right: '5px', width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#e07a5f', fontSize: '9px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  avatarSmall: { width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#1b4d3e', color: '#ffffff', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' },
+  avatarSmall: { width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#1b4d3e', color: '#ffffff', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', flexShrink: 0 },
+  avatarImageSmall: { width: '100%', height: '100%', objectFit: 'cover' },
   logoutBtn: { display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '10px', border: '1px solid #f5d4c8', backgroundColor: '#fff5f2', color: '#e07a5f', fontSize: '13px', fontWeight: '700', cursor: 'pointer' },
+  langBtn: { padding: '8px 12px', borderRadius: '10px', backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', fontSize: '13px', fontWeight: '700', color: '#495057', cursor: 'pointer', whiteSpace: 'nowrap' },
+  userMenuWrap: { position: 'relative' },
+  userPill: { display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 10px 4px 4px', borderRadius: '10px', border: '1px solid #e9ecef', backgroundColor: '#f8f9fa', cursor: 'pointer' },
+  userInfo: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: '1.2' },
+  userName: { fontSize: '13px', fontWeight: '700', color: '#212529' },
+  roleBadge: { fontSize: '10.5px', fontWeight: '700', color: '#6c757d' },
+  userDropdown: { position: 'absolute', top: 'calc(100% + 8px)', right: 0, backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e9ecef', boxShadow: '0 12px 28px rgba(0,0,0,0.12)', minWidth: '180px', padding: '6px', zIndex: 100 },
+  userDropdownItemDanger: { display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 12px', borderRadius: '8px', border: 'none', backgroundColor: 'transparent', color: '#e07a5f', fontSize: '13px', fontWeight: '700', cursor: 'pointer', textAlign: 'left' },
   content: { flex: 1, overflow: 'auto', padding: '24px 28px' },
   pageTitle: { marginBottom: '20px' },
   pageTitleText: { fontSize: '22px', fontWeight: '800', color: '#212529', letterSpacing: '-0.02em', marginBottom: '2px' },
