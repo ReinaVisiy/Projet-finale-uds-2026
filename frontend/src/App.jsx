@@ -953,10 +953,25 @@ export default function App() {
   const vendeurOnlyScreens = ['add-product', 'edit-product', 'my-products', 'seller-dashboard', 'sales-history', 'stock-alerts', 'certification', 'vendeur-orders'];
   const adminOnlyScreens = ['admin-dashboard', 'order-management-admin', 'order-detail-admin', 'moderation-panel', 'vendor-verification'];
 
+  // Écrans où un statut de commande est affiché : mesCommandes /
+  // mesCommandesVendeur ne sont chargées qu'une fois à la connexion
+  // (cf. useEffect plus haut), donc sans ce rechargement explicite à
+  // l'entrée sur l'écran, "Mes achats" et "Mes ventes" peuvent afficher
+  // un statut périmé (confirmation de livraison faite entretemps par
+  // l'autre partie, ou auto-confirmation à 72h côté backend).
+  const ecransCommandesClient = ['orders', 'purchases'];
+  const ecransCommandesVendeur = ['vendeur-orders', 'seller-dashboard', 'sales-history'];
+
   const navigate = (s) => {
     setPreviousScreen(screen);
     if (screen === 'messages-inbox' && s !== 'messages-inbox') {
       chargerMessagesNonLus();
+    }
+    if (currentUser?.role === 'client' && ecransCommandesClient.includes(s)) {
+      chargerMesCommandes();
+    }
+    if (currentUser?.role === 'vendeur' && ecransCommandesVendeur.includes(s)) {
+      chargerCommandesVendeur();
     }
     const publicScreens = ['home', 'login-page', 'register', 'recovery', 'product-detail', 'faq', 'producer-profile', 'client-profile', 'user-search', 'catalogue'];
     if (!currentUser && !publicScreens.includes(s)) {
