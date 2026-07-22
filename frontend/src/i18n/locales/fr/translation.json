@@ -152,7 +152,15 @@
     "rejectDispute": "Rejeter",
     "platformRevenue": "Revenu plateforme",
     "platformRevenueCommission": "Commission (5%) :",
-    "platformRevenueFees": "Frais d'annulation (10%) :"
+    "platformRevenueFees": "Frais d'annulation (10%) :",
+    "productsTitle": "Produits",
+    "productsSub": "produit(s) publié(s), tous vendeurs confondus",
+    "noProductsYet": "Aucun produit publié pour le moment",
+    "colProduct": "Produit",
+    "colVendor": "Producteur",
+    "colCategory": "Catégorie",
+    "colPrice": "Prix",
+    "colStock": "Stock"
   },
   "signalement": {
     "motifs": [

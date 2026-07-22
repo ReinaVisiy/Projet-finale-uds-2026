@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
+import useProduits from '../hooks/useProduits';
 
 
 function getNavItems(t) {
@@ -43,6 +44,12 @@ export default function AdminDashboard({
   const { t } = useTranslation();
   const navItems = getNavItems(t);
   const isMobile = useIsMobile(768);
+  // ===== VUE PRODUITS (item 9) =====
+  // Avant : l'onglet "Produits" changeait bien activeNav, mais aucun bloc
+  // JSX ne correspondait a 'products' -> contenu vide. Reutilise le meme
+  // hook que ProductCatalog/AgriconnectHome (liste publique de tous les
+  // produits, tous vendeurs confondus) pour une vraie vue admin.
+  const { produits: tousLesProduits, chargement: chargementProduits } = useProduits();
   const [activeNav, setActiveNav] = useState('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // La sidebar (220px fixes) ne laissait quasiment plus de place au
@@ -159,8 +166,8 @@ export default function AdminDashboard({
       onNavigateToVendorVerification && onNavigateToVendorVerification();
     } else if (item.id === 'signalements') {
       onNavigateToModeration && onNavigateToModeration();
-    } else if (item.id === 'users' || item.id === 'sales' || item.id === 'disputes') {
-      // reste sur le dashboard : affiche l'onglet Utilisateurs/Ventes/Litiges ci-dessous
+    } else if (item.id === 'users' || item.id === 'sales' || item.id === 'disputes' || item.id === 'products') {
+      // reste sur le dashboard : affiche l'onglet Utilisateurs/Ventes/Litiges/Produits ci-dessous
     } else if (item.id !== 'home') {
       showToast(`Navigation → ${item.label}`);
     }
@@ -510,6 +517,54 @@ export default function AdminDashboard({
           )}
 
           {/* ===== VUE CERTIFICATIONS ===== */}
+          {/* ===== VUE PRODUITS ===== */}
+          {activeNav === 'products' && (
+            <>
+              <div style={styles.pageTitle}>
+                <h2 style={styles.pageTitleText}>{t('adminDashboard.productsTitle')}</h2>
+                <p style={styles.pageTitleSub}>{tousLesProduits.length} {t('adminDashboard.productsSub')}</p>
+              </div>
+              <div style={styles.salesTableCard}>
+                {chargementProduits ? (
+                  <div style={styles.emptyState}><ShieldCheck size={40} color="#adb5bd" /><p>{t('productCatalog.loading')}</p></div>
+                ) : tousLesProduits.length === 0 ? (
+                  <div style={styles.emptyState}><ShieldCheck size={40} color="#adb5bd" /><p>{t('adminDashboard.noProductsYet')}</p></div>
+                ) : (
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>{t('adminDashboard.colProduct')}</th>
+                        <th style={styles.th}>{t('adminDashboard.colVendor')}</th>
+                        <th style={styles.th}>{t('adminDashboard.colCategory')}</th>
+                        <th style={styles.th}>{t('adminDashboard.colPrice')}</th>
+                        <th style={styles.th}>{t('adminDashboard.colStock')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tousLesProduits.map((p) => (
+                        <tr key={p.id} style={styles.tr}>
+                          <td style={styles.td}>{p.name}</td>
+                          <td style={styles.td}>{p.farm}</td>
+                          <td style={styles.td}>{p.category}</td>
+                          <td style={styles.td}>{p.price.toLocaleString('fr-FR')} FCFA</td>
+                          <td style={styles.td}>
+                            <span style={{
+                              ...styles.statusBadge,
+                              color: p.stock > 0 ? '#2d6a4f' : '#c0392b',
+                              backgroundColor: p.stock > 0 ? '#d8f3dc' : '#fdecea',
+                            }}>
+                              {p.stock}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </>
+          )}
+
           {/* ===== VUE UTILISATEURS ===== */}
           {activeNav === 'users' && (
             <>

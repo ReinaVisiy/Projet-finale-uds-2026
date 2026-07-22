@@ -152,7 +152,15 @@
     "rejectDispute": "Reject",
     "platformRevenue": "Platform revenue",
     "platformRevenueCommission": "Commission (5%):",
-    "platformRevenueFees": "Cancellation fees (10%):"
+    "platformRevenueFees": "Cancellation fees (10%):",
+    "productsTitle": "Products",
+    "productsSub": "product(s) published, across all vendors",
+    "noProductsYet": "No products published yet",
+    "colProduct": "Product",
+    "colVendor": "Producer",
+    "colCategory": "Category",
+    "colPrice": "Price",
+    "colStock": "Stock"
   },
   "signalement": {
     "motifs": [
