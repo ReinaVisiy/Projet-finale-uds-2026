@@ -100,9 +100,18 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
     }
   };
 
+  // Lien de partage vers cette fiche produit précise. L'app ne fait pas de
+  // vrai routing (navigation par setScreen dans App.jsx), donc l'URL de la
+  // page ne contient pas l'id du produit : on le passe en query param
+  // (?produit=<id>), lu et résolu par App.jsx au chargement.
+  const construireUrlPartage = () => {
+    if (typeof window === 'undefined') return '';
+    return `${window.location.origin}${window.location.pathname}?produit=${product.id}`;
+  };
+
   // Répartition du nombre de partage par plateforme (ouvre un lien de partage standard)
   const partagerSur = (plateforme) => {
-    const url = typeof window !== 'undefined' ? window.location.href : '';
+    const url = construireUrlPartage();
     const texte = encodeURIComponent(`${product.name} sur Agriconnect`);
     const urlEncodee = encodeURIComponent(url);
     const liens = {
@@ -120,8 +129,17 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
   };
 
   const handlePartager = () => {
+    const url = construireUrlPartage();
     if (navigator.share) {
-      navigator.share({ title: product.name, url: window.location.href }).catch(() => {});
+      navigator.share({ title: product.name, text: `${product.name} sur Agriconnect`, url }).catch((err) => {
+        // L'utilisateur a annulé volontairement : ne rien faire. Toute
+        // autre erreur (API bloquée dans un iframe, contexte non
+        // sécurisé, etc.) : on retombe sur le menu de partage manuel
+        // plutôt que de laisser le clic sans aucun effet visible.
+        if (err?.name !== 'AbortError') {
+          setShowShareMenu(true);
+        }
+      });
     } else {
       setShowShareMenu(true);
     }

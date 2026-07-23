@@ -40,7 +40,7 @@ import AvisPlateformeModal from './components/AvisPlateformeModal';
 import { authApi, utilisateurApi, produitApi, signalementApi, commandeApi, paiementApi, messageApi, certificationApi, notificationApi, litigeApi, avisApi, getSession } from './services/api';
 import { ROLE_FRONTEND_TO_BACKEND, joinNomComplet, splitNomComplet, mapProfileToFrontendUser } from './services/userMapping';
 import { mapCertificationPourAdmin } from './services/certificationMapping';
-import { mapProduitPourVendeur, construireProduitRequest } from './services/productMapping';
+import { mapProduitPourVendeur, mapProduitPourVitrine, construireProduitRequest } from './services/productMapping';
 import { mapSignalementPourAffichage, construireRaison, TYPE_FRONTEND_TO_BACKEND } from './services/signalementMapping';
 import { mapCommandePourAffichage, STATUT_FRANCAIS_TO_BACKEND } from './services/commandeMapping';
 import { mapNotificationPourAffichage, construireNotificationRequest } from './services/notificationMapping';
@@ -1100,6 +1100,30 @@ export default function App() {
 
   // ===== NAVIGATION =====
   const goToProduct = (product) => { setSelectedProduct(product); setScreen('product-detail'); };
+
+  // Lien de partage produit (?produit=<id>), généré par le bouton
+  // "Partager" de ProductDetail. Il n'y a pas de routing réel dans cette
+  // app (navigation par setScreen, cf. commentaire httpClient plus haut
+  // sur BrowserRouter non utilisé) : on lit donc ce paramètre une seule
+  // fois au montage et on redirige directement vers la fiche produit
+  // correspondante si l'id est valide.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const idProduitPartage = new URLSearchParams(window.location.search).get('produit');
+    if (!idProduitPartage) return;
+    (async () => {
+      try {
+        const dto = await produitApi.getProduitById(idProduitPartage);
+        goToProduct(mapProduitPourVitrine(dto));
+      } catch (err) {
+        console.error('Produit partagé introuvable :', err);
+      } finally {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const goToMessage = (vendor) => requireLogin(() => { setPreviousScreen(screen); setSelectedVendor(vendor); setScreen('message'); });
   const goToProducerProfile = (vendor) => { setSelectedVendor(vendor); setScreen('producer-profile'); };
   // Choisit le bon écran de profil public selon le rôle de l'utilisateur trouvé.
