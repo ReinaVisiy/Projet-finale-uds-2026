@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { AlertTriangle, CheckCircle, XCircle, UserX, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ConfirmActionModal from './ConfirmActionModal';
+import UserLink from './common/UserLink';
+import ProductLink from './common/ProductLink';
 
 
 export default function ModerationPanel({
@@ -74,10 +76,14 @@ export default function ModerationPanel({
                 <div style={styles.cardLeft}>
                   <div style={styles.avatar}>{s.cible?.[0]?.toUpperCase() || '?'}</div>
                   <div>
-                    <p style={styles.cible}>{s.cible}</p>
+                    <p style={styles.cible}>
+                      {s.type === 'produit'
+                        ? <ProductLink id={s.targetId}>{s.cible}</ProductLink>
+                        : <UserLink id={s.targetId}>{s.cible}</UserLink>}
+                    </p>
                     <p style={styles.details}>
                       <span style={styles.motif}>{s.motif}</span>
-                      <span style={styles.auteur}>{t('moderation.by')} {s.auteur}</span>
+                      <span style={styles.auteur}>{t('moderation.by')} <UserLink id={s.reporterId}>{s.auteur}</UserLink></span>
                       <span style={styles.date}>{new Date(s.date).toLocaleDateString('fr-FR')}</span>
                     </p>
                     {s.commentaire && <p style={styles.commentaire}>💬 {s.commentaire}</p>}
