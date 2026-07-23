@@ -8,5 +8,6 @@ public enum NotificationType {
     AVIS,
     SIGNALEMENT,
     COMPTE,
-    SYSTEME
+    SYSTEME,
+    STOCK
 }

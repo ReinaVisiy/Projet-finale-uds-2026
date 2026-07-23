@@ -40,6 +40,7 @@ export const NOTIFICATION_TYPE_TO_SEVERITY = {
   SIGNALEMENT: 'warning',
   COMPTE: 'success',
   SYSTEME: 'info',
+  STOCK: 'warning',
 };
 
 /**
@@ -75,6 +76,7 @@ export function mapNotificationPourAffichage(dto) {
 export function deviserTypeMetier(lien) {
   if (!lien) return 'SYSTEME';
   if (lien.includes('order') || lien.includes('commande')) return 'COMMANDE';
+  if (lien.includes('stock')) return 'STOCK';
   if (lien.includes('moderation') || lien.includes('signalement')) return 'SIGNALEMENT';
   if (lien.includes('certification')) return 'CERTIFICATION';
   if (lien.includes('message')) return 'MESSAGE';
