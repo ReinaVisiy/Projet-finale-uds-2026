@@ -533,7 +533,7 @@
     "stat2": "Producteurs vérifiés",
     "stat3": "Produits disponibles",
     "stat4": "Commandes livrées",
-    "testiTitle": "Ce que disent nos clients",
+    "testiTitle": "Ce que disent nos utilisateurs",
     "prefooterTitle": "Prêt à commencer ? Inscrivez-vous gratuitement ou connectez-vous",
     "prefooterBtn": "Se connecter",
     "footerTagline": "La plateforme de marché agricole local",
@@ -542,6 +542,21 @@
     "emptyMsg": "Aucun produit dans cette catégorie.",
     "seeAll": "Voir tous les produits",
     "voirCatalogue": "Voir tout le catalogue"
+  },
+  "avisPlateforme": {
+    "homeEmpty": "Soyez le premier à donner votre avis sur AgryCam !",
+    "voirPlus": "Voir plus",
+    "listTitle": "Avis de nos utilisateurs",
+    "listEmpty": "Aucun avis pour le moment.",
+    "loadError": "Impossible de charger les avis.",
+    "popupTitle": "Votre avis compte !",
+    "popupSubtitle": "Avant de vous déconnecter, dites-nous ce que vous pensez d'AgryCam.",
+    "commentPlaceholder": "Qu'avez-vous aimé ? Que pourrait-on améliorer ? (optionnel)",
+    "selectRatingError": "Merci de choisir une note avant d'envoyer.",
+    "submitError": "L'envoi de votre avis a échoué. Réessayez.",
+    "skip": "Plus tard",
+    "sending": "Envoi...",
+    "submit": "Envoyer et se déconnecter"
   },
   "navigation": {
     "home": "Accueil",

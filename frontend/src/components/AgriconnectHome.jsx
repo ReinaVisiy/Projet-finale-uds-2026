@@ -8,6 +8,8 @@ import { traduireNomCategorie } from '../services/productMapping';
 import { getStatsPubliques as getStatsUtilisateurs } from '../services/api/utilisateurApi';
 import { getStatsPubliques as getStatsCertifications } from '../services/api/certificationApi';
 import { getStatsPubliques as getStatsCommandes } from '../services/api/commandeApi';
+import { getAvisPlateforme, getAvisStatsPlateforme } from '../services/api/avisApi';
+import AvisPlateformeListeModal from './AvisPlateformeListeModal';
 
 // Couleurs/images par défaut pour les vignettes de catégorie (le backend ne
 // fournit qu'un id + un nom, pas de style visuel). On associe l'image en se
@@ -55,6 +57,13 @@ export default function AgroMarketHome({
     commandesLivrees: null,
   });
 
+  // Avis plateforme (section "Ce que disent nos utilisateurs") : note
+  // moyenne + nombre d'avis pour l'en-tête, et la liste triée (meilleure
+  // note d'abord, cf. tri backend) dont on n'affiche que les 3 premiers ici.
+  const [avisStatsPlateforme, setAvisStatsPlateforme] = useState({ noteMoyenne: 0, nombreAvis: 0 });
+  const [avisPlateforme, setAvisPlateforme] = useState([]);
+  const [afficherListeAvis, setAfficherListeAvis] = useState(false);
+
   useEffect(() => {
     let annule = false;
 
@@ -69,6 +78,31 @@ export default function AgroMarketHome({
         producteursVerifies: certifications.status === 'fulfilled' ? certifications.value?.producteursVerifies : null,
         commandesLivrees: commandes.status === 'fulfilled' ? commandes.value?.commandesLivrees : null,
       });
+    });
+
+    return () => { annule = true; };
+  }, []);
+
+  // Avis plateforme : chargés une seule fois (visiteurs non connectés
+  // uniquement, cf. section témoignages plus bas). La liste est déjà
+  // triée meilleure note d'abord côté backend.
+  useEffect(() => {
+    let annule = false;
+
+    Promise.allSettled([
+      getAvisStatsPlateforme(),
+      getAvisPlateforme(),
+    ]).then(([stats, liste]) => {
+      if (annule) return;
+      if (stats.status === 'fulfilled') {
+        setAvisStatsPlateforme({
+          noteMoyenne: stats.value?.noteMoyenne || 0,
+          nombreAvis: stats.value?.nombreAvis || 0,
+        });
+      }
+      if (liste.status === 'fulfilled') {
+        setAvisPlateforme(liste.value || []);
+      }
     });
 
     return () => { annule = true; };
@@ -339,24 +373,58 @@ export default function AgroMarketHome({
         {!currentUser && (
           <div style={styles.section}>
             <h2 style={styles.sectionTitle}>{t('home.testiTitle')}</h2>
-            <div style={styles.testimonialGrid}>
-              {[
-                { name: 'Ravie D.', text: '"Produits très frais et livraison ultra-rapide ! Je recommande à 100%."' },
-                { name: 'Farmer X', text: '"Plateforme fiable qui me permet de vendre à des prix équitables sans intermédiaire."' },
-                { name: 'Client Y', text: '"Le meilleur rapport qualité/prix par rapport au marché local."' }
-              ].map((testi, i) => (
-                <div key={i} style={styles.testimonialCard}>
-                  <div style={{display:'flex', gap:'2px', marginBottom:'12px'}}>
-                    {[1,2,3,4,5].map(j => <Star key={j} size={14} fill="#f5b041" color="#f5b041" />)}
-                  </div>
-                  <p style={styles.testiText}>{testi.text}</p>
-                  <h4 style={styles.testiName}>{testi.name}</h4>
-                </div>
-              ))}
+
+            {/* Note moyenne de la plateforme : étoiles remplies selon la
+                note arrondie, pas de note chiffrée à côté (juste les
+                étoiles + le nombre d'avis). */}
+            <div style={styles.avgRatingRow}>
+              <div style={{ display: 'flex', gap: '3px' }}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star
+                    key={i}
+                    size={20}
+                    fill={i <= Math.round(avisStatsPlateforme.noteMoyenne) ? '#f5b041' : 'none'}
+                    color="#f5b041"
+                  />
+                ))}
+              </div>
+              {avisStatsPlateforme.nombreAvis > 0 && (
+                <span style={styles.avgRatingCount}>
+                  {t('productDetail.reviewsCount', { count: avisStatsPlateforme.nombreAvis })}
+                </span>
+              )}
             </div>
+
+            {avisPlateforme.length === 0 ? (
+              <p style={styles.testiEmpty}>{t('avisPlateforme.homeEmpty')}</p>
+            ) : (
+              <div style={styles.testimonialGrid}>
+                {avisPlateforme.slice(0, 3).map((testi) => (
+                  <div key={testi.id} style={styles.testimonialCard}>
+                    <div style={{ display: 'flex', gap: '2px', marginBottom: '12px' }}>
+                      {[1, 2, 3, 4, 5].map((j) => (
+                        <Star key={j} size={14} fill={j <= testi.note ? '#f5b041' : 'none'} color="#f5b041" />
+                      ))}
+                    </div>
+                    <p style={styles.testiText}>{testi.commentaire}</p>
+                    <h4 style={styles.testiName}>{testi.clientNom}</h4>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {avisPlateforme.length > 3 && (
+              <button type="button" style={styles.voirPlusBtn} onClick={() => setAfficherListeAvis(true)}>
+                {t('avisPlateforme.voirPlus')} <ArrowRight size={16} />
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {afficherListeAvis && (
+        <AvisPlateformeListeModal onClose={() => setAfficherListeAvis(false)} />
+      )}
 
       {/* PRE-FOOTER (si non connecté) */}
       {!currentUser && (
@@ -807,6 +875,38 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
     gap: '24px',
+  },
+  avgRatingRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '24px',
+  },
+  avgRatingCount: {
+    fontSize: '14px',
+    color: '#6c757d',
+    fontWeight: '600',
+  },
+  testiEmpty: {
+    fontSize: '15px',
+    color: '#6c757d',
+    marginBottom: '24px',
+  },
+  voirPlusBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginTop: '24px',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    padding: '10px 20px',
+    backgroundColor: 'transparent',
+    border: '1.5px solid #2d6a4f',
+    borderRadius: '999px',
+    color: '#2d6a4f',
+    fontSize: '14px',
+    fontWeight: '700',
+    cursor: 'pointer',
   },
   testimonialCard: {
     backgroundColor: '#ffffff',

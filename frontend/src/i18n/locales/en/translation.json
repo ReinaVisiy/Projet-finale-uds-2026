@@ -533,7 +533,7 @@
     "stat2": "Verified producers",
     "stat3": "Available products",
     "stat4": "Orders delivered",
-    "testiTitle": "What our customers say",
+    "testiTitle": "What our users say",
     "prefooterTitle": "Ready to start? Sign up for free or log in",
     "prefooterBtn": "Log in",
     "footerTagline": "The local farm marketplace platform",
@@ -542,6 +542,21 @@
     "emptyMsg": "No products in this category.",
     "seeAll": "See all products",
     "voirCatalogue": "See full catalogue"
+  },
+  "avisPlateforme": {
+    "homeEmpty": "Be the first to review AgryCam!",
+    "voirPlus": "See more",
+    "listTitle": "What our users say",
+    "listEmpty": "No reviews yet.",
+    "loadError": "Could not load reviews.",
+    "popupTitle": "Your feedback matters!",
+    "popupSubtitle": "Before you log out, tell us what you think of AgryCam.",
+    "commentPlaceholder": "What did you like? What could be improved? (optional)",
+    "selectRatingError": "Please choose a rating before sending.",
+    "submitError": "Sending your review failed. Please try again.",
+    "skip": "Later",
+    "sending": "Sending...",
+    "submit": "Send and log out"
   },
   "navigation": {
     "home": "Home",
