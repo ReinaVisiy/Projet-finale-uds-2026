@@ -1216,6 +1216,15 @@
     "errCodeInvalid": "Please enter a valid 6-digit code",
     "errCodeWrong": "Incorrect or expired code, please try again"
   },
+  "orderStatus": {
+    "enAttente": "Pending",
+    "validee": "Confirmed",
+    "enPreparation": "Preparing",
+    "enLivraison": "Shipping",
+    "livree": "Delivered",
+    "annulee": "Cancelled",
+    "rejetee": "Rejected"
+  },
   "notifications": {
     "generic": "You have a new notification.",
     "litigeRembourseClient": "Your dispute on order #{{orderId}} has been refunded.",

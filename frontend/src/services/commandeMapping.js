@@ -30,6 +30,32 @@ export const STATUT_FRANCAIS_TO_BACKEND = {
   'Rejetée': 'REJETEE',
 };
 
+// Le statut interne ("status") reste toujours en français (utilisé dans
+// toute la logique métier/comparaisons ci-dessous, ex. order.status ===
+// 'Rejetée') : ne jamais le traduire à la source. Cette map ne sert
+// qu'à retrouver la clé i18n correspondante au moment de l'AFFICHAGE
+// (cf. traduireStatutCommande), pour que le statut apparaisse dans la
+// langue actuellement choisie par la personne qui consulte.
+export const STATUT_FRANCAIS_TO_KEY = {
+  'En attente': 'enAttente',
+  'Validée': 'validee',
+  'En préparation': 'enPreparation',
+  'En livraison': 'enLivraison',
+  'Livrée': 'livree',
+  'Annulée': 'annulee',
+  'Rejetée': 'rejetee',
+};
+
+/**
+ * Traduit un statut de commande (toujours stocké en français en interne)
+ * dans la langue actuellement choisie, pour l'affichage uniquement.
+ * Ne jamais utiliser la valeur retournée pour une comparaison logique.
+ */
+export function traduireStatutCommande(status, t) {
+  const key = STATUT_FRANCAIS_TO_KEY[status];
+  return key ? t(`orderStatus.${key}`) : (status || '');
+}
+
 /**
  * Convertit un CommandeResponse (backend) en objet "commande" tel
  * qu'attendu par ClientOrders / VendeurOrders / ClientPurchases :

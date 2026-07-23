@@ -1216,6 +1216,15 @@
     "errCodeInvalid": "Veuillez saisir un code valide à 6 chiffres",
     "errCodeWrong": "Code incorrect ou expiré, veuillez réessayer"
   },
+  "orderStatus": {
+    "enAttente": "En attente",
+    "validee": "Validée",
+    "enPreparation": "En préparation",
+    "enLivraison": "En livraison",
+    "livree": "Livrée",
+    "annulee": "Annulée",
+    "rejetee": "Rejetée"
+  },
   "notifications": {
     "generic": "Vous avez une nouvelle notification.",
     "litigeRembourseClient": "Votre litige sur la commande #{{orderId}} a été remboursé.",
