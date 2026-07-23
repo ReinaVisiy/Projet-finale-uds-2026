@@ -10,13 +10,15 @@ public class CredentialsResponse {
     private String motDePasse;
     private List<String> roles;
     private LocalDateTime suspenduJusquau;
+    private boolean emailConfirme;
 
-    public CredentialsResponse(Long uid, String email, String motDePasse, List<String> roles, LocalDateTime suspenduJusquau) {
+    public CredentialsResponse(Long uid, String email, String motDePasse, List<String> roles, LocalDateTime suspenduJusquau, boolean emailConfirme) {
         this.uid = uid;
         this.email = email;
         this.motDePasse = motDePasse;
         this.roles = roles;
         this.suspenduJusquau = suspenduJusquau;
+        this.emailConfirme = emailConfirme;
     }
 
     public Long getUid() {
@@ -37,5 +39,9 @@ public class CredentialsResponse {
 
     public LocalDateTime getSuspenduJusquau() {
         return suspenduJusquau;
+    }
+
+    public boolean isEmailConfirme() {
+        return emailConfirme;
     }
 }

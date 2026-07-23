@@ -39,6 +39,22 @@ public class Utilisateur {
     // très lointaine — pas une fonctionnalité séparée.
     private java.time.LocalDateTime suspenduJusquau;
 
+    // Confirmation d'email a l'inscription (cf. UtilisateurService#createUtilisateur
+    // et #confirmerEmail) : un compte nouvellement cree n'est pas connectable
+    // (verifie par auth-service, cf. AuthService#login) tant que le code envoye
+    // par email n'a pas ete valide. Les comptes admin (AdminSeeder,
+    // creerAdministrateur) sont crees deja confirmes.
+    private boolean emailConfirme = false;
+    private String codeConfirmationEmail;
+    private java.time.LocalDateTime expirationCodeConfirmation;
+
+    // Reinitialisation de mot de passe ("mot de passe oublie", cf.
+    // UtilisateurService#demanderReinitialisationMotDePasse /
+    // #reinitialiserMotDePasse) : code a usage unique envoye par email,
+    // valable une duree limitee.
+    private String codeReinitialisationMdp;
+    private java.time.LocalDateTime expirationCodeReinitialisation;
+
     public enum Role {
         CLIENT, PRODUCTEUR, ADMIN
     }

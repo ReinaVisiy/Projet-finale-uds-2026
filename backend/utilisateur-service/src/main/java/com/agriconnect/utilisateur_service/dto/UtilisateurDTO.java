@@ -15,4 +15,5 @@ public class UtilisateurDTO {
     private java.time.LocalDateTime suspenduJusquau;
     // Pratique pour le frontend : évite de comparer des dates côté client.
     private boolean suspendu;
+    private boolean emailConfirme;
 }

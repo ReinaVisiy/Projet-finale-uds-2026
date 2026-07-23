@@ -47,6 +47,7 @@ public class AdminSeeder implements CommandLineRunner {
         admin.setEmail(ADMIN_EMAIL);
         admin.setMotDePasse(passwordEncoder.encode(ADMIN_MOT_DE_PASSE));
         admin.setRole(Utilisateur.Role.ADMIN);
+        admin.setEmailConfirme(true);
         utilisateurRepository.save(admin);
 
         log.info("Compte administrateur initial créé automatiquement (email: {})", ADMIN_EMAIL);
