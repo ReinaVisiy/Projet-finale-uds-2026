@@ -122,7 +122,7 @@ export default function App() {
       return new Date(bDate).getTime() - new Date(aDate).getTime();
     });
   };
-  const addNotification = (userId, type, message, lien = null) => {
+  const addNotification = (userId, type, messageKey, parametres = {}, lien = null) => {
     // Mise à jour optimiste : uniquement si la notification concerne
     // l'utilisateur actuellement connecté sur CE navigateur. Avant ce
     // correctif, setNotifications() s'exécutait pour TOUT appel, même
@@ -130,12 +130,19 @@ export default function App() {
     // admins d'un signalement...) : le client qui déclenchait l'action
     // voyait alors apparaître, dans sa propre cloche, une notification
     // qui ne lui était pas destinée.
+    //
+    // On ne stocke plus de phrase déjà rendue : messageKey + parametres
+    // (données brutes) sont conservés tels quels, et c'est
+    // NotificationsCenter.jsx (via t()) qui traduit au moment de
+    // l'affichage, dans la langue actuellement choisie par la personne
+    // qui consulte — jamais celle de qui a déclenché l'événement.
     if (userId === currentUser?.id) {
       const newNotif = {
         id: `notif-${Date.now()}`,
         utilisateurId: userId,
         type: type,
-        message,
+        messageKey,
+        parametres: parametres || {},
         lien,
         lu: false,
         dateCreation: new Date().toISOString(),
@@ -163,7 +170,7 @@ export default function App() {
     // "niveau" — plus besoin de la redeviner au chargement, puisque
     // notification-service la stocke désormais telle quelle.
     return notificationApi
-      .creerNotification(construireNotificationRequest(userId, message, lien, type))
+      .creerNotification(construireNotificationRequest(userId, messageKey, parametres, lien, type))
       .catch((err) => console.error('Notification non persistée côté serveur :', err));
   };
 
@@ -185,15 +192,15 @@ export default function App() {
       .catch((err) => console.error("Impossible de récupérer la liste des comptes admin :", err));
   }, []);
 
-  const notifierAdmins = (type, message, lien = null) => {
+  const notifierAdmins = (type, messageKey, parametres = {}, lien = null) => {
     if (adminIds.length === 0) {
       // Repli si la liste n'a pas encore été chargée (ex. tout début du
       // chargement de l'app) : on garde l'ancien comportement plutôt que
       // de perdre silencieusement la notification.
-      addNotification(1, type, message, lien);
+      addNotification(1, type, messageKey, parametres, lien);
       return;
     }
-    adminIds.forEach((id) => addNotification(id, type, message, lien));
+    adminIds.forEach((id) => addNotification(id, type, messageKey, parametres, lien));
   };
 
   const chargerMesNotifications = async () => {
