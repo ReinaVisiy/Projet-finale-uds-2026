@@ -695,6 +695,12 @@ export default function App() {
           total: product.price * quantity,
         }];
       });
+      // setScreen direct (pas navigate()) : on ne veut pas relancer les
+      // rechargements de commandes propres à navigate(), juste mémoriser
+      // l'écran d'où vient l'ajout pour que "Continuer les achats" (dans
+      // le panier) y ramène l'utilisateur au lieu de toujours renvoyer à
+      // l'accueil.
+      setPreviousScreen(screen);
       setScreen('cart');
     });
   };
@@ -1289,7 +1295,7 @@ export default function App() {
           onRemoveItem={removeFromCart}
           onUpdateQuantity={updateCartItemQuantity}
           onCheckout={handleCheckout}
-          onContinueShopping={() => navigate('home')}
+          onContinueShopping={() => navigate(previousScreen)}
         />;
       case 'checkout-wizard':
         return <ShoppingCart
@@ -1297,7 +1303,7 @@ export default function App() {
           onRemoveItem={removeFromCart}
           onUpdateQuantity={updateCartItemQuantity}
           onCheckout={handleCheckout}
-          onContinueShopping={() => navigate('home')}
+          onContinueShopping={() => navigate(previousScreen)}
         />;
       case 'orders':
         return <ClientOrders
