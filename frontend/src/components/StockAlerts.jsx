@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { traduireNomCategorie } from '../services/productMapping';
 import useIsMobile from '../hooks/useIsMobile';
+import ProductLink from './common/ProductLink';
 
 const alertConfig = {
   CRITIQUE: { color: '#dc3545', bg: '#fde8ea' },
@@ -212,7 +213,7 @@ export default function StockAlerts({ onBack, vendeurProducts = [] }) {
                       <div style={styles.productCell}>
                         <div style={styles.productEmoji}>{item.emoji}</div>
                         <div>
-                          <p style={styles.productName}>{item.product}</p>
+                          <ProductLink id={item.id} style={{ ...styles.productName, display: 'block' }}>{item.product}</ProductLink>
                           <p style={styles.productCategory}>{traduireNomCategorie(item.category, t)}</p>
                         </div>
                       </div>
