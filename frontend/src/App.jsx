@@ -1044,7 +1044,7 @@ export default function App() {
       await certificationApi.confirmerPaiementCertification(id, { paye: true });
       const certificationConcernee = vendorVerifications.find((v) => v.id === id);
       if (certificationConcernee) {
-        addNotification(certificationConcernee.producteurId, 'success', `Le paiement de votre certification a été confirmé.`, '/certification');
+        addNotification(certificationConcernee.producteurId, 'success', 'certificationPaymentConfirmed', {}, '/certification');
       }
       await chargerCertifications();
     } catch (err) {
@@ -1057,7 +1057,7 @@ export default function App() {
       await certificationApi.reviserCertification(id, { approuve: true });
       const certificationConcernee = vendorVerifications.find((v) => v.id === id);
       if (certificationConcernee) {
-        addNotification(certificationConcernee.producteurId, 'success', `Votre demande de certification a été approuvée.`, '/certification');
+        addNotification(certificationConcernee.producteurId, 'success', 'certificationApproved', {}, '/certification');
       }
       await chargerCertifications();
     } catch (err) {
@@ -1073,7 +1073,8 @@ export default function App() {
         addNotification(
           certificationConcernee.producteurId,
           'error',
-          `Votre demande de certification a été rejetée${motifRejet ? ` : ${motifRejet}` : '.'}`,
+          motifRejet ? 'certificationRejectedWithReason' : 'certificationRejectedNoReason',
+          motifRejet ? { motif: motifRejet } : {},
           '/certification'
         );
       }
@@ -1097,9 +1098,8 @@ export default function App() {
       addNotification(
         userId,
         estSuspensionEnCours ? 'error' : 'success',
-        estSuspensionEnCours
-          ? `Votre compte a été suspendu pendant ${jours} jour${jours > 1 ? 's' : ''} pour non-respect des règles d'intégrité de la plateforme.`
-          : `Votre compte a été réactivé. Vous pouvez de nouveau vous connecter.`,
+        estSuspensionEnCours ? 'accountSuspended' : 'accountReactivated',
+        estSuspensionEnCours ? { count: jours } : {},
         '/profil'
       );
       await chargerUtilisateurs();
@@ -1120,7 +1120,8 @@ export default function App() {
         addNotification(
           vendeurId,
           'error',
-          `Votre produit${nomProduit ? ` « ${nomProduit} »` : ''} a été supprimé par un administrateur pour non-respect des règles d'intégrité de la plateforme (signalement confirmé).`,
+          nomProduit ? 'productRemovedWithName' : 'productRemovedNoName',
+          nomProduit ? { nom: nomProduit } : {},
           '/my-products'
         );
       }
