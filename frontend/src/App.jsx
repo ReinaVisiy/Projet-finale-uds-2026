@@ -626,6 +626,17 @@ export default function App() {
   const handleResoudreLitige = async (litigeId, statut) => {
     try {
       await litigeApi.resoudreLitige(litigeId, statut);
+      const litigeConcerne = tousLesLitiges.find((l) => l.id === litigeId);
+      if (litigeConcerne) {
+        addNotification(
+          litigeConcerne.clientId,
+          statut === 'RESOLU' ? 'success' : 'info',
+          statut === 'RESOLU'
+            ? `Votre litige sur la commande #${litigeConcerne.commandeId} a été résolu.`
+            : `Votre litige sur la commande #${litigeConcerne.commandeId} a été rejeté.`,
+          '/orders'
+        );
+      }
       await chargerTousLesLitiges();
     } catch (err) {
       alert(err?.message || "La résolution du litige a échoué.");
