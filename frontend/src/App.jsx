@@ -650,10 +650,10 @@ export default function App() {
       await litigeApi.rembourserLitige(litigeId);
       const litigeConcerne = tousLesLitiges.find((l) => l.id === litigeId);
       if (litigeConcerne) {
-        addNotification(litigeConcerne.clientId, 'success', `Votre litige sur la commande #${litigeConcerne.commandeId} a été remboursé.`, '/orders');
+        addNotification(litigeConcerne.clientId, 'success', 'litigeRembourseClient', { orderId: litigeConcerne.commandeId }, '/orders');
         const commandeConcernee = toutesLesCommandes.find((c) => c.id === litigeConcerne.commandeId);
         if (commandeConcernee) {
-          addNotification(commandeConcernee.producteurId, 'warning', `La commande #${litigeConcerne.commandeId} a été remboursée suite à un litige.`, '/vendeur-orders');
+          addNotification(commandeConcernee.producteurId, 'warning', 'litigeRembourseVendeur', { orderId: litigeConcerne.commandeId }, '/vendeur-orders');
         }
       }
       await chargerTousLesLitiges();
@@ -672,9 +672,8 @@ export default function App() {
         addNotification(
           litigeConcerne.clientId,
           statut === 'RESOLU' ? 'success' : 'info',
-          statut === 'RESOLU'
-            ? `Votre litige sur la commande #${litigeConcerne.commandeId} a été résolu.`
-            : `Votre litige sur la commande #${litigeConcerne.commandeId} a été rejeté.`,
+          statut === 'RESOLU' ? 'litigeResolu' : 'litigeRejete',
+          { orderId: litigeConcerne.commandeId },
           '/orders'
         );
       }
@@ -790,7 +789,7 @@ export default function App() {
     // navigation avant que le navigateur n'ait eu le temps d'envoyer la
     // requête POST /api/notifications, qui se retrouvait annulée — le
     // vendeur ne recevait alors jamais cette notification.
-    await addNotification(vendeurId, 'info', `Nouvelle commande #${commande.id} de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client'}`, '/vendeur-orders');
+    await addNotification(vendeurId, 'info', 'newOrder', { orderId: commande.id, clientName: joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'Client' }, '/vendeur-orders');
 
     const transaction = await paiementApi.initierPaiement({
       typeReference: 'COMMANDE',
@@ -810,7 +809,7 @@ export default function App() {
       return;
     }
 
-    addNotification(currentUser.id, 'success', `Commande #${commande.id} confirmée !`, '/orders');
+    addNotification(currentUser.id, 'success', 'orderConfirmed', { orderId: commande.id }, '/orders');
     await chargerMesCommandes();
     navigate('orders');
   };
@@ -858,7 +857,7 @@ export default function App() {
         type,
         description,
       });
-      notifierAdmins('error', `Nouveau litige ouvert sur la commande #${litigeOrder.id} par ${currentUser?.prenom || 'un client'}`, '/admin/moderation-panel');
+      notifierAdmins('error', 'newLitige', { orderId: litigeOrder.id, clientName: currentUser?.prenom || 'un client' }, '/admin/moderation-panel');
       await chargerMesLitiges();
       if (currentUser?.role === 'admin') await chargerTousLesLitiges();
     } catch (err) {
@@ -903,7 +902,7 @@ export default function App() {
     // événement "plateforme" (contrairement à une inscription), ni une
     // activité de l'admin lui-même — cela leur exposait les connexions de
     // tous les autres comptes (cf. backlog #16/#18).
-    addNotification(userData.id, 'success', `Bienvenue ${userData.prenom} ! Vous êtes connecté.`, '/profil');
+    addNotification(userData.id, 'success', 'welcomeLogin', { prenom: userData.prenom }, '/profil');
 
     setIsClientMode(false);
 
