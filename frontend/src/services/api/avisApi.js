@@ -26,3 +26,21 @@ export const getAvisStats = (produitId) =>
 /** Get all reviews authored by a given client (public profile "avis laissés"). Public. */
 export const getAvisParClient = (clientId) =>
   httpGet(BASE, `/api/avis/client/${clientId}`, { auth: false });
+
+// ---- Avis "plateforme" (satisfaction générale, proposé à la déconnexion) ----
+
+/** Publish a review of the platform itself (no produitId). request: { note, commentaire } */
+export const publierAvisPlateforme = (avisRequest) =>
+  httpPost(BASE, '/api/avis/plateforme/publier', avisRequest);
+
+/** Get all platform reviews, best rating first. Public. Used for top-3 + "voir plus". */
+export const getAvisPlateforme = () =>
+  httpGet(BASE, '/api/avis/plateforme', { auth: false });
+
+/** Get aggregate stats (average rating, count) for the platform. Public. */
+export const getAvisStatsPlateforme = () =>
+  httpGet(BASE, '/api/avis/plateforme/stats', { auth: false });
+
+/** Whether the logged-in user has already reviewed the platform. */
+export const aDejaEvaluePlateforme = () =>
+  httpGet(BASE, '/api/avis/plateforme/a-deja-evalue');
