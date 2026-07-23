@@ -2,10 +2,14 @@ package com.agriconnect.utilisateur_service.controller;
 
 import com.agriconnect.utilisateur_service.dto.AjouterAdminRequest;
 import com.agriconnect.utilisateur_service.dto.ChangerMotDePasseRequest;
+import com.agriconnect.utilisateur_service.dto.ConfirmerEmailRequest;
 import com.agriconnect.utilisateur_service.dto.CredentialsResponse;
+import com.agriconnect.utilisateur_service.dto.MotDePasseOublieRequest;
+import com.agriconnect.utilisateur_service.dto.ReinitialiserMotDePasseRequest;
 import com.agriconnect.utilisateur_service.dto.SuspensionRequest;
 import com.agriconnect.utilisateur_service.dto.UpdateProfilRequest;
 import com.agriconnect.utilisateur_service.dto.UtilisateurDTO;
+import com.agriconnect.utilisateur_service.dto.VerifierCodeResetRequest;
 import com.agriconnect.utilisateur_service.entity.Utilisateur;
 import com.agriconnect.utilisateur_service.service.UtilisateurService;
 import lombok.RequiredArgsConstructor;
@@ -110,6 +114,38 @@ public class UtilisateurController {
             @RequestBody SuspensionRequest request) {
         UtilisateurDTO response = utilisateurService.suspendreUtilisateur(id, request.getJours());
         return ResponseEntity.ok(response);
+    }
+
+    // Confirmation d'email a l'inscription (public : appele avant tout JWT).
+    @PostMapping("/confirmer-email")
+    public ResponseEntity<String> confirmerEmail(@RequestBody ConfirmerEmailRequest request) {
+        utilisateurService.confirmerEmail(request.getEmail(), request.getCode());
+        return ResponseEntity.ok("Email confirme avec succes");
+    }
+
+    @PostMapping("/renvoyer-code-confirmation")
+    public ResponseEntity<String> renvoyerCodeConfirmation(@RequestBody MotDePasseOublieRequest request) {
+        utilisateurService.renvoyerCodeConfirmation(request.getEmail());
+        return ResponseEntity.ok("Code de confirmation renvoye");
+    }
+
+    // Mot de passe oublie (public, en 3 etapes).
+    @PostMapping("/mot-de-passe-oublie")
+    public ResponseEntity<String> demanderReinitialisationMotDePasse(@RequestBody MotDePasseOublieRequest request) {
+        utilisateurService.demanderReinitialisationMotDePasse(request.getEmail());
+        return ResponseEntity.ok("Code de reinitialisation envoye");
+    }
+
+    @PostMapping("/verifier-code-reset")
+    public ResponseEntity<String> verifierCodeReinitialisation(@RequestBody VerifierCodeResetRequest request) {
+        utilisateurService.verifierCodeReinitialisation(request.getEmail(), request.getCode());
+        return ResponseEntity.ok("Code valide");
+    }
+
+    @PostMapping("/reinitialiser-mot-de-passe")
+    public ResponseEntity<String> reinitialiserMotDePasse(@RequestBody ReinitialiserMotDePasseRequest request) {
+        utilisateurService.reinitialiserMotDePasse(request.getEmail(), request.getCode(), request.getNouveauMotDePasse());
+        return ResponseEntity.ok("Mot de passe reinitialise avec succes");
     }
 
     // Ancien mot de passe incorrect -> 400, distinct du 404 "non trouve".

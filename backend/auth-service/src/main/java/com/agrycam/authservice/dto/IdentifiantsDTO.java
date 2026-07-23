@@ -8,5 +8,6 @@ public record IdentifiantsDTO(
     String email,
     String passwordHash,
     List<String> roles,
-    LocalDateTime suspenduJusquau
+    LocalDateTime suspenduJusquau,
+    boolean emailConfirme
 ) {}

@@ -57,7 +57,8 @@ public class RestUtilisateurClient implements UtilisateurClient {
                     reponse.email(),
                     reponse.motDePasse(),
                     reponse.roles(),
-                    reponse.suspenduJusquau()
+                    reponse.suspenduJusquau(),
+                    reponse.emailConfirme()
             );
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
@@ -67,5 +68,5 @@ public class RestUtilisateurClient implements UtilisateurClient {
         }
     }
 
-    private record CredentialsApiResponse(Long uid, String email, String motDePasse, List<String> roles, LocalDateTime suspenduJusquau) {}
+    private record CredentialsApiResponse(Long uid, String email, String motDePasse, List<String> roles, LocalDateTime suspenduJusquau, boolean emailConfirme) {}
 }

@@ -10,4 +10,5 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
     boolean existsByEmail(String email);
     List<Utilisateur> findByNomContainingIgnoreCase(String nom);
     long countByRole(Utilisateur.Role role);
+    List<Utilisateur> findByEmailConfirmeFalseAndCodeConfirmationEmailIsNull();
 }

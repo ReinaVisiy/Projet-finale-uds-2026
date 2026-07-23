@@ -31,6 +31,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/utilisateurs/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/utilisateurs").permitAll()
+                .requestMatchers(HttpMethod.POST,
+                        "/api/utilisateurs/confirmer-email",
+                        "/api/utilisateurs/renvoyer-code-confirmation",
+                        "/api/utilisateurs/mot-de-passe-oublie",
+                        "/api/utilisateurs/verifier-code-reset",
+                        "/api/utilisateurs/reinitialiser-mot-de-passe").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

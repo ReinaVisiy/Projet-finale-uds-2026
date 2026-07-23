@@ -3,6 +3,7 @@ package com.agrycam.authservice.service;
 import com.agrycam.authservice.dto.IdentifiantsDTO;
 import com.agrycam.authservice.dto.ConnexionRequest;
 import com.agrycam.authservice.dto.ConnexionResponse;
+import com.agrycam.authservice.exception.EmailNonConfirmeException;
 import com.agrycam.authservice.security.JwtUtil;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +37,10 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.password(), credentials.passwordHash())) {
             throw new BadCredentialsException("Email ou mot de passe incorrect");
+        }
+
+        if (!credentials.emailConfirme()) {
+            throw new EmailNonConfirmeException("Veuillez confirmer votre email avant de vous connecter.");
         }
 
         if (credentials.suspenduJusquau() != null && credentials.suspenduJusquau().isAfter(LocalDateTime.now())) {

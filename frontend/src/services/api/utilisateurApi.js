@@ -59,3 +59,23 @@ export const changerMotDePasse = (id, ancienMotDePasse, nouveauMotDePasse) =>
  */
 export const suspendreUtilisateur = (id, jours) =>
   httpPut(BASE, `/api/utilisateurs/${id}/suspension`, { jours });
+
+/** Confirm the account's email using the 6-digit code sent at registration. */
+export const confirmerEmail = (email, code) =>
+  httpPost(BASE, '/api/utilisateurs/confirmer-email', { email, code }, { auth: false });
+
+/** Resend the email-confirmation code (e.g. the first one expired or was lost). */
+export const renvoyerCodeConfirmation = (email) =>
+  httpPost(BASE, '/api/utilisateurs/renvoyer-code-confirmation', { email }, { auth: false });
+
+/** Step 1 of "forgot password": send a reset code to the given email. */
+export const demanderReinitialisationMotDePasse = (email) =>
+  httpPost(BASE, '/api/utilisateurs/mot-de-passe-oublie', { email }, { auth: false });
+
+/** Step 2: verify the reset code before showing the new-password screen. */
+export const verifierCodeReinitialisation = (email, code) =>
+  httpPost(BASE, '/api/utilisateurs/verifier-code-reset', { email, code }, { auth: false });
+
+/** Step 3: apply the new password after the code has been verified. */
+export const reinitialiserMotDePasse = (email, code, nouveauMotDePasse) =>
+  httpPost(BASE, '/api/utilisateurs/reinitialiser-mot-de-passe', { email, code, nouveauMotDePasse }, { auth: false });

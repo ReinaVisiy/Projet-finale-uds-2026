@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Mail, ArrowLeft, CheckCircle, AlertCircle, Key, Send, Lock } from 'lucide-react';
+import { utilisateurApi } from '../services/api';
 
-export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, updateUserPassword }) {
+export default function PasswordRecovery({ onBack, onSuccess }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
@@ -13,44 +14,44 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [generatedCode, setGeneratedCode] = useState('');
 
-  const handleEmailSubmit = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (!email.trim()) {
       setError(t('passwordRecovery.errEmailRequired'));
       return;
     }
-    // Vérifier si l'email existe dans les utilisateurs enregistrés
-    const userExists = registeredUsers.some(u => u.email.toLowerCase() === email.toLowerCase());
-    if (!userExists) {
-      setError(t('passwordRecovery.errNoAccount'));
-      return;
+    setLoading(true);
+    try {
+      await utilisateurApi.demanderReinitialisationMotDePasse(email.trim().toLowerCase());
+      setStep(2);
+    } catch (err) {
+      setError(err.message || t('passwordRecovery.errNoAccount'));
+    } finally {
+      setLoading(false);
     }
-    // Générer un code aléatoire à 5 chiffres
-    const newCode = Math.floor(10000 + Math.random() * 90000).toString();
-    setGeneratedCode(newCode);
-    // Simuler l'envoi du code par email
-    alert(t('passwordRecovery.codeSentAlert', { email, code: newCode }));
-    setStep(2);
   };
 
-  const handleCodeSubmit = (e) => {
+  const handleCodeSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!code.trim() || code.length < 5) {
+    if (!code.trim() || code.length < 6) {
       setError(t('passwordRecovery.errCodeInvalid'));
       return;
     }
-    if (code !== generatedCode) {
-      setError(t('passwordRecovery.errCodeWrong'));
-      return;
+    setLoading(true);
+    try {
+      await utilisateurApi.verifierCodeReinitialisation(email.trim().toLowerCase(), code);
+      setStep(3);
+    } catch (err) {
+      setError(err.message || t('passwordRecovery.errCodeWrong'));
+    } finally {
+      setLoading(false);
     }
-    setStep(3);
   };
 
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (newPassword.length < 6) {
@@ -62,16 +63,15 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
       return;
     }
     setLoading(true);
-    // Mettre à jour le mot de passe
-    const success = updateUserPassword(email, newPassword);
-    if (success) {
+    try {
+      await utilisateurApi.reinitialiserMotDePasse(email.trim().toLowerCase(), code, newPassword);
       setSuccess(true);
-      setLoading(false);
       setTimeout(() => {
         if (onSuccess) onSuccess();
       }, 2000);
-    } else {
-      setError(t('passwordRecovery.errUpdateFailed'));
+    } catch (err) {
+      setError(err.message || t('passwordRecovery.errUpdateFailed'));
+    } finally {
       setLoading(false);
     }
   };
@@ -141,9 +141,9 @@ export default function PasswordRecovery({ onBack, onSuccess, registeredUsers, u
                   placeholder={t('passwordRecovery.codePlaceholder')}
                   style={styles.input}
                   value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   required
-                  maxLength={5}
+                  maxLength={6}
                 />
               </div>
             </div>
