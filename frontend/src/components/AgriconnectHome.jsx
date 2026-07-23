@@ -135,6 +135,7 @@ export default function AgroMarketHome({
       if (correspondRecherche(p.name, query)) return true;
       if (correspondRecherche(p.farm, query)) return true;
       if (correspondRecherche(p.category, query)) return true;
+      if (correspondRecherche(p.localisation, query)) return true;
       return false;
     });
     setFilteredProducts(results);
