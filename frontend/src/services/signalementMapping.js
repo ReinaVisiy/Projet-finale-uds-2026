@@ -43,6 +43,7 @@ export function mapSignalementPourAffichage(dto, cibleNom, auteurNom, targetOwne
     cible: cibleNom || `#${dto.targetId}`,
     targetId: dto.targetId,
     targetOwnerId: targetOwnerId ?? (dto.type !== 'PRODUIT' ? dto.targetId : undefined),
+    reporterId: dto.reporterId, // déclarant à notifier une fois le signalement traité
     motif: dto.raison,
     auteur: auteurNom || `Utilisateur #${dto.reporterId}`,
     date: dto.dateCreation,

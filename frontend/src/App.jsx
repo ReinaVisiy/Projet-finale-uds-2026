@@ -1409,6 +1409,12 @@ export default function App() {
             try {
               await signalementApi.updateStatutSignalement(id, 'RESOLU');
               notifierAdmins('info', `Signalement résolu`, '/admin/moderation-panel');
+              const signalementConcerne = signalements.find((s) => s.id === id);
+              if (signalementConcerne) {
+                // Pas de "voir plus" : aucune page ne permet à un déclarant
+                // de consulter le suivi de ses propres signalements.
+                addNotification(signalementConcerne.reporterId, 'success', `Votre signalement a été traité et jugé fondé.`);
+              }
               await chargerSignalements();
             } catch (err) {
               alert(err?.message || "La mise à jour du signalement a échoué.");
@@ -1418,6 +1424,10 @@ export default function App() {
             try {
               await signalementApi.updateStatutSignalement(id, 'REJETE');
               notifierAdmins('info', `Signalement rejeté`, '/admin/moderation-panel');
+              const signalementConcerne = signalements.find((s) => s.id === id);
+              if (signalementConcerne) {
+                addNotification(signalementConcerne.reporterId, 'info', `Votre signalement a été examiné et jugé non fondé.`);
+              }
               await chargerSignalements();
             } catch (err) {
               alert(err?.message || "La mise à jour du signalement a échoué.");
