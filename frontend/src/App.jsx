@@ -500,7 +500,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (currentUser?.role === 'client') {
+    if (currentUser?.role === 'client' || isClientMode) {
       chargerMesCommandes();
       chargerMesLitiges();
     } else {
@@ -508,7 +508,7 @@ export default function App() {
       setMesLitiges([]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser?.id, currentUser?.role]);
+  }, [currentUser?.id, currentUser?.role, isClientMode]);
 
   // Commandes du vendeur connecté uniquement, via l'endpoint scopé
   // /api/commandes/vendeur/{id} (plutôt que de filtrer côté client dans

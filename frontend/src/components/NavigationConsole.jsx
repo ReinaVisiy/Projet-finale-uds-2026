@@ -131,7 +131,7 @@ export default function NavigationConsole({
               <button style={styles.navLink} onClick={() => { setMobileMenuOpen(false); onNavigate('user-profile'); }}>
                 <User size={15} /> {t('navigation.myProfile')}
               </button>
-              {currentUser.role === 'client' && (
+              {(currentUser.role === 'client' || isClientMode) && (
                 <>
                   <button style={styles.navLink} onClick={() => { setMobileMenuOpen(false); onNavigate('orders'); }}>
                     <Package size={15} /> {t('navigation.myOrders')}
@@ -232,7 +232,7 @@ export default function NavigationConsole({
                       <MessageCircle size={15} /> {t('navigation.myMessages')}
                       {unreadMessagesCount > 0 && <span style={styles.dropdownBadge}>{unreadMessagesCount}</span>}
                     </button>
-                    {currentUser.role === 'client' && (
+                    {(currentUser.role === 'client' || isClientMode) && (
                       <>
                         <button style={styles.dropdownItem} onClick={() => { setShowMenu(false); onNavigate('orders'); }}>
                           <Package size={15} /> {t('navigation.myOrders')}
