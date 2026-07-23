@@ -1224,10 +1224,21 @@ export default function App() {
         return <PaymentReturn
           transactionId={paymentTransactionId}
           onTermine={() => navigate(currentUser?.role === 'client' ? 'orders' : 'home')}
-          onPaiementConfirme={() => {
+          onPaiementConfirme={async (transaction) => {
             if (currentUser?.id) {
               addNotification(currentUser.id, 'success', 'Votre paiement a été confirmé avec succès.', '/orders');
             }
+            if (transaction?.typeReference === 'COMMANDE' && transaction?.referenceId) {
+              try {
+                const commandeConcernee = await commandeApi.getCommandeById(transaction.referenceId);
+                if (commandeConcernee?.producteurId) {
+                  addNotification(commandeConcernee.producteurId, 'success', `Le paiement de la commande #${transaction.referenceId} a été confirmé.`, '/vendeur-orders');
+                }
+              } catch (err) {
+                console.error('Impossible de notifier le vendeur du paiement confirmé :', err);
+              }
+            }
+            await chargerMesCommandes();
           }}
         />;
       case 'cart':
