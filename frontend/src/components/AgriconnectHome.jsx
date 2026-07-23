@@ -1,6 +1,6 @@
 // src/components/AgroMarketHome.jsx
 import { useState, useEffect } from 'react';
-import { Search, ShoppingBag, Leaf, ShieldCheck, Truck, Star, ArrowRight, UserPlus, PackageSearch } from 'lucide-react';
+import { Search, ShoppingBag, Leaf, ShieldCheck, Truck, Star, ArrowRight, UserPlus, PackageSearch, MapPin } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
 import { useTranslation } from 'react-i18next';
 import { correspondRecherche } from '../utils/produceSearch';
@@ -309,6 +309,12 @@ export default function AgroMarketHome({
                       <p style={styles.prodFarm}>{prod.farm}</p>
                       <CertifiedBadge isCertified={!!prod.certifie} label={t('producerProfile.certifiedBadge')} style={{ marginLeft: '6px' }} />
                     </div>
+                    {prod.localisation && (
+                      <div style={styles.prodLocationRow}>
+                        <MapPin size={12} color="#6c757d" />
+                        <span style={styles.prodLocation}>{prod.localisation}</span>
+                      </div>
+                    )}
                     <div style={styles.prodFooter}>
                       <div style={styles.stars}>
                         {[1,2,3,4,5].map(i => {
@@ -813,6 +819,16 @@ const styles = {
     color: '#6c757d',
     margin: 0,
     fontWeight: '500',
+  },
+  prodLocationRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    marginBottom: '12px',
+  },
+  prodLocation: {
+    fontSize: '12px',
+    color: '#6c757d',
   },
   prodFooter: {
     display: 'flex',

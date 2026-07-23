@@ -747,7 +747,7 @@
   "productCatalog": {
     "back": "Back",
     "title": "Product catalogue",
-    "searchPlaceholder": "Search for a product, a farm or a category...",
+    "searchPlaceholder": "Search for a product, a farm, a category or a location...",
     "reset": "✕ Reset",
     "all": "All",
     "loading": "Loading products...",
@@ -803,7 +803,8 @@
     "addToCart": "Add to cart • {{total}} FCFA",
     "notFoundTitle": "Product not found",
     "notFoundSubtitle": "This product is no longer available or the link you used is invalid.",
-    "backToHome": "Back to home"
+    "backToHome": "Back to home",
+    "availableAt": "Available in {{location}}"
   },
   "salesHistory": {
     "pageTitle": "Sales history",

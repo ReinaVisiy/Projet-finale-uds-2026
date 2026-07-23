@@ -747,7 +747,7 @@
   "productCatalog": {
     "back": "Retour",
     "title": "Catalogue des produits",
-    "searchPlaceholder": "Rechercher un produit, une ferme ou une catégorie...",
+    "searchPlaceholder": "Rechercher un produit, une ferme, une catégorie ou une localisation...",
     "reset": "✕ Réinitialiser",
     "all": "Tous",
     "loading": "Chargement des produits...",
@@ -803,7 +803,8 @@
     "addToCart": "Ajouter au panier • {{total}} FCFA",
     "notFoundTitle": "Produit introuvable",
     "notFoundSubtitle": "Ce produit n'est plus disponible ou le lien utilisé n'est pas valide.",
-    "backToHome": "Retour à l'accueil"
+    "backToHome": "Retour à l'accueil",
+    "availableAt": "Disponible à : {{location}}"
   },
   "salesHistory": {
     "pageTitle": "Historique des ventes",

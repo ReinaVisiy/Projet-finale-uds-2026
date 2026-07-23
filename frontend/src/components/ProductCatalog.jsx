@@ -1,6 +1,6 @@
 // src/components/ProductCatalog.jsx
 import { useState, useMemo } from 'react';
-import { Search, ShoppingBag, Star, ArrowLeft } from 'lucide-react';
+import { Search, ShoppingBag, Star, ArrowLeft, MapPin } from 'lucide-react';
 import useProduits from '../hooks/useProduits';
 import { correspondRecherche } from '../utils/produceSearch';
 import { traduireNomCategorie } from '../services/productMapping';
@@ -34,6 +34,7 @@ export default function ProductCatalog({
         if (correspondRecherche(p.name, query)) return true;
         if (correspondRecherche(p.farm, query)) return true;
         if (correspondRecherche(p.category, query)) return true;
+        if (correspondRecherche(p.localisation, query)) return true;
         return false;
       });
     }
@@ -157,6 +158,12 @@ export default function ProductCatalog({
                   <p style={styles.prodFarm}>{prod.farm}</p>
                   <CertifiedBadge isCertified={!!prod.certifie} label={t('producerProfile.certifiedBadge')} style={{ marginLeft: '6px' }} />
                 </div>
+                {prod.localisation && (
+                  <div style={styles.prodLocationRow}>
+                    <MapPin size={12} color="#6c757d" />
+                    <span style={styles.prodLocation}>{prod.localisation}</span>
+                  </div>
+                )}
                 <div style={styles.prodFooter}>
                   <div style={styles.stars}>
                     {[1,2,3,4,5].map(i => {
@@ -341,6 +348,8 @@ const styles = {
   prodPrice: { fontSize: '15px', fontWeight: '800', color: '#e07a5f' },
   prodFarmRow: { display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', margin: '0 0 10px 0' },
   prodFarm: { fontSize: '13px', color: '#6c757d', margin: 0 },
+  prodLocationRow: { display: 'flex', alignItems: 'center', gap: '4px', margin: '0 0 10px 0' },
+  prodLocation: { fontSize: '12px', color: '#6c757d' },
   prodFooter: {
     display: 'flex',
     justifyContent: 'space-between',

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Share2, Shield, Truck, Package, Plus, Minus, ShoppingCart, MessageCircle, Flag, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Star, Share2, Shield, Truck, Package, Plus, Minus, ShoppingCart, MessageCircle, Flag, ChevronRight, MapPin } from 'lucide-react';
 import { getAvisParProduit, getAvisStats, publierAvis, modifierAvis } from '../services/api/avisApi';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
@@ -272,6 +272,12 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
                     <h3 style={styles.farmName}>{product.farm}</h3>
                     <CertifiedBadge isCertified={!!product.certifie} label={t('producerProfile.certifiedBadge')} />
                   </div>
+                  {product.localisation && (
+                    <p style={styles.farmLocation}>
+                      <MapPin size={12} />
+                      {t('productDetail.availableAt', { location: product.localisation })}
+                    </p>
+                  )}
                   {onNavigateToProducerProfile && (
                     <button
                       style={styles.viewProfileLink}
@@ -526,6 +532,7 @@ const styles = {
   farmAvatar: { width: '48px', height: '48px', backgroundColor: '#1b4d3e', color: '#ffffff', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '800' },
   farmNameRow: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' },
   farmName: { fontSize: '16px', fontWeight: '800', color: '#212529', margin: 0 },
+  farmLocation: { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#6c757d', margin: '4px 0 0 0' },
   verifiedWrap: { display: 'flex', alignItems: 'center', gap: '6px' },
   verifiedText: { fontSize: '12px', color: '#2d6a4f', fontWeight: '700' },
   viewProfileLink: { display: 'flex', alignItems: 'center', gap: '2px', background: 'none', border: 'none', color: '#6c757d', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', padding: '4px 0 0 0' },
