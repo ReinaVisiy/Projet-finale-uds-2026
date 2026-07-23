@@ -1359,7 +1359,10 @@ export default function App() {
               await commandeApi.updateStatutCommande(orderId, statutBackend);
               const commandeConcernee = mesCommandesVendeur.find((c) => c.id === orderId);
               if (commandeConcernee) {
-                addNotification(commandeConcernee.id_client, 'info', `Statut de votre commande #${orderId} mis à jour : ${newStatus}`, '/orders');
+                const messageStatut = newStatus === 'Rejetée'
+                  ? `Votre commande #${orderId} a été rejetée par le vendeur.`
+                  : `Statut de votre commande #${orderId} mis à jour : ${newStatus}`;
+                addNotification(commandeConcernee.id_client, newStatus === 'Rejetée' ? 'error' : 'info', messageStatut, '/orders');
               }
               await chargerCommandesVendeur();
             } catch (err) {
@@ -1498,7 +1501,10 @@ export default function App() {
               await commandeApi.updateStatutCommande(orderId, statutBackend);
               const commandeConcernee = mesCommandesVendeur.find((c) => c.id === orderId);
               if (commandeConcernee) {
-                addNotification(commandeConcernee.id_client, 'info', `Statut de votre commande #${orderId} mis à jour : ${newStatus}`, '/orders');
+                const messageStatut = newStatus === 'Rejetée'
+                  ? `Votre commande #${orderId} a été rejetée par le vendeur.`
+                  : `Statut de votre commande #${orderId} mis à jour : ${newStatus}`;
+                addNotification(commandeConcernee.id_client, newStatus === 'Rejetée' ? 'error' : 'info', messageStatut, '/orders');
               }
               await chargerCommandesVendeur();
             } catch (err) {
