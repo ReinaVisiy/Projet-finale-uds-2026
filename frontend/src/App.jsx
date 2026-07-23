@@ -1422,13 +1422,13 @@ export default function App() {
           onTermine={() => navigate(currentUser?.role === 'client' ? 'orders' : 'home')}
           onPaiementConfirme={async (transaction) => {
             if (currentUser?.id) {
-              addNotification(currentUser.id, 'success', 'Votre paiement a été confirmé avec succès.', '/orders');
+              addNotification(currentUser.id, 'success', 'paymentConfirmed', {}, '/orders');
             }
             if (transaction?.typeReference === 'COMMANDE' && transaction?.referenceId) {
               try {
                 const commandeConcernee = await commandeApi.getCommandeById(transaction.referenceId);
                 if (commandeConcernee?.producteurId) {
-                  addNotification(commandeConcernee.producteurId, 'success', `Le paiement de la commande #${transaction.referenceId} a été confirmé.`, '/vendeur-orders');
+                  addNotification(commandeConcernee.producteurId, 'success', 'vendorPaymentConfirmed', { orderId: transaction.referenceId }, '/vendeur-orders');
                 }
               } catch (err) {
                 console.error('Impossible de notifier le vendeur du paiement confirmé :', err);
@@ -1442,9 +1442,8 @@ export default function App() {
             addNotification(
               currentUser.id,
               'error',
-              estCertification
-                ? 'Le paiement de votre certification a échoué ou a expiré.'
-                : `Le paiement de la commande #${transaction?.referenceId ?? ''} a échoué ou a expiré.`,
+              estCertification ? 'certificationPaymentFailed' : 'orderPaymentFailed',
+              estCertification ? {} : { orderId: transaction?.referenceId ?? '' },
               estCertification ? '/certification' : '/orders'
             );
           }}
