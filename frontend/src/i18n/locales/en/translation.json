@@ -1241,6 +1241,9 @@
     "reportResolvedAdmin": "Report resolved",
     "reportRejectedAdmin": "Report rejected",
     "reportUpheld": "Your report was reviewed and found valid.",
-    "reportDismissed": "Your report was reviewed and found not valid."
+    "reportDismissed": "Your report was reviewed and found not valid.",
+    "newUserRegistered": "New user registered: {{name}} ({{role}})",
+    "newCertificationRequest": "New certification request from {{vendorName}}",
+    "newReport": "New report on {{target}} by {{reporterName}}"
   }
 }

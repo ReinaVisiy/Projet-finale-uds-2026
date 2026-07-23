@@ -1241,6 +1241,9 @@
     "reportResolvedAdmin": "Signalement résolu",
     "reportRejectedAdmin": "Signalement rejeté",
     "reportUpheld": "Votre signalement a été traité et jugé fondé.",
-    "reportDismissed": "Votre signalement a été examiné et jugé non fondé."
+    "reportDismissed": "Votre signalement a été examiné et jugé non fondé.",
+    "newUserRegistered": "Nouvel utilisateur inscrit : {{name}} ({{role}})",
+    "newCertificationRequest": "Nouvelle demande de certification de {{vendorName}}",
+    "newReport": "Nouveau signalement de {{target}} par {{reporterName}}"
   }
 }
