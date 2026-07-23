@@ -20,7 +20,7 @@ const readAsDataUrl = (file) => new Promise((resolve, reject) => {
   reader.readAsDataURL(file);
 });
 
-export default function CertificationRequest({ onBack }) {
+export default function CertificationRequest({ onBack, onCertificationSoumise }) {
   const { t, i18n } = useTranslation();
   const isMobile = useIsMobile(768);
   const TYPES_DOCUMENT = ['CARTE_IDENTITE', 'PASSEPORT', 'PERMIS_CONDUIRE', 'RECIPISSE'].map((value) => ({
@@ -112,6 +112,7 @@ export default function CertificationRequest({ onBack }) {
     })
       .then((response) => {
         setCertification(response);
+        onCertificationSoumise?.(response);
         // Enchaine directement sur le paiement NotchPay : pas d'etape
         // manuelle intermediaire.
         return lancerPaiement(response);

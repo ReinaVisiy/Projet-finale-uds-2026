@@ -1437,6 +1437,9 @@ export default function App() {
       case 'certification':
         return <CertificationRequest
           onBack={() => navigate('seller-dashboard')}
+          onCertificationSoumise={() => {
+            notifierAdmins('info', `Nouvelle demande de certification de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'un vendeur'}`, '/admin/vendor-verification');
+          }}
         />;
       case 'admin-dashboard':
         return <AdminDashboard
