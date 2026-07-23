@@ -222,32 +222,52 @@ export default function AgroMarketHome({
       </div>
 
       <div style={styles.container}>
-        {/* CATEGORIES */}
+        {/* CATEGORIES : cartes pleines en navigation normale, mais version
+            compacte (icône ronde + nom, en ligne) une fois qu'un filtre est
+            actif — sinon les grandes cartes poussent les résultats trop bas
+            et donnent l'impression qu'il n'y a aucun résultat. */}
         <div style={styles.section} id="categories">
           <h2 style={styles.sectionTitle}>{t('home.catTitle')}</h2>
-          <div style={styles.categoryGrid}>
+          <div style={filteredProducts !== null ? styles.categoryGridCompact : styles.categoryGrid}>
             {categories.map(cat => (
-              <div
-                key={cat.id}
-                style={{
-                  ...styles.categoryCard,
-                  backgroundColor: cat.color,
-                  border: activeCategory === cat.id ? '2px solid #2d6a4f' : '2px solid transparent',
-                  transform: activeCategory === cat.id ? 'scale(1.03)' : 'scale(1)',
-                  boxShadow: activeCategory === cat.id ? '0 8px 24px rgba(45,106,79,0.2)' : 'none',
-                  transition: 'all 0.2s ease',
-                }}
-                onClick={() => handleCategoryClick(cat)}
-              >
-                <div style={styles.catImgWrap}>
-                  <img src={cat.image} alt={cat.name} style={styles.catImg} />
+              filteredProducts !== null ? (
+                <div
+                  key={cat.id}
+                  style={{
+                    ...styles.categoryCardCompact,
+                    backgroundColor: cat.color,
+                    border: activeCategory === cat.id ? '2px solid #2d6a4f' : '2px solid transparent',
+                  }}
+                  onClick={() => handleCategoryClick(cat)}
+                >
+                  <div style={styles.catImgWrapCompact}>
+                    <img src={cat.image} alt={cat.name} style={styles.catImg} />
+                  </div>
+                  <span style={styles.catNameCompact}>{cat.name}</span>
                 </div>
-                <h3 style={styles.catName}>{cat.name}</h3>
-                <span style={styles.catCount}>{cat.count}</span>
-                {activeCategory === cat.id && (
-                  <span style={styles.catActive}>{t('home.catSelected')}</span>
-                )}
-              </div>
+              ) : (
+                <div
+                  key={cat.id}
+                  style={{
+                    ...styles.categoryCard,
+                    backgroundColor: cat.color,
+                    border: activeCategory === cat.id ? '2px solid #2d6a4f' : '2px solid transparent',
+                    transform: activeCategory === cat.id ? 'scale(1.03)' : 'scale(1)',
+                    boxShadow: activeCategory === cat.id ? '0 8px 24px rgba(45,106,79,0.2)' : 'none',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onClick={() => handleCategoryClick(cat)}
+                >
+                  <div style={styles.catImgWrap}>
+                    <img src={cat.image} alt={cat.name} style={styles.catImg} />
+                  </div>
+                  <h3 style={styles.catName}>{cat.name}</h3>
+                  <span style={styles.catCount}>{cat.count}</span>
+                  {activeCategory === cat.id && (
+                    <span style={styles.catActive}>{t('home.catSelected')}</span>
+                  )}
+                </div>
+              )
             ))}
           </div>
         </div>
@@ -642,6 +662,34 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
     gap: '24px',
+  },
+  categoryGridCompact: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '12px',
+  },
+  categoryCardCompact: {
+    padding: '10px 16px',
+    borderRadius: '14px',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: '12px',
+    cursor: 'pointer',
+  },
+  catImgWrapCompact: {
+    width: '44px',
+    height: '44px',
+    borderRadius: '50%',
+    overflow: 'hidden',
+    flexShrink: 0,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.10)',
+  },
+  catNameCompact: {
+    fontSize: '14px',
+    fontWeight: '700',
+    color: '#212529',
+    margin: 0,
   },
   categoryCard: {
     padding: '24px',
