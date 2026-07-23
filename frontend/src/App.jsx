@@ -968,6 +968,15 @@ export default function App() {
   const handleRejectVerification = async (id, motifRejet) => {
     try {
       await certificationApi.reviserCertification(id, { approuve: false, motifRejet });
+      const certificationConcernee = vendorVerifications.find((v) => v.id === id);
+      if (certificationConcernee) {
+        addNotification(
+          certificationConcernee.producteurId,
+          'error',
+          `Votre demande de certification a été rejetée${motifRejet ? ` : ${motifRejet}` : '.'}`,
+          '/certification'
+        );
+      }
       await chargerCertifications();
     } catch (err) {
       alert(err?.message || "Le rejet a échoué.");
