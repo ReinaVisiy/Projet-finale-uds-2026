@@ -955,6 +955,10 @@ export default function App() {
   const handleApproveVerification = async (id) => {
     try {
       await certificationApi.reviserCertification(id, { approuve: true });
+      const certificationConcernee = vendorVerifications.find((v) => v.id === id);
+      if (certificationConcernee) {
+        addNotification(certificationConcernee.producteurId, 'success', `Votre demande de certification a été approuvée.`, '/certification');
+      }
       await chargerCertifications();
     } catch (err) {
       alert(err?.message || "L'approbation a échoué.");
