@@ -213,8 +213,15 @@ public class UtilisateurService {
         try {
             Hashtable<String, String> env = new Hashtable<>();
             env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
-            env.put("com.sun.jndi.dns.timeout.initial", "2000");
-            env.put("com.sun.jndi.dns.timeout.retries", "1");
+            // Point explicitement vers des serveurs DNS publics : le
+            // provider JNDI ne detecte pas toujours correctement le
+            // resolveur DNS configure au niveau du systeme d'exploitation
+            // (notamment sous Windows), ce qui provoquait des echecs
+            // "DNS error" meme pour des domaines parfaitement valides
+            // (ex. gmail.com).
+            env.put("java.naming.provider.url", "dns://8.8.8.8 dns://1.1.1.1");
+            env.put("com.sun.jndi.dns.timeout.initial", "3000");
+            env.put("com.sun.jndi.dns.timeout.retries", "2");
             InitialDirContext ictx = new InitialDirContext(env);
 
             Attribute mx = ictx.getAttributes(domaine, new String[]{"MX"}).get("MX");
