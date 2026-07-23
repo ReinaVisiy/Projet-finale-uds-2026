@@ -335,6 +335,8 @@
     "logIn": "Se connecter",
     "notRegistered": "Pas encore inscrit ?",
     "createAccount": "Créer un compte gratuit",
+    "emailNotVerified": "Votre email n'est pas vérifié.",
+    "verifyMyEmail": "Vérifier mon email",
     "secure": "🔒 S.E. Sécurisé",
     "gdpr": "📋 RGPD Contrôle",
     "certified": "✅ Certifié Agri"
@@ -953,7 +955,7 @@
     "emailPlaceholder": "ex: elviradech237@gmail.com",
     "validate": "Valider",
     "step2Title": "Vérification",
-    "step2Subtitle": "Un code de validation a été envoyé à votre adresse email",
+    "step2Subtitle": "Un code de validation a été envoyé à {{email}}",
     "codeLabel": "Code de validation",
     "codePlaceholder": "111111",
     "step3Title": "Nouveau mot de passe",

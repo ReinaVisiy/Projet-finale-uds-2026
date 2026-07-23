@@ -1254,7 +1254,7 @@ export default function App() {
     if (currentUser?.role === 'vendeur' && ecransCommandesVendeur.includes(s)) {
       chargerCommandesVendeur();
     }
-    const publicScreens = ['home', 'login-page', 'register', 'recovery', 'product-detail', 'faq', 'producer-profile', 'client-profile', 'user-search', 'catalogue'];
+    const publicScreens = ['home', 'login-page', 'register', 'confirm-email', 'recovery', 'product-detail', 'faq', 'producer-profile', 'client-profile', 'user-search', 'catalogue'];
     if (!currentUser && !publicScreens.includes(s)) {
       requireLogin(() => {
         updateScreenHistory(s);

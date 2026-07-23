@@ -40,7 +40,7 @@ public class AuthService {
         }
 
         if (!credentials.emailConfirme()) {
-            throw new EmailNonConfirmeException("Veuillez confirmer votre email avant de vous connecter.");
+            throw new EmailNonConfirmeException("Votre email n'est pas vérifié.");
         }
 
         if (credentials.suspenduJusquau() != null && credentials.suspenduJusquau().isAfter(LocalDateTime.now())) {

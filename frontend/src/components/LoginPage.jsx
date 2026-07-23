@@ -19,11 +19,13 @@ export default function LoginPage({
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setUnconfirmedEmail('');
     setLoading(true);
 
     if (!email.trim() || !password.trim()) {
@@ -36,8 +38,9 @@ export default function LoginPage({
       const user = await onValidateLogin(email, password, role);
       onLoginSuccess(user);
     } catch (err) {
-      if (err.body?.code === 'EMAIL_NON_CONFIRME' && onUnconfirmedEmail) {
-        onUnconfirmedEmail(email.trim().toLowerCase());
+      if (err.body?.code === 'EMAIL_NON_CONFIRME') {
+        setError(t('login.emailNotVerified'));
+        setUnconfirmedEmail(email.trim().toLowerCase());
         return;
       }
       setError(err.message || t('login.wrongCreds'));
@@ -67,6 +70,15 @@ export default function LoginPage({
             <AlertCircle size={18} color="#e07a5f" />
             <span style={styles.errorText}>{error}</span>
           </div>
+        )}
+        {unconfirmedEmail && onUnconfirmedEmail && (
+          <button
+            type="button"
+            style={styles.verifyEmailLink}
+            onClick={() => onUnconfirmedEmail(unconfirmedEmail)}
+          >
+            {t('login.verifyMyEmail')}
+          </button>
         )}
 
         {/* Choix du rôle */}
@@ -158,6 +170,7 @@ const styles = {
   infoText: { fontSize: '13px', color: '#1b4d3e', fontWeight: '600' },
   errorBox: { display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 16px', backgroundColor: '#fdf1ed', borderRadius: '12px', marginBottom: '20px', border: '1px solid #f5d4c8' },
   errorText: { fontSize: '13px', color: '#e07a5f', fontWeight: '600' },
+  verifyEmailLink: { background: 'none', border: 'none', color: '#2d6a4f', fontSize: '13px', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline', marginTop: '-10px', marginBottom: '20px', display: 'block' },
   roleRow: { display: 'flex', gap: '12px', marginBottom: '20px' },
   roleBtn: { flex: 1, padding: '12px', border: '2px solid #dee2e6', borderRadius: '14px', backgroundColor: '#f8f9fa', color: '#495057', fontSize: '14px', fontWeight: '700', cursor: 'pointer' },
   roleBtnActive: { border: '2px solid #2d6a4f', backgroundColor: '#e9f5ee', color: '#1b4d3e' },

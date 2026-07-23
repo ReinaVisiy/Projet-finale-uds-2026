@@ -127,7 +127,7 @@ export default function PasswordRecovery({ onBack, onSuccess }) {
             <ArrowLeft size={20} /> {t('passwordRecovery.back')}
           </button>
           <h1 style={styles.title}>{t('passwordRecovery.step2Title')}</h1>
-          <p style={styles.subtitle}>{t('passwordRecovery.step2Subtitle')}</p>
+          <p style={styles.subtitle}>{t('passwordRecovery.step2Subtitle', { email })}</p>
           
           {error && <div style={styles.errorBox}><AlertCircle size={18} color="#e07a5f" /><span>{error}</span></div>}
           
