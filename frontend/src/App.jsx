@@ -607,6 +607,14 @@ export default function App() {
   const handleRembourserLitige = async (litigeId) => {
     try {
       await litigeApi.rembourserLitige(litigeId);
+      const litigeConcerne = tousLesLitiges.find((l) => l.id === litigeId);
+      if (litigeConcerne) {
+        addNotification(litigeConcerne.clientId, 'success', `Votre litige sur la commande #${litigeConcerne.commandeId} a été remboursé.`, '/orders');
+        const commandeConcernee = toutesLesCommandes.find((c) => c.id === litigeConcerne.commandeId);
+        if (commandeConcernee) {
+          addNotification(commandeConcernee.producteurId, 'warning', `La commande #${litigeConcerne.commandeId} a été remboursée suite à un litige.`, '/vendeur-orders');
+        }
+      }
       await chargerTousLesLitiges();
     } catch (err) {
       alert(err?.message || "Le remboursement du litige a échoué.");
