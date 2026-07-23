@@ -10,7 +10,7 @@ import * as paiementApi from '../services/api/paiementApi';
 const INTERVALLE_SONDAGE_MS = 3000;
 const TENTATIVES_MAX = 5;
 
-export default function PaymentReturn({ transactionId, onTermine, onPaiementConfirme }) {
+export default function PaymentReturn({ transactionId, onTermine, onPaiementConfirme, onPaiementEchoue }) {
   const { t } = useTranslation();
   const [statut, setStatut] = useState('EN_ATTENTE');
   const [erreur, setErreur] = useState(null);
@@ -39,7 +39,16 @@ export default function PaymentReturn({ transactionId, onTermine, onPaiementConf
     onPaiementConfirmeRef.current = onPaiementConfirme;
   }, [onPaiementConfirme]);
 
+  // Même logique que onPaiementConfirmeRef ci-dessus, pour le cas
+  // symétrique d'un paiement définitivement échoué/expiré : on notifie
+  // le client une seule fois par transaction (cf. dejaEchoueRef).
+  const onPaiementEchoueRef = useRef(onPaiementEchoue);
+  useEffect(() => {
+    onPaiementEchoueRef.current = onPaiementEchoue;
+  }, [onPaiementEchoue]);
+
   const dejaConfirmeRef = useRef(false);
+  const dejaEchoueRef = useRef(false);
 
   const lancerSondage = useCallback(() => {
     let annule = false;
@@ -59,6 +68,9 @@ export default function PaymentReturn({ transactionId, onTermine, onPaiementConf
           if (transaction.statut === 'PAYE' && !dejaConfirmeRef.current) {
             dejaConfirmeRef.current = true;
             onPaiementConfirmeRef.current?.(transaction);
+          } else if ((transaction.statut === 'ECHOUE' || transaction.statut === 'EXPIRE') && !dejaEchoueRef.current) {
+            dejaEchoueRef.current = true;
+            onPaiementEchoueRef.current?.(transaction);
           }
           return;
         }

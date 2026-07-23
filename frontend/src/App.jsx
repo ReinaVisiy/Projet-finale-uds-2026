@@ -1240,6 +1240,18 @@ export default function App() {
             }
             await chargerMesCommandes();
           }}
+          onPaiementEchoue={(transaction) => {
+            if (!currentUser?.id) return;
+            const estCertification = transaction?.typeReference === 'CERTIFICATION';
+            addNotification(
+              currentUser.id,
+              'error',
+              estCertification
+                ? 'Le paiement de votre certification a échoué ou a expiré.'
+                : `Le paiement de la commande #${transaction?.referenceId ?? ''} a échoué ou a expiré.`,
+              estCertification ? '/certification' : '/orders'
+            );
+          }}
         />;
       case 'cart':
         return <ShoppingCart
