@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
+import UserLink from './common/UserLink';
+import ProductLink from './common/ProductLink';
 
 // Avant : tout l'affichage (client, produit, adresse, montant, numéro de
 // suivi...) était codé en dur, donc identique et sans rapport avec la
@@ -155,7 +157,7 @@ export default function OrderDetailAdmin({ order, onBack, onMarkAsDelivered }) {
               <div key={idx} style={styles.productRow}>
                 <div style={styles.productAvatar}>🌾</div>
                 <div style={styles.productInfo}>
-                  <h4 style={styles.productName}>{item.nomProduit}</h4>
+                  <h4 style={styles.productName}><ProductLink id={item.produitId}>{item.nomProduit}</ProductLink></h4>
                   <p style={styles.productMeta}>{item.quantity} × {item.prixUnitaire?.toLocaleString()} FCFA</p>
                 </div>
                 <div style={styles.productPrice}>{item.subtotal?.toLocaleString()} FCFA</div>
@@ -169,7 +171,7 @@ export default function OrderDetailAdmin({ order, onBack, onMarkAsDelivered }) {
           <div style={styles.section}>
             <h3 style={styles.sectionTitle}>{t('orderDetailAdmin.clientInfo')}</h3>
             <div style={styles.clientDetail}>
-              <p style={styles.detailName}>{order.client}</p>
+              <p style={styles.detailName}><UserLink id={order.id_client}>{order.client}</UserLink></p>
               <p style={styles.detailContact}>{order.clientEmail || t('orderDetailAdmin.noEmail')}</p>
             </div>
           </div>

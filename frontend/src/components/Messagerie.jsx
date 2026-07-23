@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { messageApi, utilisateurApi } from '../services/api';
+import UserLink from './common/UserLink';
+import ProductLink from './common/ProductLink';
 import {
   Search,
   Send,
@@ -328,7 +330,12 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
       const estNouvelleConversationViaProduit =
         vendor?.id === selectedPartnerId && !!vendor?.product && messages.length === 0;
       if (estNouvelleConversationViaProduit) {
-        finalContent = `${PRODUCT_MARKER_PREFIX}${vendor.product}]\n${finalContent}`;
+        // Format "<id>|<nom>" pour permettre au banner de lier vers la
+        // fiche produit (cf. parsing plus bas). L'id peut etre absent
+        // (conversation demarree autrement) : dans ce cas la banniere
+        // reste un texte simple, non cliquable.
+        const idPart = vendor.productId != null ? vendor.productId : '';
+        finalContent = `${PRODUCT_MARKER_PREFIX}${idPart}|${vendor.product}]\n${finalContent}`;
       }
 
       const sentMsg = await messageApi.envoyerMessage({
@@ -790,6 +797,7 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
                     }}
                   >
                     {/* Partner Avatar fallback with lucide User icon if default */}
+                    <UserLink id={convo.partnerId} style={{ flexShrink: 0 }}>
                     <div style={{
                       width: '46px',
                       height: '46px',
@@ -809,6 +817,7 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
                         initials
                       )}
                     </div>
+                    </UserLink>
 
                     {/* Chat Preview Metadata */}
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -826,7 +835,9 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
                           overflow: 'hidden',
                           textOverflow: 'ellipsis'
                         }}>
-                          {partnerNameResolved}
+                          <UserLink id={convo.partnerId} style={{ color: 'inherit' }}>
+                            {partnerNameResolved}
+                          </UserLink>
                         </span>
                         <span style={{
                           fontSize: '11px',
@@ -957,6 +968,7 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
                     <ChevronLeft size={24} />
                   </button>
 
+                  <UserLink id={selectedPartnerId}>
                   <div style={{
                     width: '40px',
                     height: '40px',
@@ -975,10 +987,13 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
                       getPartnerName(conversations.find(c => c.partnerId === selectedPartnerId), selectedPartnerId).charAt(0).toUpperCase() || '?'
                     )}
                   </div>
+                  </UserLink>
 
                   <div>
                     <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'white' }}>
-                      {getPartnerName(conversations.find(c => c.partnerId === selectedPartnerId), selectedPartnerId)}
+                      <UserLink id={selectedPartnerId} style={{ color: 'white' }}>
+                        {getPartnerName(conversations.find(c => c.partnerId === selectedPartnerId), selectedPartnerId)}
+                      </UserLink>
                     </h3>
                   </div>
                 </div>
@@ -1048,11 +1063,24 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
                     // Parse le contexte produit - uniquement possible sur le
                     // tout premier message de la conversation, puisque
                     // c'est le seul ou ce marqueur est jamais ajoute.
+                    // Format "<id>|<nom>" (voir handleSendMessage) ; les
+                    // messages plus anciens n'ont que "<nom>" (pas de '|'),
+                    // auquel cas productContextId reste null et la
+                    // banniere n'est pas cliquable.
                     let productContext = null;
+                    let productContextId = null;
                     if (index === 0 && cleanContent.startsWith(PRODUCT_MARKER_PREFIX)) {
                       const closeIdx = cleanContent.indexOf(']');
                       if (closeIdx !== -1) {
-                        productContext = cleanContent.substring(PRODUCT_MARKER_PREFIX.length, closeIdx);
+                        const raw = cleanContent.substring(PRODUCT_MARKER_PREFIX.length, closeIdx);
+                        const sepIdx = raw.indexOf('|');
+                        if (sepIdx !== -1) {
+                          const idStr = raw.substring(0, sepIdx);
+                          productContextId = idStr ? Number(idStr) : null;
+                          productContext = raw.substring(sepIdx + 1);
+                        } else {
+                          productContext = raw;
+                        }
                         cleanContent = cleanContent.substring(closeIdx + 1).replace(/^\n/, '');
                       }
                     }
@@ -1109,7 +1137,10 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
                               textAlign: 'center',
                               maxWidth: '80%'
                             }}>
-                              💬 {t('messagerie.aboutProduct')} {productContext}
+                              💬 {t('messagerie.aboutProduct')}{' '}
+                              <ProductLink id={productContextId} style={{ color: 'inherit', fontWeight: '700' }}>
+                                {productContext}
+                              </ProductLink>
                             </span>
                           </div>
                         )}

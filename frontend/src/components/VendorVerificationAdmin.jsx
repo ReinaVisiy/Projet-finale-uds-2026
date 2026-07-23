@@ -5,6 +5,7 @@ import {
   XCircle, Clock, AlertCircle, Phone, Mail, Search, Wallet,
 } from 'lucide-react';
 import useIsMobile from '../hooks/useIsMobile';
+import UserLink from './common/UserLink';
 
 // pendingVerifications: [{ id, producteurId, prenom, nom, email, telephone,
 //   typeDocument, typeDocumentLabel, idRecto, idVerso, photoUtilisateur,
@@ -143,7 +144,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
                       {v.prenom?.[0]?.toUpperCase()}{v.nom?.[0]?.toUpperCase()}
                     </div>
                     <div style={styles.listItemInfo}>
-                      <span style={styles.listItemName}>{v.prenom} {v.nom}</span>
+                      <UserLink id={v.producteurId} style={styles.listItemName}>{v.prenom} {v.nom}</UserLink>
                       <span style={styles.listItemEmail}>{v.email}</span>
                     </div>
                     <span style={{ ...styles.miniBadge, backgroundColor: badge.bg, color: badge.color }}>
@@ -177,7 +178,7 @@ export default function VendorVerificationAdmin({ pendingVerifications = [], onA
                     {selected.prenom?.[0]?.toUpperCase()}{selected.nom?.[0]?.toUpperCase()}
                   </div>
                   <div>
-                    <h2 style={styles.detailName}>{selected.prenom} {selected.nom}</h2>
+                    <h2 style={styles.detailName}><UserLink id={selected.producteurId}>{selected.prenom} {selected.nom}</UserLink></h2>
                     <span
                       style={{
                         ...styles.statusPill,

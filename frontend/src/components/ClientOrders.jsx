@@ -4,6 +4,7 @@ import { ArrowLeft, Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, Ch
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from './ConfirmDialog';
 import useIsMobile from '../hooks/useIsMobile';
+import ProductLink from './common/ProductLink';
 
 // Statuts pour lesquels le client peut encore annuler (avant EXPEDIEE,
 // cf. section 2 du cahier des charges — le backend refait de toute façon
@@ -185,7 +186,7 @@ export default function ClientOrders({ orders, onBackHome, onConfirmReception, o
                           <tbody>
                             {order.items.map((item, idx) => (
                               <tr key={idx} style={styles.tr}>
-                                <td style={styles.td}>{item.nomProduit || item.name}</td>
+                                <td style={styles.td}><ProductLink id={item.produitId}>{item.nomProduit || item.name}</ProductLink></td>
                                 <td style={styles.td}>{item.quantity}</td>
                                 <td style={styles.td}>{item.prixUnitaire?.toLocaleString() || item.price?.toLocaleString()} FCFA</td>
                                 <td style={styles.td}>{item.subtotal?.toLocaleString() || (item.quantity * item.price)?.toLocaleString()} FCFA</td>

@@ -4,6 +4,8 @@ import { ArrowLeft } from 'lucide-react';
 import { traduireNomCategorie } from '../services/productMapping';
 import { paiementApi } from '../services/api';
 import useIsMobile from '../hooks/useIsMobile';
+import UserLink from './common/UserLink';
+import ProductLink from './common/ProductLink';
 
 // Avant : toutes les données (mois, catégories, transactions, statuts,
 // KPIs) étaient des tableaux fictifs codés en dur (mêmes 6 "ventes" pour
@@ -91,10 +93,12 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
           date: order.date,
           dateISO: order.dateISO,
           product: item.nomProduit || item.name || produit.name,
+          productId: item.produitId ?? produit.id,
           category: produit.category || 'Général',
           qty: `${item.quantity} unité(s)`,
           amount: item.subtotal || 0,
           client: order.client,
+          clientId: order.id_client,
           status: order.status,
           orderId: order.id,
         });
@@ -427,10 +431,10 @@ export default function SalesHistory({ onBack, adminOrders = [], vendeurProducts
                   return (
                     <tr key={i} style={styles.tr}>
                       <td style={styles.td}><span style={styles.dateChip}>{row.date}</span></td>
-                      <td style={styles.td}><strong style={{ color: '#212529' }}>{row.product}</strong></td>
+                      <td style={styles.td}><ProductLink id={row.productId}><strong style={{ color: '#212529' }}>{row.product}</strong></ProductLink></td>
                       <td style={styles.td}>{row.qty}</td>
                       <td style={styles.td}><strong style={{ color: '#e07a5f' }}>{row.amount.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR')} FCFA</strong></td>
-                      <td style={styles.td}>{row.client}</td>
+                      <td style={styles.td}><UserLink id={row.clientId}>{row.client}</UserLink></td>
                       <td style={styles.td}>
                         <span style={{
                           ...styles.statusBadge,

@@ -44,6 +44,7 @@ import { mapProduitPourVendeur, mapProduitPourVitrine, construireProduitRequest 
 import { mapSignalementPourAffichage, construireRaison, TYPE_FRONTEND_TO_BACKEND } from './services/signalementMapping';
 import { mapCommandePourAffichage, STATUT_FRANCAIS_TO_BACKEND } from './services/commandeMapping';
 import { mapNotificationPourAffichage, construireNotificationRequest } from './services/notificationMapping';
+import { NavigationContext } from './context/NavigationContext';
 
 export default function App() {
   // Détection du retour de paiement NotchPay (successUrl/cancelUrl construits
@@ -1137,6 +1138,31 @@ export default function App() {
     }
   };
 
+  // Variantes "par id" pour UserLink/ProductLink (voir NavigationContext) :
+  // beaucoup d'endroits (messagerie, avis, commandes, panneau admin...)
+  // n'ont qu'un id + un nom affichés en texte brut, jamais l'objet complet
+  // attendu par goToUserProfile/goToProduct. On va chercher l'objet complet
+  // avant de naviguer.
+  const goToUserProfileById = async (id) => {
+    if (id == null) return;
+    try {
+      const dto = await utilisateurApi.getUtilisateurById(id);
+      goToUserProfile(mapProfileToFrontendUser(dto));
+    } catch (err) {
+      alert("Impossible de charger ce profil.");
+    }
+  };
+
+  const goToProductById = async (id) => {
+    if (id == null) return;
+    try {
+      const dto = await produitApi.getProduitById(id);
+      goToProduct(mapProduitPourVitrine(dto));
+    } catch (err) {
+      alert("Impossible de charger ce produit (peut-être a-t-il été retiré).");
+    }
+  };
+
   const clientOnlyScreens = ['cart', 'checkout-wizard', 'orders', 'purchases'];
   const vendeurOnlyScreens = ['add-product', 'edit-product', 'my-products', 'seller-dashboard', 'sales-history', 'stock-alerts', 'certification', 'vendeur-orders'];
   const adminOnlyScreens = ['admin-dashboard', 'order-management-admin', 'order-detail-admin', 'moderation-panel', 'vendor-verification'];
@@ -1650,6 +1676,7 @@ export default function App() {
   };
 
   return (
+    <NavigationContext.Provider value={{ goToUserProfileById, goToProductById }}>
     <div style={styles.appWrapper}>
       <NavigationConsole
         currentScreen={screen}
@@ -1699,6 +1726,7 @@ export default function App() {
         />
       )}
     </div>
+    </NavigationContext.Provider>
   );
 }
 

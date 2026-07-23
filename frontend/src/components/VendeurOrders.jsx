@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Package, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
+import UserLink from './common/UserLink';
+import ProductLink from './common/ProductLink';
 
 
 export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
@@ -104,7 +106,7 @@ export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
                     <div style={{ ...styles.detailsGrid, ...(isMobile && { gridTemplateColumns: '1fr' }) }}>
                       <div>
                         <p style={styles.detailLabel}>{t('vendeurOrders.client')}</p>
-                        <p style={styles.detailValue}>{order.client}</p>
+                        <p style={styles.detailValue}><UserLink id={order.id_client}>{order.client}</UserLink></p>
                       </div>
                       <div>
                         <p style={styles.detailLabel}>{t('vendeurOrders.email')}</p>
@@ -134,7 +136,7 @@ export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
                         <tbody>
                           {vendeurItems?.map((item, idx) => (
                             <tr key={idx} style={styles.tr}>
-                              <td style={styles.td}>{item.nomProduit || item.name}</td>
+                              <td style={styles.td}><ProductLink id={item.produitId}>{item.nomProduit || item.name}</ProductLink></td>
                               <td style={styles.td}>{item.quantity}</td>
                               <td style={styles.td}>{item.prixUnitaire?.toLocaleString() || item.price?.toLocaleString()} FCFA</td>
                               <td style={styles.td}>{item.subtotal?.toLocaleString() || (item.quantity * item.price)?.toLocaleString()} FCFA</td>

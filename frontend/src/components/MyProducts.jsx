@@ -3,6 +3,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from './ConfirmDialog';
 import { traduireNomCategorie } from '../services/productMapping';
+import ProductLink from './common/ProductLink';
 
 
 const PLACEHOLDER_IMG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 100 100" style="background:%23e2e8f0;"><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="24">🌱</text></svg>';
@@ -148,7 +149,7 @@ export default function MyProducts({ products = [], onNavigateToAddProduct, onEd
                         />
                       </div>
                     </td>
-                    <td style={styles.tdName}>{prod.name}</td>
+                    <td style={styles.tdName}><ProductLink id={prod.id}>{prod.name}</ProductLink></td>
                     <td style={styles.tdCategory}>{traduireNomCategorie(prod.category, t)}</td>
                     <td style={styles.tdStock}>
                       <span style={{

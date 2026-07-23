@@ -12,6 +12,8 @@ import ConfirmDialog from './ConfirmDialog';
 import { certificationApi, paiementApi } from '../services/api';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
+import UserLink from './common/UserLink';
+import ProductLink from './common/ProductLink';
 
 
 function getMenuItems(t) {
@@ -254,7 +256,7 @@ export default function SellerDashboard({
         {adminOrders.slice(-3).reverse().map(order => (
           <div key={order.id} style={styles.orderRow}>
             <span style={styles.orderId}>#{order.id}</span>
-            <span style={styles.orderClient}>{order.client}</span>
+            <UserLink id={order.id_client} style={styles.orderClient}>{order.client}</UserLink>
             <span style={styles.orderAmount}>{order.amount.toLocaleString()} FCFA</span>
             <span style={{
               ...styles.orderStatus,
@@ -291,7 +293,7 @@ export default function SellerDashboard({
               adminOrders.map(order => (
                 <tr key={order.id}>
                   <td style={styles.td}>#{order.id}</td>
-                  <td style={styles.td}>{order.client}</td>
+                  <td style={styles.td}><UserLink id={order.id_client}>{order.client}</UserLink></td>
                   <td style={styles.td}>{order.amount.toLocaleString()} FCFA</td>
                   <td style={styles.td}>{order.date}</td>
                   <td style={styles.td}>
@@ -343,7 +345,7 @@ export default function SellerDashboard({
             <tbody>
               {vendeurProducts.map(p => (
                 <tr key={p.id}>
-                  <td style={styles.td}>{p.name}</td>
+                  <td style={styles.td}><ProductLink id={p.id}>{p.name}</ProductLink></td>
                   <td style={styles.td}>{p.category || t('sellerDashboard.notCategorized')}</td>
                   <td style={styles.td}>{p.price.toLocaleString()} FCFA</td>
                   <td style={styles.td}>{p.stock}</td>
@@ -400,7 +402,7 @@ export default function SellerDashboard({
             <tbody>
               {lowStockItems.map(p => (
                 <tr key={p.id}>
-                  <td style={styles.td}>{p.name}</td>
+                  <td style={styles.td}><ProductLink id={p.id}>{p.name}</ProductLink></td>
                   <td style={styles.td}>{p.stock}</td>
                   <td style={styles.td}>{CRITICAL_STOCK_THRESHOLD}</td>
                   <td style={styles.td}>
