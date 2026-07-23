@@ -1396,6 +1396,7 @@ export default function App() {
                 else if (target === 'admin/order-management-admin') navigate('order-management-admin');
                 else if (target === 'admin/moderation-panel') navigate('moderation-panel');
                 else if (target === 'admin/vendor-verification') navigate('vendor-verification');
+                else if (target === 'certification') navigate('certification');
                 else navigate('home');
               } else {
                 alert(`Redirection vers : ${lien}`);

@@ -27,6 +27,7 @@ const LIENS_VALIDES = [
   '/seller-dashboard',
   '/vendeur-orders',
   '/messages-inbox',
+  '/certification',
   '/admin/dashboard',
   '/admin/order-management-admin',
   '/admin/moderation-panel',
