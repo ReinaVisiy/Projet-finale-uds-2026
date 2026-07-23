@@ -1363,7 +1363,7 @@ export default function App() {
               try {
                 const user = await validateLogin(email, password, role);
                 handleLoginSuccess(user);
-                addNotification(user.id, 'success', 'Votre email a été confirmé avec succès !', '/profil');
+                addNotification(user.id, 'success', 'emailConfirmed', {}, '/profil');
                 return;
               } catch (err) {
                 console.error('Connexion automatique après confirmation échouée :', err);
@@ -1389,7 +1389,7 @@ export default function App() {
           currentUser={currentUser}
           onAvisPublie={(producteurId, product) => {
             if (producteurId) {
-              addNotification(producteurId, 'info', `Un avis a été laissé sur votre produit "${product?.name || ''}"`, '/seller-dashboard');
+              addNotification(producteurId, 'info', 'newReview', { productName: product?.name || '' }, '/seller-dashboard');
             }
           }}
         />;
