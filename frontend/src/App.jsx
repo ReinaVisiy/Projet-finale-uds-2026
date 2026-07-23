@@ -973,13 +973,22 @@ export default function App() {
   // (ConfirmActionModal) côté appelant : plus de window.prompt() ici.
   const handleToggleUserBlocked = async (userId, joursSaisis) => {
     const user = registeredUsers.find(u => u.id === userId);
+    const estSuspensionEnCours = !user || !user.suspendu;
     let jours = 0;
-    if (!user || !user.suspendu) {
+    if (estSuspensionEnCours) {
       jours = parseInt(joursSaisis, 10);
       if (!jours || jours <= 0) { alert('Veuillez saisir un nombre de jours valide.'); return; }
     }
     try {
       await utilisateurApi.suspendreUtilisateur(userId, jours);
+      addNotification(
+        userId,
+        estSuspensionEnCours ? 'error' : 'success',
+        estSuspensionEnCours
+          ? `Votre compte a été suspendu pendant ${jours} jour${jours > 1 ? 's' : ''} pour non-respect des règles d'intégrité de la plateforme.`
+          : `Votre compte a été réactivé. Vous pouvez de nouveau vous connecter.`,
+        '/profil'
+      );
       await chargerUtilisateurs();
       await chargerSignalements();
     } catch (err) {
