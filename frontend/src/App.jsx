@@ -978,7 +978,7 @@ export default function App() {
       role: ROLE_FRONTEND_TO_BACKEND[role],
     });
 
-    notifierAdmins('info', `Nouvel utilisateur inscrit : ${prenom} ${nom} (${role})`, '/admin/dashboard');
+    notifierAdmins('info', 'newUserRegistered', { name: `${prenom} ${nom}`, role }, '/admin/dashboard');
 
     setPendingConfirmationEmail(email.trim().toLowerCase());
     setPendingConfirmationPassword(password);
@@ -1637,7 +1637,7 @@ export default function App() {
         return <CertificationRequest
           onBack={() => navigate('seller-dashboard')}
           onCertificationSoumise={() => {
-            notifierAdmins('info', `Nouvelle demande de certification de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'un vendeur'}`, '/admin/vendor-verification');
+            notifierAdmins('info', 'newCertificationRequest', { vendorName: joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'un vendeur' }, '/admin/vendor-verification');
           }}
         />;
       case 'admin-dashboard':
@@ -1702,12 +1702,12 @@ export default function App() {
           onResolve={async (id) => {
             try {
               await signalementApi.updateStatutSignalement(id, 'RESOLU');
-              notifierAdmins('info', `Signalement résolu`, '/admin/moderation-panel');
+              notifierAdmins('info', 'reportResolvedAdmin', {}, '/admin/moderation-panel');
               const signalementConcerne = signalements.find((s) => s.id === id);
               if (signalementConcerne) {
                 // Pas de "voir plus" : aucune page ne permet à un déclarant
                 // de consulter le suivi de ses propres signalements.
-                addNotification(signalementConcerne.reporterId, 'success', `Votre signalement a été traité et jugé fondé.`);
+                addNotification(signalementConcerne.reporterId, 'success', 'reportUpheld', {});
               }
               await chargerSignalements();
             } catch (err) {
@@ -1717,10 +1717,10 @@ export default function App() {
           onReject={async (id) => {
             try {
               await signalementApi.updateStatutSignalement(id, 'REJETE');
-              notifierAdmins('info', `Signalement rejeté`, '/admin/moderation-panel');
+              notifierAdmins('info', 'reportRejectedAdmin', {}, '/admin/moderation-panel');
               const signalementConcerne = signalements.find((s) => s.id === id);
               if (signalementConcerne) {
-                addNotification(signalementConcerne.reporterId, 'info', `Votre signalement a été examiné et jugé non fondé.`);
+                addNotification(signalementConcerne.reporterId, 'info', 'reportDismissed', {});
               }
               await chargerSignalements();
             } catch (err) {
@@ -1829,7 +1829,7 @@ export default function App() {
                 reporterId: currentUser.id,
                 raison: construireRaison(data.motif, data.commentaire),
               });
-              notifierAdmins('error', `Nouveau signalement de ${data.cible} par ${currentUser?.prenom || 'Client'}`, '/admin/moderation-panel');
+              notifierAdmins('error', 'newReport', { target: data.cible, reporterName: currentUser?.prenom || 'Client' }, '/admin/moderation-panel');
               if (currentUser?.role === 'admin') await chargerSignalements();
             } catch (err) {
               alert(err?.message || "L'envoi du signalement a échoué.");
