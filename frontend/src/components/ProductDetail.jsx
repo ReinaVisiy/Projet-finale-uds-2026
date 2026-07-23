@@ -3,6 +3,7 @@ import { ArrowLeft, Star, Share2, Shield, Truck, Package, Plus, Minus, ShoppingC
 import { getAvisParProduit, getAvisStats, publierAvis, modifierAvis } from '../services/api/avisApi';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
+import UserLink from './common/UserLink';
 
 
 export default function ProductDetail({ onBack, onAddToCart, onContactVendor, onNavigateToProducerProfile, onSignaler, currentUser, product: propProduct, onAvisPublie }) {
@@ -440,7 +441,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
               avisList.map(a => (
                 <div key={a.id} style={styles.reviewCard}>
                   <div style={styles.reviewCardHeader}>
-                    <span style={styles.reviewAuthor}>{a.clientNom || t('productDetail.client')}</span>
+                    <UserLink id={a.clientId} style={styles.reviewAuthor}>{a.clientNom || t('productDetail.client')}</UserLink>
                     <div style={styles.stars}>
                       {[1,2,3,4,5].map(i => <Star key={i} size={13} fill={i <= a.note ? "#f5b041" : "none"} color="#f5b041" />)}
                     </div>

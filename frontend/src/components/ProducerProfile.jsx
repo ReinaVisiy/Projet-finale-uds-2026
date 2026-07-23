@@ -5,6 +5,7 @@ import { produitApi, avisApi, certificationApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
 import ConfirmDialog from './ConfirmDialog';
 import useIsMobile from '../hooks/useIsMobile';
+import UserLink from './common/UserLink';
 
 // Un avis (backend AvisResponse) : { id, note, commentaire, date, clientId, clientNom, produitId }
 export default function ProducerProfile({
@@ -471,7 +472,7 @@ export default function ProducerProfile({
                     <div style={styles.avisAvatar}>{avis.clientNom?.[0]?.toUpperCase() || 'C'}</div>
                     <div style={styles.avisBody}>
                       <div style={styles.avisTopRow}>
-                        <span style={styles.avisAuthor}>{avis.clientNom}</span>
+                        <UserLink id={avis.clientId} style={styles.avisAuthor}>{avis.clientNom}</UserLink>
                         <span style={styles.avisDate}>
                           {new Date(avis.date).toLocaleDateString('fr-FR')}
                         </span>

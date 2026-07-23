@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Star, ShieldCheck, Package, Settings, Lock, Mail, Phone, User } from 'lucide-react';
 import { produitApi, avisApi, certificationApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
+import UserLink from './common/UserLink';
 
 // "Mon profil" : reprend la mise en page riche de ProducerProfile/ClientProfile
 // (en-tête, onglets produits/avis) mais pour l'utilisateur connecté lui-même,
@@ -241,7 +242,7 @@ export default function UserProfile({
                           <div style={styles.avisAvatar}>{avis.clientNom?.[0]?.toUpperCase() || 'C'}</div>
                           <div style={styles.avisBody}>
                             <div style={styles.avisTopRow}>
-                              <span style={styles.avisAuthor}>{avis.clientNom}</span>
+                              <UserLink id={avis.clientId} style={styles.avisAuthor}>{avis.clientNom}</UserLink>
                               <span style={styles.avisDate}>
                                 {new Date(avis.date).toLocaleDateString('fr-FR')}
                               </span>
