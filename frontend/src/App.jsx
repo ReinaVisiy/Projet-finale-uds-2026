@@ -1250,7 +1250,7 @@ export default function App() {
           currentUser={currentUser}
           onEditProfile={() => navigate('edit-profile')}
           onChangePassword={() => navigate('change-password')}
-          onBack={() => navigate('home')}
+          onBack={() => navigate(previousScreen)}
           onNavigateToProduct={goToProduct}
         />;
       case 'edit-profile':
