@@ -36,7 +36,8 @@ import NotificationsCenter from './components/NotificationsCenter';
 import OrderDetailAdmin from './components/OrderDetailAdmin';
 import ChangePassword from './components/ChangePassword';
 import PaymentReturn from './components/PaymentReturn';
-import { authApi, utilisateurApi, produitApi, signalementApi, commandeApi, paiementApi, messageApi, certificationApi, notificationApi, litigeApi, getSession } from './services/api';
+import AvisPlateformeModal from './components/AvisPlateformeModal';
+import { authApi, utilisateurApi, produitApi, signalementApi, commandeApi, paiementApi, messageApi, certificationApi, notificationApi, litigeApi, avisApi, getSession } from './services/api';
 import { ROLE_FRONTEND_TO_BACKEND, joinNomComplet, splitNomComplet, mapProfileToFrontendUser } from './services/userMapping';
 import { mapCertificationPourAdmin } from './services/certificationMapping';
 import { mapProduitPourVendeur, construireProduitRequest } from './services/productMapping';
@@ -875,6 +876,35 @@ export default function App() {
     setScreen('home');
   };
 
+  // ===== POP-UP AVIS PLATEFORME À LA DÉCONNEXION =====
+  // Affiché une seule fois par utilisateur (tant qu'il n'a pas encore
+  // laissé d'avis sur la plateforme). "Passer" et "envoyer" mènent tous
+  // les deux à la déconnexion réelle ; seul le second publie un avis.
+  const [afficherAvisPlateforme, setAfficherAvisPlateforme] = useState(false);
+
+  const demanderLogout = async () => {
+    if (!currentUser) {
+      handleLogout();
+      return;
+    }
+    try {
+      const dejaEvalue = await avisApi.aDejaEvaluePlateforme();
+      if (dejaEvalue) {
+        handleLogout();
+      } else {
+        setAfficherAvisPlateforme(true);
+      }
+    } catch {
+      // avis-service indisponible : on ne bloque pas la déconnexion.
+      handleLogout();
+    }
+  };
+
+  const handleAvisPlateformeTermine = () => {
+    setAfficherAvisPlateforme(false);
+    handleLogout();
+  };
+
   // ===== MODE CLIENT =====
   const toggleClientMode = () => {
     setIsClientMode(prev => {
@@ -1409,7 +1439,7 @@ export default function App() {
       case 'seller-dashboard':
         return <SellerDashboard
           onNavigate={navigate}
-          onLogout={handleLogout}
+          onLogout={demanderLogout}
           currentUser={currentUser}
           vendeurProducts={vendeurProducts}
           adminOrders={mesCommandesVendeur}
@@ -1455,7 +1485,7 @@ export default function App() {
           onNavigate={navigate}
           onNavigateToVendorVerification={() => navigate('vendor-verification')}
           onNavigateToModeration={() => { chargerSignalements(); navigate('moderation-panel'); }}
-          onLogout={handleLogout}
+          onLogout={demanderLogout}
           onApproveCertification={handleApproveVerification}
           onRejectCertification={handleRejectVerification}
           onRembourserLitige={handleRembourserLitige}
@@ -1595,7 +1625,7 @@ export default function App() {
         currentScreen={screen}
         onNavigate={navigate}
         currentUser={currentUser}
-        onLogout={handleLogout}
+        onLogout={demanderLogout}
         cartCount={cartItems.length}
         notifications={notifications}
         unreadMessagesCount={unreadMessagesCount}
@@ -1630,6 +1660,12 @@ export default function App() {
           order={litigeOrder}
           onClose={() => { setShowLitige(false); setLitigeOrder(null); }}
           onSubmit={handleCreerLitige}
+        />
+      )}
+      {afficherAvisPlateforme && (
+        <AvisPlateformeModal
+          onSkip={handleAvisPlateformeTermine}
+          onSubmitted={handleAvisPlateformeTermine}
         />
       )}
     </div>
