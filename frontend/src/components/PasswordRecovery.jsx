@@ -109,8 +109,8 @@ export default function PasswordRecovery({ onBack, onSuccess }) {
                 />
               </div>
             </div>
-            <button type="submit" style={styles.submitBtn}>
-              <Send size={18} /> {t('passwordRecovery.validate')}
+            <button type="submit" style={{ ...styles.submitBtn, opacity: loading ? 0.7 : 1 }} disabled={loading}>
+              <Send size={18} /> {loading ? t('passwordRecovery.inProgress') : t('passwordRecovery.validate')}
             </button>
           </form>
         </div>
@@ -147,8 +147,8 @@ export default function PasswordRecovery({ onBack, onSuccess }) {
                 />
               </div>
             </div>
-            <button type="submit" style={styles.submitBtn}>
-              <CheckCircle size={18} /> {t('passwordRecovery.validate')}
+            <button type="submit" style={{ ...styles.submitBtn, opacity: loading ? 0.7 : 1 }} disabled={loading}>
+              <CheckCircle size={18} /> {loading ? t('passwordRecovery.inProgress') : t('passwordRecovery.validate')}
             </button>
           </form>
         </div>
