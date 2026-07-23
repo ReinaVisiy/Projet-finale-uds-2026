@@ -1319,6 +1319,8 @@ export default function App() {
                 else if (target === 'orders') navigate('orders');
                 else if (target === 'purchases') navigate('purchases');
                 else if (target === 'seller-dashboard') navigate('seller-dashboard');
+                else if (target === 'vendeur-orders') navigate('vendeur-orders');
+                else if (target === 'messages-inbox') navigate('messages-inbox');
                 else if (target === 'admin/dashboard') navigate('admin-dashboard');
                 else if (target === 'admin/order-management-admin') navigate('order-management-admin');
                 else if (target === 'admin/moderation-panel') navigate('moderation-panel');

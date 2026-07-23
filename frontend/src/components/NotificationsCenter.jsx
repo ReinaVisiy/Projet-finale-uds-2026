@@ -17,6 +17,24 @@ const typeColor = {
   info: { bg: '#e9f5ee', border: '#2d6a4f' },
 };
 
+// Cibles reellement gerees par App.jsx#onNavigateToLink (une seule source de
+// verite cote navigation) : un lien absent de cette liste ne mene nulle part
+// de valide, donc le bouton "voir plus" ne doit pas s'afficher pour lui.
+const LIENS_VALIDES = [
+  '/profil',
+  '/orders',
+  '/purchases',
+  '/seller-dashboard',
+  '/vendeur-orders',
+  '/messages-inbox',
+  '/admin/dashboard',
+  '/admin/order-management-admin',
+  '/admin/moderation-panel',
+  '/admin/vendor-verification',
+];
+
+const estLienValide = (lien) => typeof lien === 'string' && LIENS_VALIDES.includes(lien);
+
 export default function NotificationsCenter({
   onBack,
   currentUser,
@@ -145,7 +163,7 @@ export default function NotificationsCenter({
                         minute: '2-digit',
                       })}
                     </span>
-                    {notif.lien && (
+                    {estLienValide(notif.lien) && (
                       <button
                         style={styles.linkBtn}
                         onClick={(e) => {
