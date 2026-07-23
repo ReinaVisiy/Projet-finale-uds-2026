@@ -1474,7 +1474,7 @@ export default function App() {
             await commandeApi.updateStatutCommande(orderId, 'LIVREE');
             const commandeConcernee = mesCommandes.find((c) => c.id === orderId);
             if (commandeConcernee) {
-              addNotification(commandeConcernee.producteurId, 'success', `Le client a confirmé la réception de la commande #${orderId}.`, '/vendeur-orders');
+              addNotification(commandeConcernee.producteurId, 'success', 'orderReceived', { orderId }, '/vendeur-orders');
             }
             await chargerMesCommandes();
           }}
@@ -1482,7 +1482,7 @@ export default function App() {
             await commandeApi.annulerCommande(orderId);
             const commandeConcernee = mesCommandes.find((c) => c.id === orderId);
             if (commandeConcernee) {
-              addNotification(commandeConcernee.producteurId, 'warning', `Le client a annulé la commande #${orderId}.`, '/vendeur-orders');
+              addNotification(commandeConcernee.producteurId, 'warning', 'orderCancelledByClient', { orderId }, '/vendeur-orders');
             }
             await chargerMesCommandes();
           }}
@@ -1501,7 +1501,7 @@ export default function App() {
           orderContext={null}
           onBack={() => navigate('back')}
           onMessageEnvoye={(destinataireId) => {
-            addNotification(destinataireId, 'info', `Vous avez reçu un message de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'un utilisateur'}`, '/messages-inbox');
+            addNotification(destinataireId, 'info', 'newMessage', { senderName: joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'un utilisateur' }, '/messages-inbox');
           }}
         />;
       case 'message':
@@ -1511,7 +1511,7 @@ export default function App() {
           currentUser={currentUser}
           onBack={() => navigate('back')}
           onMessageEnvoye={(destinataireId) => {
-            addNotification(destinataireId, 'info', `Vous avez reçu un message de ${joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'un utilisateur'}`, '/messages-inbox');
+            addNotification(destinataireId, 'info', 'newMessage', { senderName: joinNomComplet(currentUser?.prenom, currentUser?.nom) || 'un utilisateur' }, '/messages-inbox');
           }}
         />;
       case 'user-profile':
