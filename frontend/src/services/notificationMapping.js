@@ -46,6 +46,12 @@ export const NOTIFICATION_TYPE_TO_SEVERITY = {
 /**
  * Convertit une NotificationResponse (backend) en objet tel qu'attendu
  * par NotificationsCenter.jsx / NavigationConsole.jsx.
+ *
+ * On ne construit plus la phrase ici : messageKey + parametres sont
+ * transmis tels quels, et c'est NotificationsCenter.jsx (via t()) qui
+ * traduit au moment de l'affichage, dans la langue actuellement
+ * choisie par la personne qui consulte — pas celle de qui a déclenché
+ * l'événement.
  */
 export function mapNotificationPourAffichage(dto) {
   return {
@@ -56,7 +62,8 @@ export function mapNotificationPourAffichage(dto) {
       NOTIFICATION_TYPE_TO_SEVERITY[dto.type] ||
       'info',
     typeMetier: dto.type, // conservé si besoin d'un filtrage plus fin plus tard
-    message: dto.titre || dto.contenu,
+    messageKey: dto.messageKey,
+    parametres: dto.parametres || {},
     lien: dto.lien,
     lu: dto.lu,
     dateCreation: dto.dateEnvoi,
@@ -88,18 +95,21 @@ export function deviserTypeMetier(lien) {
 
 /**
  * Construit le NotificationRequest attendu par le backend à partir des
- * paramètres de addNotification(userId, uiType, message, lien).
+ * paramètres de addNotification(userId, uiType, messageKey, parametres, lien).
  * uiType (info/success/warning/error) est la sévérité réellement
  * choisie par le développeur à chaque appel : on la transmet telle
  * quelle au backend au lieu de la redeviner à la lecture.
+ * On envoie une clé de traduction (ex. "newOrder") + les données brutes
+ * (ex. {id, name}) au lieu d'une phrase déjà traduite, pour que la
+ * traduction se fasse à la lecture, dans la langue du destinataire.
  */
-export function construireNotificationRequest(destinataireId, message, lien, uiType) {
+export function construireNotificationRequest(destinataireId, messageKey, parametres, lien, uiType) {
   return {
     destinataireId,
     type: deviserTypeMetier(lien),
     niveau: SEVERITE_UI_TO_BACKEND[uiType] || 'INFO',
-    titre: message,
-    contenu: message,
+    messageKey,
+    parametres: parametres || {},
     lien: lien || null,
   };
 }
