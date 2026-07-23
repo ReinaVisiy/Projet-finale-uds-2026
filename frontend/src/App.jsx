@@ -1218,10 +1218,18 @@ export default function App() {
           onBackHome={() => navigate('home')}
           onConfirmReception={async (orderId) => {
             await commandeApi.updateStatutCommande(orderId, 'LIVREE');
+            const commandeConcernee = mesCommandes.find((c) => c.id === orderId);
+            if (commandeConcernee) {
+              addNotification(commandeConcernee.producteurId, 'success', `Le client a confirmé la réception de la commande #${orderId}.`, '/vendeur-orders');
+            }
             await chargerMesCommandes();
           }}
           onCancelOrder={async (orderId) => {
             await commandeApi.annulerCommande(orderId);
+            const commandeConcernee = mesCommandes.find((c) => c.id === orderId);
+            if (commandeConcernee) {
+              addNotification(commandeConcernee.producteurId, 'warning', `Le client a annulé la commande #${orderId}.`, '/vendeur-orders');
+            }
             await chargerMesCommandes();
           }}
           onPayOrder={handlePayerCommandeExistante}
