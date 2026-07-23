@@ -5,6 +5,7 @@ import useProduits from '../hooks/useProduits';
 import { correspondRecherche } from '../utils/produceSearch';
 import { traduireNomCategorie } from '../services/productMapping';
 import { useTranslation } from 'react-i18next';
+import CertifiedBadge from './CertifiedBadge';
 
 
 export default function ProductCatalog({
@@ -152,7 +153,10 @@ export default function ProductCatalog({
                   <h3 style={styles.prodName}>{prod.name}</h3>
                   <span style={styles.prodPrice}>{prod.price.toLocaleString()} FCFA</span>
                 </div>
-                <p style={styles.prodFarm}>{prod.farm}</p>
+                <div style={styles.prodFarmRow}>
+                  <p style={styles.prodFarm}>{prod.farm}</p>
+                  <CertifiedBadge isCertified={!!prod.certifie} label={t('producerProfile.certifiedBadge')} style={{ marginLeft: '6px' }} />
+                </div>
                 <div style={styles.prodFooter}>
                   <div style={styles.stars}>
                     {[1,2,3,4,5].map(i => {
@@ -335,7 +339,8 @@ const styles = {
   },
   prodName: { fontSize: '16px', fontWeight: '700', color: '#212529', margin: 0 },
   prodPrice: { fontSize: '15px', fontWeight: '800', color: '#e07a5f' },
-  prodFarm: { fontSize: '13px', color: '#6c757d', margin: '0 0 10px 0' },
+  prodFarmRow: { display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', margin: '0 0 10px 0' },
+  prodFarm: { fontSize: '13px', color: '#6c757d', margin: 0 },
   prodFooter: {
     display: 'flex',
     justifyContent: 'space-between',

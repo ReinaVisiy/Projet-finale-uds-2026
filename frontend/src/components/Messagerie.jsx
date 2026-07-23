@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { messageApi, utilisateurApi } from '../services/api';
+import { messageApi, utilisateurApi, certificationApi } from '../services/api';
 import UserLink from './common/UserLink';
 import ProductLink from './common/ProductLink';
+import CertifiedBadge from './CertifiedBadge';
 import {
   Search,
   Send,
@@ -27,12 +28,13 @@ import {
 // conversation a ete demarree en contactant un producteur trouve par
 // recherche (dans ce cas, aucun produit n'est associe).
 const PRODUCT_MARKER_PREFIX = '[PRODUIT:';
+const ORDER_MARKER_PREFIX = '[COMMANDE:';
 
 // Marqueur de reponse-a-un-message : purement cote frontend (pas de champ
 // dedie cote backend), stocke au debut du contenu du nouveau message.
 const REPLY_MARKER_PREFIX = '[Reponse a: "';
 
-export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoye }) {
+export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoye, orderContext }) {
   const { t, i18n } = useTranslation();
   const currentUserId = currentUser?.id;
   const ROLE_LABELS = {
@@ -67,6 +69,7 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
 
   // Dynamic names, profile details, and interactive actions menus
   const [userNames, setUserNames] = useState({});
+  const [certifiedPartnerIds, setCertifiedPartnerIds] = useState({});
   const [activeMessageMenuId, setActiveMessageMenuId] = useState(null);
   const [showHeaderDropdown, setShowHeaderDropdown] = useState(false);
   const [partnerProfile, setPartnerProfile] = useState(null);
@@ -146,6 +149,10 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
   // conversations, bouton "copier", etc.)
   const nettoyerApercu = (contenuBrut) => {
     let texte = contenuBrut || '';
+    if (texte.startsWith(ORDER_MARKER_PREFIX)) {
+      const idx = texte.indexOf(']');
+      texte = idx !== -1 ? texte.substring(idx + 1).replace(/^\n/, '').trim() : texte;
+    }
     if (texte.startsWith(PRODUCT_MARKER_PREFIX)) {
       const idx = texte.indexOf(']');
       texte = idx !== -1 ? texte.substring(idx + 1).replace(/^\n/, '').trim() : texte;
@@ -258,9 +265,15 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
 
       missingIds.forEach(async (id) => {
         try {
-          const u = await utilisateurApi.getUtilisateurById(id);
+          const [u, estCertifie] = await Promise.all([
+            utilisateurApi.getUtilisateurById(id),
+            certificationApi.estCertifieActif(id).catch(() => false)
+          ]);
           if (u && u.nom) {
             setUserNames(prev => ({ ...prev, [id]: u.nom }));
+          }
+          if (estCertifie) {
+            setCertifiedPartnerIds(prev => ({ ...prev, [id]: true }));
           }
         } catch (e) {
           console.error("Failed to load user name for:", id, e);
@@ -336,6 +349,9 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
         // reste un texte simple, non cliquable.
         const idPart = vendor.productId != null ? vendor.productId : '';
         finalContent = `${PRODUCT_MARKER_PREFIX}${idPart}|${vendor.product}]\n${finalContent}`;
+      }
+      if (orderContext?.id) {
+        finalContent = `${ORDER_MARKER_PREFIX}${orderContext.id}]\n${finalContent}`;
       }
 
       const sentMsg = await messageApi.envoyerMessage({
@@ -827,18 +843,21 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
                         justifyContent: 'space-between',
                         marginBottom: '4px'
                       }}>
-                        <span style={{
-                          fontSize: '14px',
-                          fontWeight: hasUnread ? '700' : '600',
-                          color: '#1e293b',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}>
-                          <UserLink id={convo.partnerId} style={{ color: 'inherit' }}>
-                            {partnerNameResolved}
-                          </UserLink>
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                          <span style={{
+                            fontSize: '14px',
+                            fontWeight: hasUnread ? '700' : '600',
+                            color: '#1e293b',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            <UserLink id={convo.partnerId} style={{ color: 'inherit' }}>
+                              {partnerNameResolved}
+                            </UserLink>
+                          </span>
+                          <CertifiedBadge isCertified={!!certifiedPartnerIds[convo.partnerId]} label={t('producerProfile.certifiedBadge')} style={{ flexShrink: 0 }} />
+                        </div>
                         <span style={{
                           fontSize: '11px',
                           color: 'var(--text-muted)'
@@ -990,11 +1009,14 @@ export default function Messagerie({ onBack, vendor, currentUser, onMessageEnvoy
                   </UserLink>
 
                   <div>
-                    <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'white' }}>
-                      <UserLink id={selectedPartnerId} style={{ color: 'white' }}>
-                        {getPartnerName(conversations.find(c => c.partnerId === selectedPartnerId), selectedPartnerId)}
-                      </UserLink>
-                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'white', margin: 0 }}>
+                        <UserLink id={selectedPartnerId} style={{ color: 'white' }}>
+                          {getPartnerName(conversations.find(c => c.partnerId === selectedPartnerId), selectedPartnerId)}
+                        </UserLink>
+                      </h3>
+                      <CertifiedBadge isCertified={!!certifiedPartnerIds[selectedPartnerId]} label={t('producerProfile.certifiedBadge')} />
+                    </div>
                   </div>
                 </div>
 

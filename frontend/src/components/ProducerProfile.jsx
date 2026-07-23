@@ -4,6 +4,7 @@ import { ArrowLeft, Star, MessageCircle, ShieldCheck, Edit3, Trash2, Flag, Packa
 import { produitApi, avisApi, certificationApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
 import ConfirmDialog from './ConfirmDialog';
+import CertifiedBadge from './CertifiedBadge';
 import useIsMobile from '../hooks/useIsMobile';
 import UserLink from './common/UserLink';
 
@@ -241,9 +242,7 @@ export default function ProducerProfile({
             <div>
               <div style={styles.nameRow}>
                 <h1 style={styles.name}>{producteur.prenom ? `${producteur.prenom} ${producteur.nom}` : producteur.nom}</h1>
-                {certifie && (
-                  <span style={styles.verifiedBadge}><ShieldCheck size={14} /> {t('producerProfile.certifiedBadge')}</span>
-                )}
+                <CertifiedBadge isCertified={certifie} label={t('producerProfile.certifiedBadge')} />
               </div>
               <div style={styles.ratingRow}>
                 <StarRow value={moyenne} size={18} />

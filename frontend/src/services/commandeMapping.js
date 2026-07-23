@@ -38,12 +38,14 @@ export const STATUT_FRANCAIS_TO_BACKEND = {
  * @param dto           CommandeResponse renvoyé par commande-service
  * @param clientNom     nom déjà résolu du client (utilisateur-service)
  * @param clientEmail   email déjà résolu du client
- * @param nomsProduits  Map<produitId, nom> déjà résolue (produit-service)
+ * @param infosProduits Map<produitId, {nom, imageUrl}> déjà résolue (produit-service)
+ * @param vendeurNom    nom déjà résolu du vendeur (utilisateur-service)
  */
-export function mapCommandePourAffichage(dto, clientNom, clientEmail, nomsProduits) {
+export function mapCommandePourAffichage(dto, clientNom, clientEmail, infosProduits, vendeurNom) {
   const items = (dto.lignesCommande || []).map((lc) => ({
     produitId: lc.produitId,
-    nomProduit: nomsProduits.get(lc.produitId) || `Produit #${lc.produitId}`,
+    nomProduit: infosProduits.get(lc.produitId)?.nom || `Produit #${lc.produitId}`,
+    imageUrl: infosProduits.get(lc.produitId)?.imageUrl || '',
     quantity: lc.quantite,
     prixUnitaire: lc.prixUnitaire,
     subtotal: lc.prixUnitaire * lc.quantite,
@@ -53,6 +55,7 @@ export function mapCommandePourAffichage(dto, clientNom, clientEmail, nomsProdui
     id: dto.id,
     id_client: dto.clientId,
     producteurId: dto.producteurId,
+    vendeur: vendeurNom || `Vendeur #${dto.producteurId}`,
     client: clientNom || `Client #${dto.clientId}`,
     clientEmail: clientEmail || '',
     amount: dto.montantTotal,

@@ -4,6 +4,7 @@ import { getAvisParProduit, getAvisStats, publierAvis, modifierAvis } from '../s
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 import UserLink from './common/UserLink';
+import CertifiedBadge from './CertifiedBadge';
 
 
 export default function ProductDetail({ onBack, onAddToCart, onContactVendor, onNavigateToProducerProfile, onSignaler, currentUser, product: propProduct, onAvisPublie }) {
@@ -267,10 +268,9 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
               >
                 <div style={styles.farmAvatar}>{(product.farm || 'F')[0]}</div>
                 <div>
-                  <h3 style={styles.farmName}>{product.farm}</h3>
-                  <div style={styles.verifiedWrap}>
-                    <Shield size={12} color="#2d6a4f" />
-                    <span style={styles.verifiedText}>{t('productDetail.verifiedProducer')}</span>
+                  <div style={styles.farmNameRow}>
+                    <h3 style={styles.farmName}>{product.farm}</h3>
+                    <CertifiedBadge isCertified={!!product.certifie} label={t('producerProfile.certifiedBadge')} />
                   </div>
                   {onNavigateToProducerProfile && (
                     <button
@@ -321,7 +321,10 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
                   <button style={styles.qtyBtn} onClick={handleIncrease}><Plus size={18} /></button>
                 </div>
               </div>
-              <button style={styles.addToCartBtn} onClick={() => onAddToCart ? onAddToCart(quantity) : alert(t('productDetail.addedToCart', { count: quantity }))}>
+              <button
+                style={styles.addToCartBtn}
+                onClick={() => onAddToCart ? onAddToCart(product, quantity) : alert(t('productDetail.addedToCart', { count: quantity }))}
+              >
                 <ShoppingCart size={20} />
                 {t('productDetail.addToCart', { total: (product.price * quantity).toLocaleString() })}
               </button>
@@ -521,7 +524,8 @@ const styles = {
   farmBanner: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', backgroundColor: '#ffffff', borderRadius: '20px', border: '1px solid #e9ecef' },
   farmInfo: { display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer' },
   farmAvatar: { width: '48px', height: '48px', backgroundColor: '#1b4d3e', color: '#ffffff', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '800' },
-  farmName: { fontSize: '16px', fontWeight: '800', color: '#212529', margin: '0 0 4px 0' },
+  farmNameRow: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' },
+  farmName: { fontSize: '16px', fontWeight: '800', color: '#212529', margin: 0 },
   verifiedWrap: { display: 'flex', alignItems: 'center', gap: '6px' },
   verifiedText: { fontSize: '12px', color: '#2d6a4f', fontWeight: '700' },
   viewProfileLink: { display: 'flex', alignItems: 'center', gap: '2px', background: 'none', border: 'none', color: '#6c757d', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', padding: '4px 0 0 0' },
