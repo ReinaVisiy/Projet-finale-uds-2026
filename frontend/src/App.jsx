@@ -1560,7 +1560,7 @@ export default function App() {
             // d'erreur, on laisse l'exception remonter jusqu'à ChangePassword
             // pour qu'elle affiche le message sur le champ concerné.
             await utilisateurApi.changerMotDePasse(currentUser.id, currentPassword, newPassword);
-            addNotification(currentUser.id, 'info', 'Votre mot de passe a été modifié avec succès.', null);
+            addNotification(currentUser.id, 'info', 'passwordChanged', {}, null);
           }}
         />;
       case 'notifications':
@@ -1619,10 +1619,9 @@ export default function App() {
               await commandeApi.updateStatutCommande(orderId, statutBackend);
               const commandeConcernee = mesCommandesVendeur.find((c) => c.id === orderId);
               if (commandeConcernee) {
-                const messageStatut = newStatus === 'Rejetée'
-                  ? `Votre commande #${orderId} a été rejetée par le vendeur.`
-                  : `Statut de votre commande #${orderId} mis à jour : ${newStatus}`;
-                addNotification(commandeConcernee.id_client, newStatus === 'Rejetée' ? 'error' : 'info', messageStatut, '/orders');
+                const messageKey = newStatus === 'Rejetée' ? 'orderStatusRejected' : 'orderStatusUpdated';
+                const parametres = newStatus === 'Rejetée' ? { orderId } : { orderId, status: newStatus };
+                addNotification(commandeConcernee.id_client, newStatus === 'Rejetée' ? 'error' : 'info', messageKey, parametres, '/orders');
               }
               await chargerCommandesVendeur();
             } catch (err) {
@@ -1777,10 +1776,9 @@ export default function App() {
               await commandeApi.updateStatutCommande(orderId, statutBackend);
               const commandeConcernee = mesCommandesVendeur.find((c) => c.id === orderId);
               if (commandeConcernee) {
-                const messageStatut = newStatus === 'Rejetée'
-                  ? `Votre commande #${orderId} a été rejetée par le vendeur.`
-                  : `Statut de votre commande #${orderId} mis à jour : ${newStatus}`;
-                addNotification(commandeConcernee.id_client, newStatus === 'Rejetée' ? 'error' : 'info', messageStatut, '/orders');
+                const messageKey = newStatus === 'Rejetée' ? 'orderStatusRejected' : 'orderStatusUpdated';
+                const parametres = newStatus === 'Rejetée' ? { orderId } : { orderId, status: newStatus };
+                addNotification(commandeConcernee.id_client, newStatus === 'Rejetée' ? 'error' : 'info', messageKey, parametres, '/orders');
               }
               await chargerCommandesVendeur();
             } catch (err) {
