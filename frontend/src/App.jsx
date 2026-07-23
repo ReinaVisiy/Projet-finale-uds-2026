@@ -968,12 +968,13 @@ export default function App() {
   // confirmé (cf. UtilisateurService#createUtilisateur côté backend) : on
   // ne connecte plus automatiquement l'utilisateur, on l'envoie plutôt
   // vers l'écran de confirmation d'email (cf. case 'confirm-email').
-  const handleRegisterSuccess = async ({ role, prenom, nom, email, telephone, password, photo }) => {
+  const handleRegisterSuccess = async ({ role, prenom, nom, email, telephone, ville, password, photo }) => {
     await utilisateurApi.createUtilisateur({
       nom: joinNomComplet(prenom, nom),
       email,
       motDePasse: password,
       telephone,
+      ville: ville && ville.trim() ? ville.trim() : null,
       photo: photo || null,
       role: ROLE_FRONTEND_TO_BACKEND[role],
     });

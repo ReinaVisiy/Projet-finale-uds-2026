@@ -1,6 +1,6 @@
 // src/components/Registerpage.jsx
 import { useState, useRef } from 'react';
-import { User, Mail, Lock, Phone, Eye, EyeOff, ArrowRight, Camera } from 'lucide-react';
+import { User, Mail, Lock, Phone, MapPin, Eye, EyeOff, ArrowRight, Camera } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 
@@ -21,6 +21,7 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
     prenom: '',
     email: '',
     telephone: '',
+    ville: '',
     password: '',
     confirm: '',
     photo: null,
@@ -74,6 +75,7 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
         nom: form.nom,
         email: form.email,
         telephone: form.telephone,
+        ville: form.ville,
         password: form.password,
         photo: form.photo || null,
       });
@@ -169,6 +171,14 @@ export default function RegisterPage({ onRegisterSuccess, onNavigateToLogin }) {
               <input name="telephone" type="tel" placeholder={t('register.phonePlaceholder')} style={styles.input} value={form.telephone} onChange={handleChange} />
             </div>
             {errors.telephone && <span style={styles.error}>{errors.telephone}</span>}
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.label}>{t('register.city')}</label>
+            <div style={styles.inputWrap}>
+              <MapPin size={16} color="#6c757d" />
+              <input name="ville" type="text" placeholder={t('register.cityPlaceholder')} style={styles.input} value={form.ville} onChange={handleChange} />
+            </div>
           </div>
 
           <div style={styles.field}>

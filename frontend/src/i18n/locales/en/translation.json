@@ -449,6 +449,8 @@
     "emailPlaceholder": "e.g. ravie@email.com",
     "phone": "Phone *",
     "phonePlaceholder": "e.g. 6XX XXX XXX",
+    "city": "City / Town",
+    "cityPlaceholder": "e.g. Dschang",
     "password": "Password *",
     "passwordPlaceholder": "Minimum 6 characters",
     "confirmPassword": "Confirm password *",
