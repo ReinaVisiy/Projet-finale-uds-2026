@@ -64,4 +64,41 @@ public class AvisController {
         Long nombreAvis = avisService.getNombreAvis(produitId);
         return ResponseEntity.ok(new AvisStatsResponse(noteMoyenne, nombreAvis));
     }
+
+    // ---- Avis "plateforme" (satisfaction générale, proposé à la déconnexion) ----
+
+    @PostMapping("/plateforme/publier")
+    public ResponseEntity<AvisResponse> publierAvisPlateforme(
+            @RequestBody AvisRequest request,
+            Authentication authentication) {
+        Long clientId = (Long) authentication.getPrincipal();
+        return ResponseEntity.ok(avisService.publierAvisPlateforme(request, clientId));
+    }
+
+    // Public : liste complète des avis plateforme, meilleure note d'abord.
+    // Utilisé pour le top 3 de la page d'accueil et le "voir plus".
+    @GetMapping("/plateforme")
+    public ResponseEntity<List<AvisResponse>> getAvisPlateforme() {
+        return ResponseEntity.ok(avisService.getAvisPlateforme());
+    }
+
+    @GetMapping("/plateforme/stats")
+    public ResponseEntity<AvisStatsResponse> getStatsPlateforme() {
+        Double noteMoyenne = avisService.getNoteMoyennePlateforme();
+        Long nombreAvis = avisService.getNombreAvisPlateforme();
+        return ResponseEntity.ok(new AvisStatsResponse(noteMoyenne, nombreAvis));
+    }
+
+    // Indique si l'utilisateur connecté a déjà évalué la plateforme (sert à
+    // décider, côté frontend, si le pop-up doit s'afficher à la déconnexion).
+    // Non authentifié -> false (le frontend ne l'appelle de toute façon que
+    // pour un utilisateur connecté).
+    @GetMapping("/plateforme/a-deja-evalue")
+    public ResponseEntity<Boolean> aDejaEvaluePlateforme(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.ok(false);
+        }
+        Long clientId = (Long) authentication.getPrincipal();
+        return ResponseEntity.ok(avisService.aDejaEvaluePlateforme(clientId));
+    }
 }

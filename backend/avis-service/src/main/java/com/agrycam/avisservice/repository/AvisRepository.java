@@ -22,4 +22,18 @@ public interface AvisRepository extends JpaRepository<Avis, Long> {
 
     @Query("SELECT COUNT(a) FROM Avis a WHERE a.produitId = :produitId")
     Long getNombreAvis(@Param("produitId") Long produitId);
+
+    // ---- Avis "plateforme" (produitId IS NULL) ----
+
+    /** Un seul avis plateforme par client : sert à savoir s'il faut encore lui proposer le pop-up de déconnexion. */
+    Optional<Avis> findByClientIdAndProduitIdIsNull(Long clientId);
+
+    /** Tous les avis plateforme, meilleure note d'abord puis plus récent d'abord (pour "top 3" + "voir plus"). */
+    List<Avis> findByProduitIdIsNullOrderByNoteDescDateDesc();
+
+    @Query("SELECT AVG(a.note) FROM Avis a WHERE a.produitId IS NULL")
+    Double getNoteMoyennePlateforme();
+
+    @Query("SELECT COUNT(a) FROM Avis a WHERE a.produitId IS NULL")
+    Long getNombreAvisPlateforme();
 }

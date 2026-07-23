@@ -109,6 +109,59 @@ public class AvisService {
         return avisRepository.getNombreAvis(produitId);
     }
 
+    // ---- Avis "plateforme" (satisfaction générale, proposé à la déconnexion) ----
+
+    /** Publie un avis sur la plateforme (pas de produit associé). Un seul par client. */
+    public AvisResponse publierAvisPlateforme(AvisRequest request, Long clientId) {
+
+        if (clientId == null) {
+            throw new RuntimeException("Client ID is required");
+        }
+
+        if (request.getNote() == null || request.getNote() < 1 || request.getNote() > 5) {
+            throw new RuntimeException("Rating must be between 1 and 5");
+        }
+
+        if (avisRepository.findByClientIdAndProduitIdIsNull(clientId).isPresent()) {
+            throw new RuntimeException("Vous avez déjà évalué la plateforme");
+        }
+
+        Avis avis = new Avis();
+        avis.setNote(request.getNote());
+        avis.setCommentaire(request.getCommentaire());
+        avis.setClientId(clientId);
+        avis.setProduitId(null);
+
+        avisRepository.save(avis);
+
+        return toResponse(avis);
+    }
+
+    /** Tous les avis plateforme, meilleure note en premier (utilisé pour le top 3 + "voir plus"). */
+    public List<AvisResponse> getAvisPlateforme() {
+        return avisRepository.findByProduitIdIsNullOrderByNoteDescDateDesc()
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public Double getNoteMoyennePlateforme() {
+        Double moyenne = avisRepository.getNoteMoyennePlateforme();
+        return moyenne != null ? moyenne : 0.0;
+    }
+
+    public Long getNombreAvisPlateforme() {
+        return avisRepository.getNombreAvisPlateforme();
+    }
+
+    /** Le client a-t-il déjà laissé un avis sur la plateforme ? Utilisé pour décider d'afficher le pop-up à la déconnexion. */
+    public boolean aDejaEvaluePlateforme(Long clientId) {
+        if (clientId == null) {
+            return false;
+        }
+        return avisRepository.findByClientIdAndProduitIdIsNull(clientId).isPresent();
+    }
+
     private AvisResponse toResponse(Avis avis) {
         return new AvisResponse(
                 avis.getId(),

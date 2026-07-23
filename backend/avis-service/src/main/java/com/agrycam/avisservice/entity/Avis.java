@@ -28,7 +28,10 @@ public class Avis {
     @Column(name = "id_client", nullable = false)
     private Long clientId;
 
-    @Column(name = "id_produit", nullable = false)
+    // Nullable : un avis "plateforme" (satisfaction générale, laissé à la
+    // déconnexion) n'est rattaché à aucun produit. Un id_produit non nul
+    // signifie un avis produit classique.
+    @Column(name = "id_produit")
     private Long produitId;
 
     @PrePersist
