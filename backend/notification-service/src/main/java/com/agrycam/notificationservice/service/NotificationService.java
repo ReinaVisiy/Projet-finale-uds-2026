@@ -6,12 +6,16 @@ import com.agrycam.notificationservice.entity.Notification;
 import com.agrycam.notificationservice.entity.NotificationSeverity;
 import com.agrycam.notificationservice.entity.NotificationType;
 import com.agrycam.notificationservice.repository.NotificationRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,6 +24,7 @@ import java.util.stream.Collectors;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public NotificationResponse createNotification(NotificationRequest request) {
@@ -54,8 +59,8 @@ public class NotificationService {
                 .destinataireId(request.getDestinataireId())
                 .type(type)
                 .niveau(niveau)
-                .titre(request.getTitre())
-                .contenu(request.getContenu())
+                .messageKey(request.getMessageKey())
+                .parametres(serialiserParametres(request.getParametres()))
                 .lien(request.getLien())
                 .lu(false)
                 .dateEnvoi(LocalDateTime.now())
@@ -120,11 +125,32 @@ public class NotificationService {
                 .destinataireId(notification.getDestinataireId())
                 .type(notification.getType().name())
                 .niveau(notification.getNiveau() != null ? notification.getNiveau().name() : null)
-                .titre(notification.getTitre())
-                .contenu(notification.getContenu())
+                .messageKey(notification.getMessageKey())
+                .parametres(deserialiserParametres(notification.getParametres()))
                 .lien(notification.getLien())
                 .lu(notification.isLu())
                 .dateEnvoi(notification.getDateEnvoi())
                 .build();
+    }
+
+    private String serialiserParametres(Map<String, Object> parametres) {
+        if (parametres == null) return null;
+        try {
+            return objectMapper.writeValueAsString(parametres);
+        } catch (Exception e) {
+            throw new RuntimeException("Impossible de sérialiser les paramètres de la notification", e);
+        }
+    }
+
+    private Map<String, Object> deserialiserParametres(String parametresJson) {
+        if (parametresJson == null || parametresJson.isBlank()) return Collections.emptyMap();
+        try {
+            return objectMapper.readValue(parametresJson, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            // Une notification dont les paramètres sont illisibles ne doit
+            // pas faire planter tout l'affichage de la liste : on retombe
+            // sur une map vide, le frontend gérera l'absence de valeur.
+            return Collections.emptyMap();
+        }
     }
 }

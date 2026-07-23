@@ -36,11 +36,20 @@ public class Notification {
     @Builder.Default
     private NotificationSeverity niveau = NotificationSeverity.INFO;
 
+    // Clé de traduction (ex. "newOrder") au lieu d'une phrase déjà
+    // rendue : le texte final est construit côté frontend, avec les
+    // paramètres ci-dessous, dans la langue de celui qui CONSULTE la
+    // notification (et non celle de celui qui l'a déclenchée).
     @Column(nullable = false)
-    private String titre;
+    private String messageKey;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String contenu;
+    // Données brutes nécessaires à la reconstruction du message (ex.
+    // {"id":42,"name":"Awa"}), sérialisées en JSON. Stockées telles
+    // quelles (langue-agnostiques) plutôt que la phrase déjà traduite,
+    // pour que la traduction se fasse à la lecture, dans la langue
+    // actuellement choisie par le destinataire.
+    @Column(columnDefinition = "TEXT")
+    private String parametres;
 
     @Column
     private String lien;

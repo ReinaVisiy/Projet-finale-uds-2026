@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -16,8 +17,8 @@ public class NotificationResponse {
     private Long destinataireId;
     private String type;
     private String niveau;
-    private String titre;
-    private String contenu;
+    private String messageKey;
+    private Map<String, Object> parametres;
     private String lien;
     private boolean lu;
     private LocalDateTime dateEnvoi;
