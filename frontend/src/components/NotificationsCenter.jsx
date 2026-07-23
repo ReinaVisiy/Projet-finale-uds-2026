@@ -76,6 +76,19 @@ export default function NotificationsCenter({
 
   const getIcon = (type) => typeIconMap[type] || <Info size={20} color="#2d6a4f" />;
 
+  // Traduit la notification au moment de l'affichage, dans la langue
+  // actuellement choisie par la personne qui consulte — jamais celle de
+  // qui a déclenché l'événement. Repli sur un texte générique si la clé
+  // est absente (anciennes notifications créées avant ce changement, ou
+  // messageKey inconnue côté traductions).
+  const getMessage = (notif) => {
+    if (!notif.messageKey) return notif.message || '';
+    return t(`notifications.${notif.messageKey}`, {
+      ...notif.parametres,
+      defaultValue: t('notifications.generic'),
+    });
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -152,7 +165,7 @@ export default function NotificationsCenter({
                 </div>
                 <div style={styles.content}>
                   <div style={styles.topRow}>
-                    <span style={styles.message}>{notif.message}</span>
+                    <span style={styles.message}>{getMessage(notif)}</span>
                     {!notif.lu && <span style={styles.unreadDot}>●</span>}
                   </div>
                   <div style={styles.bottomRow}>
