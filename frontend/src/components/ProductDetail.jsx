@@ -266,7 +266,7 @@ export default function ProductDetail({ onBack, onAddToCart, onContactVendor, on
               {/* BOUTON CONTACTER CLIQUABLE */}
               <button
                 style={styles.contactBtn}
-                onClick={() => onContactVendor && onContactVendor({ id: product.producteurId, name: product.farm, product: product.name })}
+                onClick={() => onContactVendor && onContactVendor({ id: product.producteurId, name: product.farm, product: product.name, productId: product.id })}
               >
                 <MessageCircle size={16} />
                 {t('productDetail.contact')}
