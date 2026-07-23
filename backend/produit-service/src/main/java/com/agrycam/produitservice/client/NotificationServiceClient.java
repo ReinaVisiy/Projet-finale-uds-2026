@@ -42,13 +42,17 @@ public class NotificationServiceClient {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(jwtUtil.genererTokenServiceInterne());
 
+            // Cle de traduction + parametres bruts (langue-agnostiques) au lieu
+            // d'une phrase deja rendue en francais : notification-service ne
+            // connait plus le champ "contenu"/"titre" (voir NotificationRequest),
+            // et le frontend traduit avec ces parametres, dans la langue du
+            // producteur au moment ou il consulte la notification.
             Map<String, Object> body = Map.of(
                     "destinataireId", producteurId,
                     "type", "STOCK",
                     "niveau", "AVERTISSEMENT",
-                    "titre", "Stock critique : " + nomProduit,
-                    "contenu", "Le stock de \"" + nomProduit + "\" est descendu a " + stockActuel
-                            + " unite(s). Pensez a le reapprovisionner pour eviter une rupture.",
+                    "messageKey", "criticalStockAlert",
+                    "parametres", Map.of("nomProduit", nomProduit, "stockActuel", stockActuel),
                     "lien", "/stock-alerts"
             );
 
