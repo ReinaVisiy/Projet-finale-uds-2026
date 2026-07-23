@@ -925,7 +925,7 @@
     "errEmailRequired": "Veuillez saisir votre adresse email",
     "errNoAccount": "Aucun compte associé à cet email",
     "codeSentAlert": "Code de vérification envoyé à {{email}} : {{code}}",
-    "errCodeInvalid": "Veuillez saisir un code valide à 5 chiffres",
+    "errCodeInvalid": "Veuillez saisir un code valide à 6 chiffres",
     "errCodeWrong": "Code incorrect, veuillez réessayer",
     "errPasswordMin": "Le mot de passe doit contenir au moins 6 caractères",
     "errPasswordMismatch": "Les mots de passe ne correspondent pas",
@@ -939,7 +939,7 @@
     "step2Title": "Vérification",
     "step2Subtitle": "Un code de validation a été envoyé à votre adresse email",
     "codeLabel": "Code de validation",
-    "codePlaceholder": "11111",
+    "codePlaceholder": "111111",
     "step3Title": "Nouveau mot de passe",
     "step3Subtitle": "Créez un nouveau mot de passe pour votre compte",
     "successMsg": "Mot de passe modifié avec succès !",
@@ -1174,5 +1174,19 @@
     "daysLabel": "Nombre de jours",
     "cancel": "Annuler",
     "confirm": "Confirmer"
+  },
+  "confirmEmail": {
+    "back": "Retour",
+    "title": "Confirmez votre email",
+    "subtitle": "Un code à 6 chiffres a été envoyé à {{email}}. Saisissez-le ci-dessous pour activer votre compte.",
+    "codeLabel": "Code de confirmation",
+    "codePlaceholder": "111111",
+    "validate": "Confirmer",
+    "inProgress": "En cours...",
+    "resendCode": "Renvoyer le code",
+    "resendSuccess": "Un nouveau code a été envoyé.",
+    "resendError": "Erreur lors de l'envoi du code.",
+    "errCodeInvalid": "Veuillez saisir un code valide à 6 chiffres",
+    "errCodeWrong": "Code incorrect ou expiré, veuillez réessayer"
   }
 }

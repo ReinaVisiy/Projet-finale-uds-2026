@@ -10,6 +10,7 @@ export default function LoginPage({
   infoMessage,
   onNavigateToRecovery,
   onNavigateToRegister,
+  onUnconfirmedEmail,
 }) {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
@@ -35,6 +36,10 @@ export default function LoginPage({
       const user = await onValidateLogin(email, password, role);
       onLoginSuccess(user);
     } catch (err) {
+      if (err.body?.code === 'EMAIL_NON_CONFIRME' && onUnconfirmedEmail) {
+        onUnconfirmedEmail(email.trim().toLowerCase());
+        return;
+      }
       setError(err.message || t('login.wrongCreds'));
     } finally {
       setLoading(false);

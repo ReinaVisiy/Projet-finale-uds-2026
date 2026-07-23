@@ -925,7 +925,7 @@
     "errEmailRequired": "Please enter your email address",
     "errNoAccount": "No account associated with this email",
     "codeSentAlert": "Verification code sent to {{email}}: {{code}}",
-    "errCodeInvalid": "Please enter a valid 5-digit code",
+    "errCodeInvalid": "Please enter a valid 6-digit code",
     "errCodeWrong": "Incorrect code, please try again",
     "errPasswordMin": "The password must be at least 6 characters",
     "errPasswordMismatch": "Passwords do not match",
@@ -939,7 +939,7 @@
     "step2Title": "Verification",
     "step2Subtitle": "A validation code has been sent to your email address",
     "codeLabel": "Validation code",
-    "codePlaceholder": "11111",
+    "codePlaceholder": "111111",
     "step3Title": "New password",
     "step3Subtitle": "Create a new password for your account",
     "successMsg": "Password changed successfully!",
@@ -1174,5 +1174,19 @@
     "daysLabel": "Number of days",
     "cancel": "Cancel",
     "confirm": "Confirm"
+  },
+  "confirmEmail": {
+    "back": "Back",
+    "title": "Confirm your email",
+    "subtitle": "A 6-digit code was sent to {{email}}. Enter it below to activate your account.",
+    "codeLabel": "Confirmation code",
+    "codePlaceholder": "111111",
+    "validate": "Confirm",
+    "inProgress": "In progress...",
+    "resendCode": "Resend code",
+    "resendSuccess": "A new code has been sent.",
+    "resendError": "Error sending the code.",
+    "errCodeInvalid": "Please enter a valid 6-digit code",
+    "errCodeWrong": "Incorrect or expired code, please try again"
   }
 }

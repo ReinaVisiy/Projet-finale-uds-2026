@@ -9,6 +9,7 @@ import ClientOrders from './components/ClientOrders';
 import ClientPurchases from './components/ClientPurchases';
 import OrderManagementAdmin from './components/OrderManagementAdmin';
 import PasswordRecovery from './components/PasswordRecovery';
+import ConfirmEmailPage from './components/ConfirmEmailPage';
 import ProductDetail from './components/ProductDetail';
 import RegisterPage from './components/Registerpage';
 import SalesHistory from './components/SalesHistory';
@@ -90,6 +91,11 @@ export default function App() {
 
   // ===== COMPTES INSCRITS =====
   const [registeredUsers, setRegisteredUsers] = useState([]);
+
+  // Email en attente de confirmation apres inscription (ou apres une
+  // tentative de connexion sur un compte non confirme) : alimente
+  // ConfirmEmailPage. Vide quand aucune confirmation n'est en cours.
+  const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState('');
 
   // ===== NOTIFICATIONS =====
   // Depuis l'ajout de notification-service côté backend, les
@@ -864,8 +870,10 @@ export default function App() {
   };
 
   // ===== INSCRIPTION =====
-  // Crée le compte auprès de utilisateur-service, puis connecte
-  // automatiquement l'utilisateur (auth-service) pour récupérer un token.
+  // Crée le compte auprès de utilisateur-service. Le compte est créé non
+  // confirmé (cf. UtilisateurService#createUtilisateur côté backend) : on
+  // ne connecte plus automatiquement l'utilisateur, on l'envoie plutôt
+  // vers l'écran de confirmation d'email (cf. case 'confirm-email').
   const handleRegisterSuccess = async ({ role, prenom, nom, email, telephone, password, photo }) => {
     await utilisateurApi.createUtilisateur({
       nom: joinNomComplet(prenom, nom),
@@ -876,18 +884,10 @@ export default function App() {
       role: ROLE_FRONTEND_TO_BACKEND[role],
     });
 
-    const newUser = await validateLogin(email, password, role);
-
     notifierAdmins('info', `Nouvel utilisateur inscrit : ${prenom} ${nom} (${role})`, '/admin/dashboard');
-    addNotification(newUser.id, 'success', `Bienvenue ${prenom} ! Votre compte a été créé.`, '/profil');
 
-    setActivePlan(newUser.plan);
-    setCurrentUser(newUser);
-    if (role === 'vendeur') {
-      setScreen('seller-dashboard');
-    } else {
-      setScreen('home');
-    }
+    setPendingConfirmationEmail(email.trim().toLowerCase());
+    navigate('confirm-email');
   };
 
   // ===== GESTION DES PRODUITS =====
@@ -1112,35 +1112,30 @@ export default function App() {
           infoMessage={authRedirectMessage}
           onNavigateToRecovery={() => navigate('recovery')}
           onNavigateToRegister={() => navigate('register')}
+          onUnconfirmedEmail={(email) => {
+            setPendingConfirmationEmail(email);
+            navigate('confirm-email');
+          }}
         />;
       case 'register':
         return <RegisterPage
           onRegisterSuccess={handleRegisterSuccess}
           onNavigateToLogin={() => navigate('login-page')}
         />;
+      case 'confirm-email':
+        return <ConfirmEmailPage
+          email={pendingConfirmationEmail}
+          onBack={() => navigate('login-page')}
+          onConfirmed={() => {
+            setPendingConfirmationEmail('');
+            setAuthRedirectMessage('Email confirmé avec succès ! Vous pouvez maintenant vous connecter.');
+            navigate('login-page');
+          }}
+        />;
       case 'recovery':
         return <PasswordRecovery
           onBack={() => navigate('login-page')}
           onSuccess={() => navigate('login-page')}
-          registeredUsers={registeredUsers}
-          updateUserPassword={(email, newPassword) => {
-            const userIndex = registeredUsers.findIndex(
-              u => u.email.toLowerCase() === email.toLowerCase()
-            );
-            if (userIndex !== -1) {
-              const updatedUsers = [...registeredUsers];
-              updatedUsers[userIndex] = {
-                ...updatedUsers[userIndex],
-                password: newPassword,
-              };
-              setRegisteredUsers(updatedUsers);
-              if (currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
-                setCurrentUser({ ...currentUser, password: newPassword });
-              }
-              return true;
-            }
-            return false;
-          }}
         />;
       case 'product-detail':
         return <ProductDetail
