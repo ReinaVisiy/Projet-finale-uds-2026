@@ -3,6 +3,8 @@ import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw, Log
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 import useProduits from '../hooks/useProduits';
+import UserLink from './common/UserLink';
+import ProductLink from './common/ProductLink';
 import ConfirmActionModal from './ConfirmActionModal';
 import { paiementApi } from '../services/api';
 
@@ -610,7 +612,7 @@ export default function AdminDashboard({
                         <div key={o.id} style={styles.orderItem}>
                           <div style={styles.orderLeft}>
                             <div style={styles.orderAvatar}>{o.client?.split(' ').map(w => w[0]).join('').slice(0,2) || '??'}</div>
-                            <div><p style={styles.orderClient}>{o.client}</p><p style={styles.orderId}>#{o.id}</p></div>
+                            <div><p style={styles.orderClient}><UserLink id={o.id_client}>{o.client}</UserLink></p><p style={styles.orderId}>#{o.id}</p></div>
                           </div>
                           <div style={styles.orderRight}>
                             <p style={styles.orderAmount}>{o.amount?.toLocaleString('fr-FR') || 0} FCFA</p>
@@ -639,9 +641,15 @@ export default function AdminDashboard({
                     <tbody>
                       {lastSignalements.map((s) => (
                         <tr key={s.id} style={styles.tr}>
-                          <td style={styles.td}><strong>{s.cible}</strong></td>
+                          <td style={styles.td}>
+                            <strong>
+                              {s.type === 'produit'
+                                ? <ProductLink id={s.targetId}>{s.cible}</ProductLink>
+                                : <UserLink id={s.targetId}>{s.cible}</UserLink>}
+                            </strong>
+                          </td>
                           <td style={styles.td}>{s.motif}</td>
-                          <td style={styles.td}>{s.auteur}</td>
+                          <td style={styles.td}><UserLink id={s.reporterId}>{s.auteur}</UserLink></td>
                           <td style={styles.td}>
                             <span style={{ ...styles.statusBadge, color: s.status === 'résolu' ? '#2d6a4f' : '#f5b041', backgroundColor: s.status === 'résolu' ? '#d8f3dc' : '#fffbea' }}>{s.status}</span>
                           </td>
@@ -702,7 +710,7 @@ export default function AdminDashboard({
                           </div>
                           <div style={styles.certInfo}>
                             <h4 style={styles.certFarm}>{t('adminDashboard.order')} #{l.commandeId} · {libelleTypeLitige(l.type)}</h4>
-                            <p style={styles.certVendeur}>{l.clientNom} · {l.dateCreation ? new Date(l.dateCreation).toLocaleDateString('fr-FR') : ''}</p>
+                            <p style={styles.certVendeur}><UserLink id={l.clientId}>{l.clientNom}</UserLink> · {l.dateCreation ? new Date(l.dateCreation).toLocaleDateString('fr-FR') : ''}</p>
                             {l.description && <p style={styles.certMeta}>{l.description}</p>}
                             {estNonLivre && l.fondsDejaRetires && (
                               <p style={{ ...styles.certMeta, color: '#c1502e', fontWeight: '700' }}>{t('adminDashboard.fundsAlreadyWithdrawn')}</p>
@@ -771,8 +779,8 @@ export default function AdminDashboard({
                     <tbody>
                       {tousLesProduits.map((p) => (
                         <tr key={p.id} style={styles.tr}>
-                          <td style={styles.td}>{p.name}</td>
-                          <td style={styles.td}>{p.farm}</td>
+                          <td style={styles.td}><ProductLink id={p.id}>{p.name}</ProductLink></td>
+                          <td style={styles.td}><UserLink id={p.producteurId}>{p.farm}</UserLink></td>
                           <td style={styles.td}>{p.category}</td>
                           <td style={styles.td}>{p.price.toLocaleString('fr-FR')} FCFA</td>
                           <td style={styles.td}>
@@ -809,7 +817,7 @@ export default function AdminDashboard({
                       <div style={styles.certLeft}>
                         <div style={styles.certAvatar}>{u.prenom?.[0]?.toUpperCase()}{u.nom?.[0]?.toUpperCase()}</div>
                         <div style={styles.certInfo}>
-                          <h4 style={styles.certFarm}>{u.prenom} {u.nom}</h4>
+                          <h4 style={styles.certFarm}><UserLink id={u.id}>{u.prenom} {u.nom}</UserLink></h4>
                           <p style={styles.certVendeur}>✉️ {u.email} · 📞 {u.telephone || 'N/A'}</p>
                           <p style={styles.certMeta}>
                             {u.role === 'vendeur' ? t('adminDashboard.vendorTag') : t('adminDashboard.clientTag')}
@@ -876,7 +884,7 @@ export default function AdminDashboard({
                       {[...ventesPayeesLivrees].reverse().map((o) => (
                         <tr key={o.id} style={styles.tr}>
                           <td style={styles.td}>#{o.id}</td>
-                          <td style={styles.td}>{o.client}</td>
+                          <td style={styles.td}><UserLink id={o.id_client}>{o.client}</UserLink></td>
                           <td style={styles.td}>{o.dateISO ? new Date(o.dateISO).toLocaleDateString('fr-FR') : (o.date || '—')}</td>
                           <td style={styles.td}>{(o.amount || 0).toLocaleString('fr-FR')} FCFA</td>
                           <td style={styles.td}>
@@ -1108,7 +1116,7 @@ export default function AdminDashboard({
                       <div style={styles.certLeft}>
                         <div style={styles.certAvatar}>{u.prenom?.[0]?.toUpperCase()}{u.nom?.[0]?.toUpperCase()}</div>
                         <div style={styles.certInfo}>
-                          <h4 style={styles.certFarm}>{u.prenom} {u.nom}</h4>
+                          <h4 style={styles.certFarm}><UserLink id={u.id}>{u.prenom} {u.nom}</UserLink></h4>
                           <p style={styles.certVendeur}>✉️ {u.email}</p>
                         </div>
                       </div>
