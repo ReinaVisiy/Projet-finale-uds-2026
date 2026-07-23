@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Shield, ShieldCheck, CheckCircle, XCircle, AlertOctagon, RotateCcw, LogOut, Home, Search, ChevronDown, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
+import { traduireStatutCommande } from '../services/commandeMapping';
 import useProduits from '../hooks/useProduits';
 import UserLink from './common/UserLink';
 import ProductLink from './common/ProductLink';
@@ -626,7 +627,7 @@ export default function AdminDashboard({
                           </div>
                           <div style={styles.orderRight}>
                             <p style={styles.orderAmount}>{o.amount?.toLocaleString('fr-FR') || 0} FCFA</p>
-                            <span style={{ ...styles.orderStatus, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{o.status}</span>
+                            <span style={{ ...styles.orderStatus, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{traduireStatutCommande(o.status, t)}</span>
                           </div>
                         </div>
                       ))
@@ -949,7 +950,7 @@ export default function AdminDashboard({
                               <td style={styles.td}><UserLink id={o.id_client}>{o.client || '—'}</UserLink></td>
                               <td style={styles.td}>{o.dateISO ? new Date(o.dateISO).toLocaleDateString('fr-FR') : (o.date || '—')}</td>
                               <td style={styles.td}>
-                                <span style={{ ...styles.statusBadge, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{o.status}</span>
+                                <span style={{ ...styles.statusBadge, color: '#2d6a4f', backgroundColor: '#d8f3dc' }}>{traduireStatutCommande(o.status, t)}</span>
                               </td>
                             </tr>
                           );

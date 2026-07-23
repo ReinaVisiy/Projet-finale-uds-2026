@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import ConfirmDialog from './ConfirmDialog';
 import useIsMobile from '../hooks/useIsMobile';
 import ProductLink from './common/ProductLink';
+import { traduireStatutCommande } from '../services/commandeMapping';
 
 // Statuts pour lesquels le client peut encore annuler (avant EXPEDIEE,
 // cf. section 2 du cahier des charges — le backend refait de toute façon
@@ -142,7 +143,7 @@ export default function ClientOrders({ orders, onBackHome, onConfirmReception, o
                       backgroundColor: statusStyle.bg,
                       color: statusStyle.color,
                     }}>
-                      {statusStyle.icon} {order.status}
+                      {statusStyle.icon} {traduireStatutCommande(order.status, t)}
                     </span>
                     <button style={styles.expandBtn}>
                       {expandedOrder === order.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -167,7 +168,7 @@ export default function ClientOrders({ orders, onBackHome, onConfirmReception, o
                       </div>
                       <div>
                         <p style={styles.detailLabel}>{t('clientOrders.status')}</p>
-                        <p style={styles.detailValue}>{order.status}</p>
+                        <p style={styles.detailValue}>{traduireStatutCommande(order.status, t)}</p>
                       </div>
                     </div>
 

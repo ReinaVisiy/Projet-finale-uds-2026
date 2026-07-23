@@ -10,6 +10,7 @@ import {
 import VendeurOrders from './VendeurOrders';
 import ConfirmDialog from './ConfirmDialog';
 import { certificationApi, paiementApi } from '../services/api';
+import { traduireStatutCommande } from '../services/commandeMapping';
 import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 import UserLink from './common/UserLink';
@@ -262,7 +263,7 @@ export default function SellerDashboard({
               ...styles.orderStatus,
               backgroundColor: order.status === 'Livrée' ? '#e9f5ee' : '#fff3e0',
               color: order.status === 'Livrée' ? '#2d6a4f' : '#f5b041',
-            }}>{order.status}</span>
+            }}>{traduireStatutCommande(order.status, t)}</span>
           </div>
         ))}
       </div>
@@ -301,7 +302,7 @@ export default function SellerDashboard({
                       ...styles.statusBadge,
                       backgroundColor: order.status === 'Livrée' ? '#e9f5ee' : '#fff3e0',
                       color: order.status === 'Livrée' ? '#2d6a4f' : '#f5b041',
-                    }}>{order.status}</span>
+                    }}>{traduireStatutCommande(order.status, t)}</span>
                   </td>
                 </tr>
               ))

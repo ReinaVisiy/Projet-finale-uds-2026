@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 import UserLink from './common/UserLink';
 import ProductLink from './common/ProductLink';
+import { traduireStatutCommande } from '../services/commandeMapping';
 
 
 export default function VendeurOrders({ orders, onUpdateOrderStatus, onContactClient }) {
@@ -93,7 +94,7 @@ export default function VendeurOrders({ orders, onUpdateOrderStatus, onContactCl
                       backgroundColor: getStatusBg(order.status),
                       color: getStatusColor(order.status),
                     }}>
-                      {getStatusIcon(order.status)} {order.status}
+                      {getStatusIcon(order.status)} {traduireStatutCommande(order.status, t)}
                     </div>
                     <button style={styles.expandBtn}>
                       {expandedOrder === order.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}

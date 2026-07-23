@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import useIsMobile from '../hooks/useIsMobile';
 import UserLink from './common/UserLink';
 import ProductLink from './common/ProductLink';
+import { traduireStatutCommande } from '../services/commandeMapping';
 
 // Avant : tout l'affichage (client, produit, adresse, montant, numéro de
 // suivi...) était codé en dur, donc identique et sans rapport avec la
@@ -99,7 +100,7 @@ export default function OrderDetailAdmin({ order, onBack, onMarkAsDelivered }) {
         </div>
       ) : (
       <div style={styles.trackerCard}>
-        <span style={styles.statusLabel}>{t('orderDetailAdmin.currentStatus')}<strong style={{ color: estLivree ? '#2d6a4f' : '#e07a5f' }}>{order.status}</strong></span>
+        <span style={styles.statusLabel}>{t('orderDetailAdmin.currentStatus')}<strong style={{ color: estLivree ? '#2d6a4f' : '#e07a5f' }}>{traduireStatutCommande(order.status, t)}</strong></span>
         <div style={{ ...styles.timelineWrapper, ...(isNarrow ? styles.timelineWrapperNarrow : {}) }}>
           {STEP_KEYS.map((step, idx) => {
             const isCompleted = idx <= currentStepIdx;

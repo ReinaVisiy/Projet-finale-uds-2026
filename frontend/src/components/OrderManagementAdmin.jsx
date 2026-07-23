@@ -2,6 +2,7 @@
 import { ArrowLeft, Eye } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import UserLink from './common/UserLink';
+import { traduireStatutCommande } from '../services/commandeMapping';
 
 
 export default function OrderManagementAdmin({
@@ -53,7 +54,7 @@ export default function OrderManagementAdmin({
                       backgroundColor: order.status === 'Livrée' ? '#e9f5ee' : order.status === 'En livraison' ? '#fff3e0' : '#f1f3f5',
                       color: order.status === 'Livrée' ? '#2d6a4f' : order.status === 'En livraison' ? '#f5b041' : '#6c757d',
                     }}>
-                      {order.status || t('orderManagementAdmin.pending')}
+                      {order.status ? traduireStatutCommande(order.status, t) : t('orderManagementAdmin.pending')}
                     </span>
                   </td>
                   <td style={styles.td}>
