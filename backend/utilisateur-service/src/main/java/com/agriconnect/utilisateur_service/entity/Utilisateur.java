@@ -20,6 +20,13 @@ public class Utilisateur {
 
     private String adresse;
 
+    // Ville/commune du compte (producteur ou client), affichee sur les
+    // fiches produit ("Disponible a : ...") et utilisee pour le filtre
+    // de recherche par localisation. Distincte de "adresse" (adresse
+    // postale complete, non utilisee aujourd'hui) : un simple nom de
+    // ville, facultatif.
+    private String ville;
+
     private String motDePasse;
 
     @Enumerated(EnumType.STRING)

@@ -244,6 +244,7 @@ public class UtilisateurService {
 
         user.setNom(request.getNom());
         user.setAdresse(request.getAdresse());
+        user.setVille(request.getVille());
         user.setEmail(request.getEmail());
         if (request.getTelephone() != null) user.setTelephone(request.getTelephone());
         if (request.getPhoto() != null) user.setPhoto(request.getPhoto());
@@ -336,6 +337,7 @@ public class UtilisateurService {
         dto.setNom(user.getNom());
         dto.setEmail(user.getEmail());
         dto.setAdresse(user.getAdresse());
+        dto.setVille(user.getVille());
         dto.setRole(user.getRole().name());
         dto.setTelephone(user.getTelephone());
         dto.setPhoto(user.getPhoto());
