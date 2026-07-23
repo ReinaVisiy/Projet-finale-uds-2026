@@ -1,7 +1,7 @@
 
 // src/components/AddProduct.jsx
 import { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Upload, X } from 'lucide-react';
+import { ArrowLeft, Upload, X, MapPin } from 'lucide-react';
 import { produitApi } from '../services/api';
 import { mapCategorie, mapProduitPourVendeur, construireProduitRequest, traduireNomCategorie } from '../services/productMapping';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,7 @@ export default function AddProduct({ onProductAdded, onCancel }) {
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
+  const [localisation, setLocalisation] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [erreur, setErreur] = useState('');
@@ -66,6 +67,7 @@ export default function AddProduct({ onProductAdded, onCancel }) {
         stock: quantity,
         imageUrl: imagePreview,
         categorieId: category,
+        localisation: localisation.trim(),
       });
       const produitCree = await produitApi.publierProduit(request);
       if (onProductAdded) onProductAdded(mapProduitPourVendeur(produitCree));
@@ -149,6 +151,20 @@ export default function AddProduct({ onProductAdded, onCancel }) {
                 onChange={(e) => setDescription(e.target.value)}
                 style={styles.textarea}
                 rows="4"
+              />
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>
+                <MapPin size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                {t('addProduct.location')}
+              </label>
+              <input
+                type="text"
+                placeholder={t('addProduct.locationPlaceholder')}
+                value={localisation}
+                onChange={(e) => setLocalisation(e.target.value)}
+                style={styles.input}
               />
             </div>
 

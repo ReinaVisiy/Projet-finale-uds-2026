@@ -1538,6 +1538,7 @@ export default function App() {
                 telephone: updatedData.telephone,
                 photo: updatedData.photo,
                 adresse: currentUser.adresse || '',
+                ville: updatedData.ville,
               });
               const updatedUser = mapProfileToFrontendUser(
                 profileDto,

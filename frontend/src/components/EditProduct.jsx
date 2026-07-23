@@ -1,6 +1,6 @@
 // src/components/EditProduct.jsx
 import { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Upload, X } from 'lucide-react';
+import { ArrowLeft, Upload, X, MapPin } from 'lucide-react';
 import { produitApi } from '../services/api';
 import { mapCategorie, mapProduitPourVendeur, construireProduitRequest, traduireNomCategorie } from '../services/productMapping';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,7 @@ export default function EditProduct({
   const [quantity, setQuantity] = useState(product?.stock || '');
   const [price, setPrice] = useState(product?.price || '');
   const [description, setDescription] = useState(product?.description || '');
+  const [localisation, setLocalisation] = useState(product?.localisation || '');
   const [imagePreview, setImagePreview] = useState(product?.imageUrl || product?.image || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
@@ -68,6 +69,7 @@ export default function EditProduct({
         stock: quantity,
         imageUrl: imagePreview,
         categorieId: category,
+        localisation: localisation.trim(),
       });
       const produitModifie = await produitApi.modifierProduit(product.id, request);
       if (onSave) onSave(mapProduitPourVendeur(produitModifie));
@@ -148,6 +150,20 @@ export default function EditProduct({
                 onChange={(e) => setDescription(e.target.value)}
                 style={styles.textarea}
                 rows="4"
+              />
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>
+                <MapPin size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                {t('editProduct.location')}
+              </label>
+              <input
+                type="text"
+                placeholder={t('editProduct.locationPlaceholder')}
+                value={localisation}
+                onChange={(e) => setLocalisation(e.target.value)}
+                style={styles.input}
               />
             </div>
 

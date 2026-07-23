@@ -51,6 +51,7 @@ export function mapProfileToFrontendUser(dto, rolesFromToken = []) {
     nom,
     email: dto.email,
     adresse: dto.adresse || '',
+    ville: dto.ville || '',
     telephone: dto.telephone || '',
     photo: dto.photo || null,
     plan: dto.plan || 'gratuit',

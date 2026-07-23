@@ -473,7 +473,9 @@
     "phone": "Phone",
     "phonePlaceholder": "Your phone number",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "city": "City / Town",
+    "cityPlaceholder": "E.g. Yaounde"
   },
   "vendeurOrders": {
     "receivedOrders": "Orders received",
@@ -611,7 +613,9 @@
     "fileHint": "JPG, PNG, WEBP — Max 5 MB",
     "preview": "Preview",
     "change": "Change",
-    "remove": "Remove"
+    "remove": "Remove",
+    "location": "Location",
+    "locationPlaceholder": "E.g. Bafoussam"
   },
   "editProduct": {
     "selectImage": "Please select an image (JPG, PNG, WEBP)",
@@ -635,7 +639,9 @@
     "fileHint": "JPG, PNG, WEBP — Max 5 MB",
     "preview": "Preview",
     "change": "Change",
-    "remove": "Remove"
+    "remove": "Remove",
+    "location": "Location",
+    "locationPlaceholder": "E.g. Bafoussam"
   },
   "faq": {
     "back": "Back",

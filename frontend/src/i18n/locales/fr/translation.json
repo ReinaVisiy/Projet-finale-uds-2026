@@ -473,7 +473,9 @@
     "phone": "Téléphone",
     "phonePlaceholder": "Votre téléphone",
     "cancel": "Annuler",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "city": "Ville / Localité",
+    "cityPlaceholder": "Ex : Yaoundé"
   },
   "vendeurOrders": {
     "receivedOrders": "Mes commandes reçues",
@@ -611,7 +613,9 @@
     "fileHint": "JPG, PNG, WEBP — Max 5 MB",
     "preview": "Aperçu",
     "change": "Changer",
-    "remove": "Supprimer"
+    "remove": "Supprimer",
+    "location": "Localisation",
+    "locationPlaceholder": "Ex : Bafoussam"
   },
   "editProduct": {
     "selectImage": "Veuillez sélectionner une image (JPG, PNG, WEBP)",
@@ -635,7 +639,9 @@
     "fileHint": "JPG, PNG, WEBP — Max 5 MB",
     "preview": "Aperçu",
     "change": "Changer",
-    "remove": "Supprimer"
+    "remove": "Supprimer",
+    "location": "Localisation",
+    "locationPlaceholder": "Ex : Bafoussam"
   },
   "faq": {
     "back": "Retour",

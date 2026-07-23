@@ -1,6 +1,6 @@
 // src/components/EditProfile.jsx
 import { useState, useRef } from 'react';
-import { Camera, Save, X, Mail, Phone, ArrowLeft } from 'lucide-react';
+import { Camera, Save, X, Mail, Phone, ArrowLeft, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 
@@ -11,6 +11,7 @@ export default function EditProfile({ onBack, onSave, currentUser }) {
     prenom: currentUser?.prenom || '',
     email: currentUser?.email || '',
     telephone: currentUser?.telephone || '',
+    ville: currentUser?.ville || '',
     photo: currentUser?.photo || null,
   });
 
@@ -133,6 +134,20 @@ export default function EditProfile({ onBack, onSave, currentUser }) {
               onChange={handleChange}
               style={styles.input}
               placeholder={t('editProfile.phonePlaceholder')}
+            />
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.label}>
+              <MapPin size={14} /> {t('editProfile.city')}
+            </label>
+            <input
+              type="text"
+              name="ville"
+              value={formData.ville}
+              onChange={handleChange}
+              style={styles.input}
+              placeholder={t('editProfile.cityPlaceholder')}
             />
           </div>
 

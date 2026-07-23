@@ -1,7 +1,7 @@
 // src/components/UserProfile.jsx
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Star, Package, Settings, Lock, Mail, Phone, User } from 'lucide-react';
+import { ArrowLeft, Star, Package, Settings, Lock, Mail, Phone, User, MapPin } from 'lucide-react';
 import { produitApi, avisApi, certificationApi } from '../services/api';
 import { mapProduitPourVitrine } from '../services/productMapping';
 import UserLink from './common/UserLink';
@@ -155,6 +155,7 @@ export default function UserProfile({
               <div style={styles.contactRow}>
                 <span style={styles.contactItem}><Mail size={13} /> {currentUser.email}</span>
                 <span style={styles.contactItem}><Phone size={13} /> {currentUser.telephone || t('userProfile.notProvided')}</span>
+                <span style={styles.contactItem}><MapPin size={13} /> {currentUser.ville || t('userProfile.notProvided')}</span>
               </div>
             </div>
           </div>
