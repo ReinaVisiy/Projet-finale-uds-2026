@@ -421,11 +421,13 @@ public class PaiementService {
             log.info("Sequestre du vendeur {} credite avec succes du montant net de {} XAF (Transaction #{}) - verrouille jusqu'a livraison",
                     vendeurId, montantNet, transaction.getId());
 
-            // Credite le portefeuille de la plateforme de la commission de 5%
-            // percue sur cette transaction : contrairement au sequestre vendeur,
-            // la commission plateforme est definitivement acquise des la
-            // confirmation du paiement (pas de sequestre pour la plateforme).
-            crediterRevenuPlateforme(transaction.getCommission());
+            // La commission de 5% n'est PAS creditee ici : comme le sequestre
+            // vendeur, elle ne devient un revenu acquis pour la plateforme (et
+            // n'apparait dans le portefeuille plateforme / n'est ouverte au
+            // retrait) qu'a la livraison confirmee de la commande, cf.
+            // executerLiberationFondsSequestre. Si la commande est rejetee ou
+            // annulee avant cela, cette commission n'a donc jamais existe
+            // cote plateforme et n'a pas besoin d'etre reprise.
         }
 
         // Repercute la confirmation de paiement sur le service concerne
@@ -484,14 +486,20 @@ public class PaiementService {
         transaction.setFondsLiberes(true);
         transactionRepository.save(transaction);
 
-        log.info("Sequestre libere pour la commande {} : {} XAF transferes vers le solde disponible du vendeur {}",
-                commandeId, montantNet, transaction.getVendeurId());
+        // La commande est livree : la commission de 5% de la plateforme sur
+        // cette transaction devient enfin un revenu acquis, au meme moment
+        // que le sequestre vendeur est libere (cf. confirmerPaiementInterne,
+        // qui ne la credite volontairement pas plus tot).
+        crediterRevenuPlateforme(transaction.getCommission());
+
+        log.info("Sequestre libere pour la commande {} : {} XAF transferes vers le solde disponible du vendeur {}, commission de {} XAF creditee a la plateforme",
+                commandeId, montantNet, transaction.getVendeurId(), transaction.getCommission());
     }
 
     /**
      * Traite le remboursement lie a l'annulation d'une commande (uniquement
-     * autorisee par commande-service avant expedition) : 90% du montant
-     * total est rembourse au client, 10% retenu par la plateforme comme
+     * autorisee par commande-service avant expedition) : 95% du montant
+     * total est rembourse au client, 5% retenu par la plateforme comme
      * frais d'annulation. Le sequestre du vendeur (qui n'a jamais eu droit
      * a ces fonds puisque la vente n'a pas ete honoree) est integralement
      * debite.
@@ -539,7 +547,7 @@ public class PaiementService {
         solde.setSoldeSequestre(solde.getSoldeSequestre().subtract(transaction.getMontantNet()));
         soldeVendeurRepository.save(solde);
 
-        BigDecimal montantRembourseClient = transaction.getMontant().multiply(new BigDecimal("0.90"));
+        BigDecimal montantRembourseClient = transaction.getMontant().multiply(new BigDecimal("0.95"));
         BigDecimal fraisAnnulation = transaction.getMontant().subtract(montantRembourseClient);
 
         transaction.setMontantRembourseClient(montantRembourseClient);
@@ -547,9 +555,11 @@ public class PaiementService {
         transaction.setStatut(StatutTransaction.REMBOURSEE);
         transactionRepository.save(transaction);
 
-        // Les 10% de frais d'annulation retenus viennent s'ajouter au
-        // portefeuille de la plateforme (en plus des 5% de commission deja
-        // credites lors de la confirmation du paiement).
+        // Les 5% de frais d'annulation retenus (meme taux que la commission
+        // standard) viennent crediter le portefeuille de la plateforme. La
+        // commission normale de la transaction, elle, n'a jamais ete
+        // creditee puisque la commande n'a pas ete livree (cf.
+        // confirmerPaiementInterne) : pas de double-comptage.
         crediterRevenuPlateforme(fraisAnnulation);
 
         log.info("Commande {} annulee : {} XAF a rembourser au client, {} XAF retenus par la plateforme (sequestre vendeur {} debite de {} XAF)",
@@ -615,10 +625,10 @@ public class PaiementService {
     /**
      * Traite le remboursement lie au rejet d'une commande par le vendeur
      * (avant qu'il ne la valide) : comme pour un litige, remboursement
-     * integral (100%) au client et debit du sequestre vendeur. A la
-     * difference du litige, la vente n'a jamais ete acceptee par le
-     * vendeur : la commission plateforme deja creditee sur cette
-     * transaction est donc elle aussi reprise (cf. debiterRevenuPlateforme).
+     * integral (100%) au client et debit du sequestre vendeur. Aucune
+     * commission a reprendre cote plateforme : elle n'est creditee qu'a la
+     * livraison (cf. confirmerPaiementInterne / executerLiberationFondsSequestre),
+     * et un rejet n'est possible qu'avant cela.
      * Idempotent comme les methodes de remboursement precedentes.
      */
     @Transactional
@@ -667,13 +677,13 @@ public class PaiementService {
         transaction.setStatut(StatutTransaction.REMBOURSEE);
         transactionRepository.save(transaction);
 
-        // La commande n'ayant jamais ete honoree par le vendeur, la
-        // commission de 5% creditee au moment du paiement n'est plus due :
-        // on la reprend integralement au portefeuille plateforme.
-        debiterRevenuPlateforme(transaction.getCommission());
+        // Rien a reprendre au portefeuille plateforme : la commission de 5%
+        // n'est creditee qu'a la livraison (cf. executerLiberationFondsSequestre),
+        // et un rejet n'est possible qu'avant cela (statut EN_ATTENTE). Elle
+        // n'a donc jamais ete versee a la plateforme sur cette transaction.
 
-        log.info("Commande {} rejetee par le vendeur : remboursement integral de {} XAF au client, sequestre vendeur {} debite de {} XAF, commission plateforme de {} XAF reprise",
-                commandeId, transaction.getMontant(), transaction.getVendeurId(), transaction.getMontantNet(), transaction.getCommission());
+        log.info("Commande {} rejetee par le vendeur : remboursement integral de {} XAF au client, sequestre vendeur {} debite de {} XAF",
+                commandeId, transaction.getMontant(), transaction.getVendeurId(), transaction.getMontantNet());
     }
 
     /**

@@ -20,7 +20,7 @@ export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
     if (status === 'En livraison') return <Truck size={18} color="#f5b041" />;
     if (status === 'En préparation') return <Clock size={18} color="#0066cc" />;
     if (status === 'Validée') return <Package size={18} color="#6f42c1" />;
-    if (status === 'Annulée') return <XCircle size={18} color="#b3261e" />;
+    if (status === 'Annulée' || status === 'Rejetée') return <XCircle size={18} color="#b3261e" />;
     return <Clock size={18} color="#adb5bd" />;
   };
 
@@ -29,7 +29,7 @@ export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
     if (status === 'En livraison') return '#f5b041';
     if (status === 'En préparation') return '#0066cc';
     if (status === 'Validée') return '#6f42c1';
-    if (status === 'Annulée') return '#b3261e';
+    if (status === 'Annulée' || status === 'Rejetée') return '#b3261e';
     return '#adb5bd';
   };
 
@@ -38,7 +38,7 @@ export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
     if (status === 'En livraison') return '#fff3e0';
     if (status === 'En préparation') return '#e0f0ff';
     if (status === 'Validée') return '#f1eafc';
-    if (status === 'Annulée') return '#fdecea';
+    if (status === 'Annulée' || status === 'Rejetée') return '#fdecea';
     return '#f1f3f5';
   };
 
@@ -146,9 +146,14 @@ export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
 
                     <div style={styles.actionsSection}>
                       {order.status === 'En attente' && (
-                        <button style={styles.primaryActionBtn} onClick={() => handleStatusChange(order.id, 'Validée')}>
-                          <CheckCircle size={16} /> {t('vendeurOrders.acceptOrder')}
-                        </button>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                          <button style={styles.primaryActionBtn} onClick={() => handleStatusChange(order.id, 'Validée')}>
+                            <CheckCircle size={16} /> {t('vendeurOrders.acceptOrder')}
+                          </button>
+                          <button style={styles.rejectActionBtn} onClick={() => handleStatusChange(order.id, 'Rejetée')}>
+                            <XCircle size={16} /> {t('vendeurOrders.rejectOrder')}
+                          </button>
+                        </div>
                       )}
                       {order.status === 'Validée' && (
                         <button style={styles.primaryActionBtn} onClick={() => handleStatusChange(order.id, 'En préparation')}>
@@ -163,7 +168,7 @@ export default function VendeurOrders({ orders, onUpdateOrderStatus }) {
                       {order.status === 'En livraison' && (
                         <p style={styles.waitingNote}>{t('vendeurOrders.awaitingClientConfirmation')}</p>
                       )}
-                      {(order.status === 'Livrée' || order.status === 'Annulée') && (
+                      {(order.status === 'Livrée' || order.status === 'Annulée' || order.status === 'Rejetée') && (
                         <p style={styles.waitingNote}>{t('vendeurOrders.orderClosed')}</p>
                       )}
                     </div>
@@ -342,6 +347,19 @@ const styles = {
     backgroundColor: '#2d6a4f',
     color: '#ffffff',
     border: 'none',
+    borderRadius: '10px',
+    fontSize: '14px',
+    fontWeight: '700',
+    cursor: 'pointer',
+  },
+  rejectActionBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 18px',
+    backgroundColor: '#ffffff',
+    color: '#b3261e',
+    border: '1.5px solid #b3261e',
     borderRadius: '10px',
     fontSize: '14px',
     fontWeight: '700',

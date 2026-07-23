@@ -184,15 +184,24 @@ export default function AdminDashboard({
 
 
   // ===== REVENU PLATEFORME (section 4) =====
-  // Commission de 5% : prelevee des qu'une transaction est payee (et
-  // conservee meme si la commande est ensuite annulee/remboursee, cf.
-  // paiement-service). Frais d'annulation de 10% : retenus uniquement
-  // sur les commandes annulees avant expedition. Detail affiche sous
-  // la carte KPI uniquement (calcule cote frontend a partir des
-  // transactions brutes).
+  // Commission de 5% : creditee uniquement quand la transaction est
+  // effectivement acquise pour la plateforme, c-a-d des la confirmation
+  // de paiement pour une certification (pas de sequestre), mais seulement
+  // a la LIVRAISON pour une commande (sequestre, comme pour le vendeur -
+  // cf. executerLiberationFondsSequestre cote paiement-service). Une
+  // commande rejetee, annulee ou en litige n'a donc jamais fait gagner de
+  // commission a la plateforme. Frais d'annulation de 5% : retenus
+  // uniquement sur les commandes annulees avant expedition. Detail
+  // affiche sous la carte KPI uniquement (calcule cote frontend a partir
+  // des transactions brutes, pour rester coherent avec le calcul cote
+  // paiement-service).
   const commissionTotale = transactions
-    .filter(tr => tr.statut === 'PAYE' || tr.statut === 'REMBOURSEE')
-    .reduce((sum, tr) => sum + Number(tr.commission || 0), 0);
+    .reduce((sum, tr) => {
+      const commissionAcquise = tr.typeReference === 'CERTIFICATION'
+        ? tr.statut === 'PAYE'
+        : tr.fondsLiberes === true;
+      return commissionAcquise ? sum + Number(tr.commission || 0) : sum;
+    }, 0);
   const fraisAnnulationTotal = transactions
     .reduce((sum, tr) => sum + Number(tr.fraisAnnulation || 0), 0);
   // Le chiffre affiche sur la carte KPI vient directement du portefeuille

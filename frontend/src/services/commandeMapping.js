@@ -14,6 +14,7 @@ export const STATUT_BACKEND_TO_FRANCAIS = {
   EXPEDIEE: 'En livraison',
   LIVREE: 'Livrée',
   ANNULEE: 'Annulée',
+  REJETEE: 'Rejetée',
 };
 
 // VendeurOrders déclenche ces transitions via des boutons d'action
@@ -26,6 +27,7 @@ export const STATUT_FRANCAIS_TO_BACKEND = {
   'En livraison': 'EXPEDIEE',
   'Livrée': 'LIVREE',
   'Annulée': 'ANNULEE',
+  'Rejetée': 'REJETEE',
 };
 
 /**
