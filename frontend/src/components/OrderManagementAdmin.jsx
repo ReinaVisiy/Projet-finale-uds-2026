@@ -1,6 +1,7 @@
 // src/components/OrderManagementAdmin.jsx
 import { ArrowLeft, Eye } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import UserLink from './common/UserLink';
 
 
 export default function OrderManagementAdmin({
@@ -44,7 +45,7 @@ export default function OrderManagementAdmin({
               {orders.map((order) => (
                 <tr key={order.id} style={styles.tr}>
                   <td style={styles.td}>#{order.id}</td>
-                  <td style={styles.td}>{order.client}</td>
+                  <td style={styles.td}><UserLink id={order.id_client}>{order.client}</UserLink></td>
                   <td style={styles.td}>{order.amount?.toLocaleString() || 0} FCFA</td>
                   <td style={styles.td}>
                     <span style={{

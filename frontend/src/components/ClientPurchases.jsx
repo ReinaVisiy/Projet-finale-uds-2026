@@ -1,6 +1,7 @@
 // src/components/ClientPurchases.jsx
 import { ArrowLeft, Package, ShoppingBag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import ProductLink from './common/ProductLink';
 
 
 export default function ClientPurchases({ orders, onBackHome }) {
@@ -15,6 +16,7 @@ export default function ClientPurchases({ orders, onBackHome }) {
       order.items.forEach(item => {
         purchases.push({
           produit: item.nomProduit || item.name || t('clientPurchases.unknownProduct'),
+          produitId: item.produitId,
           quantite: item.quantity || 1,
           prixTotal: item.subtotal || (item.quantity * item.price) || 0,
           date: order.date || new Date().toLocaleDateString('fr-FR'),
@@ -78,7 +80,7 @@ export default function ClientPurchases({ orders, onBackHome }) {
               {purchases.map((purchase, index) => (
                 <tr key={index} style={styles.tr}>
                   <td style={styles.td}>
-                    <span style={styles.productName}>{purchase.produit}</span>
+                    <ProductLink id={purchase.produitId} style={styles.productName}>{purchase.produit}</ProductLink>
                     <span style={styles.orderId}>#{purchase.orderId}</span>
                   </td>
                   <td style={styles.td}>
