@@ -946,6 +946,10 @@ export default function App() {
   const handleConfirmerPaiementVerification = async (id) => {
     try {
       await certificationApi.confirmerPaiementCertification(id, { paye: true });
+      const certificationConcernee = vendorVerifications.find((v) => v.id === id);
+      if (certificationConcernee) {
+        addNotification(certificationConcernee.producteurId, 'success', `Le paiement de votre certification a été confirmé.`, '/certification');
+      }
       await chargerCertifications();
     } catch (err) {
       alert(err?.message || "La confirmation du paiement a échoué.");
