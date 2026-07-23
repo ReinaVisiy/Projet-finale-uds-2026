@@ -51,6 +51,14 @@ public class Produit {
     @JoinColumn(name = "id_categorie")
     private Categorie categorie;
 
+    // Vrai si une alerte de stock critique a deja ete envoyee au
+    // producteur pour ce produit depuis le dernier reapprovisionnement.
+    // Evite de spammer le vendeur : on ne renotifie qu'apres un retour
+    // du stock au-dessus du seuil critique (cf. ProduitService).
+    @Column(name = "alerte_stock_envoyee", nullable = false)
+    @Builder.Default
+    private Boolean alerteStockEnvoyee = false;
+
     @PrePersist
     protected void onCreate() {
         this.dateAjout = LocalDateTime.now();

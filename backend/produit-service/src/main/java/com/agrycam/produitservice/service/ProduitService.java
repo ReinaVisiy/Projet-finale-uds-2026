@@ -1,5 +1,6 @@
 package com.agrycam.produitservice.service;
 
+import com.agrycam.produitservice.client.NotificationServiceClient;
 import com.agrycam.produitservice.dto.AvisStatsDTO;
 import com.agrycam.produitservice.dto.ProduitRequest;
 import com.agrycam.produitservice.dto.ProduitResponse;
@@ -28,6 +29,11 @@ public class ProduitService {
     private final ProduitRepository produitRepository;
     private final CategorieRepository categorieRepository;
     private final RestTemplate restTemplate;
+    private final NotificationServiceClient notificationServiceClient;
+
+    // Seuil de stock critique aligne sur CRITICAL_STOCK_THRESHOLD du
+    // frontend (SellerDashboard.jsx / StockAlerts.jsx) : rupture imminente.
+    private static final int SEUIL_STOCK_CRITIQUE = 2;
 
     @Value("${avis.service.url}")
     private String avisServiceUrl;
@@ -54,6 +60,19 @@ public class ProduitService {
         int stockActuel = produit.getStock() != null ? produit.getStock() : 0;
         int nouveauStock = Math.max(stockActuel - quantite, 0);
         produit.setStock(nouveauStock);
+
+        // Alerte de stock critique : uniquement au moment ou l'on
+        // franchit le seuil vers le bas (pas a chaque commande tant
+        // qu'on reste en dessous), pour ne pas spammer le producteur.
+        // Se reactive au prochain franchissement seulement apres un
+        // reapprovisionnement au-dessus du seuil (cf. modifier()).
+        boolean franchitLeSeuil = stockActuel > SEUIL_STOCK_CRITIQUE && nouveauStock <= SEUIL_STOCK_CRITIQUE;
+        if (franchitLeSeuil && !Boolean.TRUE.equals(produit.getAlerteStockEnvoyee())) {
+            produit.setAlerteStockEnvoyee(true);
+            notificationServiceClient.envoyerAlerteStockCritique(
+                    produit.getProducteurId(), produit.getId(), produit.getNom(), nouveauStock);
+        }
+
         produitRepository.save(produit);
     }
 
@@ -193,6 +212,12 @@ public class ProduitService {
         produit.setStock(request.getStock());
         produit.setImageUrl(request.getImageUrl());
         produit.setLocalisation(request.getLocalisation());
+
+        // Reapprovisionnement au-dessus du seuil critique : on reactive
+        // l'alerte pour le prochain franchissement (cf. decrementerStock).
+        if (request.getStock() != null && request.getStock() > SEUIL_STOCK_CRITIQUE) {
+            produit.setAlerteStockEnvoyee(false);
+        }
 
         if (request.getCategorieId() != null) {
             Categorie categorie = categorieRepository.findById(request.getCategorieId())

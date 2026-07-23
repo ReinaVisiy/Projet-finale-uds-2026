@@ -99,6 +99,7 @@ services:
       AVIS_SERVICE_URL: http://avis-service:8085
       CERTIFICATION_SERVICE_URL: http://certification-service:8086
       UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
+      NOTIFICATION_SERVICE_URL: http://notification-service:8089
       EUREKA_URI: http://eureka-server:8761/eureka/
     ports:
       - "8082:8082"

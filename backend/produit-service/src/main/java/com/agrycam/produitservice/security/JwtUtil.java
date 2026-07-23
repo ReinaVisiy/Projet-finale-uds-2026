@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 @Component
@@ -50,6 +52,25 @@ public class JwtUtil {
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+    }
+
+    /**
+     * Genere un token de courte duree (60s) representant un appel systeme
+     * (uid=0, role ADMIN), pour authentifier les appels sortants de
+     * produit-service vers d'autres services (ex. notification-service),
+     * hors de tout contexte de requete utilisateur.
+     */
+    public String genererTokenServiceInterne() {
+        long maintenant = System.currentTimeMillis();
+        long expiration = maintenant + 60_000;
+
+        return Jwts.builder()
+                .claim("uid", 0L)
+                .claim("roles", Collections.singletonList("ADMIN"))
+                .setIssuedAt(new Date(maintenant))
+                .setExpiration(new Date(expiration))
+                .signWith(getSigningKey())
+                .compact();
     }
 
     private Claims getClaims(String token) {
