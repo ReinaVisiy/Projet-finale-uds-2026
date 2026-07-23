@@ -100,6 +100,13 @@ export default function App() {
   // tentative de connexion sur un compte non confirme) : alimente
   // ConfirmEmailPage. Vide quand aucune confirmation n'est en cours.
   const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState('');
+  // Mot de passe et rôle associés, conservés uniquement en mémoire le
+  // temps de la confirmation, pour pouvoir connecter automatiquement
+  // l'utilisateur une fois son email confirmé (cf. onConfirmed) sans
+  // lui redemander ses identifiants. Jamais persistés (pas de
+  // localStorage), effacés dès utilisation ou en cas d'échec.
+  const [pendingConfirmationPassword, setPendingConfirmationPassword] = useState('');
+  const [pendingConfirmationRole, setPendingConfirmationRole] = useState('client');
 
   // ===== NOTIFICATIONS =====
   // Depuis l'ajout de notification-service côté backend, les
@@ -968,6 +975,8 @@ export default function App() {
     notifierAdmins('info', `Nouvel utilisateur inscrit : ${prenom} ${nom} (${role})`, '/admin/dashboard');
 
     setPendingConfirmationEmail(email.trim().toLowerCase());
+    setPendingConfirmationPassword(password);
+    setPendingConfirmationRole(role);
     navigate('confirm-email');
   };
 
@@ -1314,8 +1323,10 @@ export default function App() {
           infoMessage={authRedirectMessage}
           onNavigateToRecovery={() => navigate('recovery')}
           onNavigateToRegister={() => navigate('register')}
-          onUnconfirmedEmail={(email) => {
+          onUnconfirmedEmail={(email, password, role) => {
             setPendingConfirmationEmail(email);
+            setPendingConfirmationPassword(password || '');
+            setPendingConfirmationRole(role || 'client');
             navigate('confirm-email');
           }}
         />;
@@ -1328,8 +1339,29 @@ export default function App() {
         return <ConfirmEmailPage
           email={pendingConfirmationEmail}
           onBack={() => navigate('login-page')}
-          onConfirmed={() => {
+          onConfirmed={async () => {
+            const email = pendingConfirmationEmail;
+            const password = pendingConfirmationPassword;
+            const role = pendingConfirmationRole;
             setPendingConfirmationEmail('');
+            setPendingConfirmationPassword('');
+            // Connexion automatique juste après la confirmation : on a
+            // déjà l'email/mot de passe/rôle en mémoire (issus de
+            // l'inscription ou d'une tentative de connexion précédente),
+            // donc pas besoin de renvoyer l'utilisateur à l'écran de
+            // connexion. Si l'auto-connexion échoue pour une raison
+            // quelconque (ex. écran atteint autrement), on retombe sur
+            // l'ancien comportement : retour à login-page avec message.
+            if (email && password) {
+              try {
+                const user = await validateLogin(email, password, role);
+                handleLoginSuccess(user);
+                addNotification(user.id, 'success', 'Votre email a été confirmé avec succès !', '/profil');
+                return;
+              } catch (err) {
+                console.error('Connexion automatique après confirmation échouée :', err);
+              }
+            }
             setAuthRedirectMessage('Email confirmé avec succès ! Vous pouvez maintenant vous connecter.');
             navigate('login-page');
           }}

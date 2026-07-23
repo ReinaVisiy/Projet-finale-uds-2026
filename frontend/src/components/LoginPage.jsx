@@ -20,12 +20,14 @@ export default function LoginPage({
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [unconfirmedEmail, setUnconfirmedEmail] = useState('');
+  const [unconfirmedPassword, setUnconfirmedPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setUnconfirmedEmail('');
+    setUnconfirmedPassword('');
     setLoading(true);
 
     if (!email.trim() || !password.trim()) {
@@ -41,6 +43,7 @@ export default function LoginPage({
       if (err.body?.code === 'EMAIL_NON_CONFIRME') {
         setError(t('login.emailNotVerified'));
         setUnconfirmedEmail(email.trim().toLowerCase());
+        setUnconfirmedPassword(password);
         return;
       }
       setError(err.message || t('login.wrongCreds'));
@@ -75,7 +78,7 @@ export default function LoginPage({
           <button
             type="button"
             style={styles.verifyEmailLink}
-            onClick={() => onUnconfirmedEmail(unconfirmedEmail)}
+            onClick={() => onUnconfirmedEmail(unconfirmedEmail, unconfirmedPassword, role)}
           >
             {t('login.verifyMyEmail')}
           </button>
