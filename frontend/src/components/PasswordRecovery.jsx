@@ -1,7 +1,7 @@
 // PasswordRecovery.jsx
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Mail, ArrowLeft, CheckCircle, AlertCircle, Key, Send, Lock } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle, AlertCircle, AlertTriangle, Key, Send, Lock } from 'lucide-react';
 import { utilisateurApi } from '../services/api';
 
 export default function PasswordRecovery({ onBack, onSuccess }) {
@@ -128,7 +128,12 @@ export default function PasswordRecovery({ onBack, onSuccess }) {
           </button>
           <h1 style={styles.title}>{t('passwordRecovery.step2Title')}</h1>
           <p style={styles.subtitle}>{t('passwordRecovery.step2Subtitle', { email })}</p>
-          
+
+          <div style={styles.hintBox}>
+            <AlertTriangle size={18} color="#b08900" />
+            <span>{t('passwordRecovery.spamHint')}</span>
+          </div>
+
           {error && <div style={styles.errorBox}><AlertCircle size={18} color="#e07a5f" /><span>{error}</span></div>}
           
           <form style={styles.form} onSubmit={handleCodeSubmit}>
@@ -285,6 +290,20 @@ const styles = {
     color: '#2d6a4f',
     fontSize: '13px',
     fontWeight: '600',
+  },
+  hintBox: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '10px',
+    padding: '12px 16px',
+    backgroundColor: '#fff8e1',
+    borderRadius: '12px',
+    border: '1px solid #f0dfa1',
+    marginBottom: '16px',
+    color: '#8a6d00',
+    fontSize: '13px',
+    fontWeight: '600',
+    lineHeight: 1.4,
   },
   form: {
     display: 'flex',
