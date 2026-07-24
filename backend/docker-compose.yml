@@ -23,9 +23,9 @@ services:
     build: ./eureka-server
     container_name: agrycam-eureka-server
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     environment:
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8761:8761"
 
@@ -33,12 +33,12 @@ services:
     build: ./api-gateway
     container_name: agrycam-api-gateway
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     depends_on:
       - eureka-server
     environment:
       EUREKA_URI: http://eureka-server:8761/eureka/
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8765:8765"
 
@@ -46,7 +46,7 @@ services:
     build: ./auth-service
     container_name: agrycam-auth-service
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     depends_on:
       - eureka-server
     environment:
@@ -55,7 +55,7 @@ services:
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
       UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
       EUREKA_URI: http://eureka-server:8761/eureka/
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8080:8080"
 
@@ -63,7 +63,7 @@ services:
     build: ./utilisateur-service
     container_name: agrycam-utilisateur-service
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     depends_on:
       postgres:
         condition: service_healthy
@@ -76,7 +76,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
       EUREKA_URI: http://eureka-server:8761/eureka/
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8081:8081"
 
@@ -84,7 +84,7 @@ services:
     build: ./produit-service
     container_name: agrycam-produit-service
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     depends_on:
       postgres:
         condition: service_healthy
@@ -100,7 +100,7 @@ services:
       UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
       NOTIFICATION_SERVICE_URL: http://notification-service:8089
       EUREKA_URI: http://eureka-server:8761/eureka/
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8082:8082"
 
@@ -108,7 +108,7 @@ services:
     build: ./message-service
     container_name: agrycam-message-service
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     depends_on:
       postgres:
         condition: service_healthy
@@ -121,7 +121,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
       EUREKA_URI: http://eureka-server:8761/eureka/
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8083:8083"
 
@@ -129,7 +129,7 @@ services:
     build: ./signalement-service
     container_name: agrycam-signalement-service
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     depends_on:
       postgres:
         condition: service_healthy
@@ -143,7 +143,7 @@ services:
       PRODUIT_SERVICE_URL: http://produit-service:8082
       UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
       EUREKA_URI: http://eureka-server:8761/eureka/
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8084:8084"
 
@@ -151,7 +151,7 @@ services:
     build: ./avis-service
     container_name: agrycam-avis-service
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     depends_on:
       postgres:
         condition: service_healthy
@@ -164,7 +164,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
       EUREKA_URI: http://eureka-server:8761/eureka/
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8085:8085"
 
@@ -172,7 +172,7 @@ services:
     build: ./certification-service
     container_name: agrycam-certification-service
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     depends_on:
       postgres:
         condition: service_healthy
@@ -184,7 +184,7 @@ services:
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
       JWT_SECRET: ${JWT_SECRET}
       EUREKA_URI: http://eureka-server:8761/eureka/
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8086:8086"
 
@@ -192,7 +192,7 @@ services:
     build: ./paiement-service
     container_name: agrycam-paiement-service
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     depends_on:
       postgres:
         condition: service_healthy
@@ -210,7 +210,7 @@ services:
       COMMANDE_SERVICE_URL: http://commande-service:8088
       UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
       EUREKA_URI: http://eureka-server:8761/eureka/
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8087:8087"
 
@@ -218,7 +218,7 @@ services:
     build: ./commande-service
     container_name: agrycam-commande-service
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     depends_on:
       postgres:
         condition: service_healthy
@@ -233,7 +233,7 @@ services:
       UTILISATEUR_SERVICE_URL: http://utilisateur-service:8081
       PAIEMENT_SERVICE_URL: http://paiement-service:8087
       EUREKA_URI: http://eureka-server:8761/eureka/
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8088:8088"
 
@@ -241,7 +241,7 @@ services:
     build: ./notification-service
     container_name: agrycam-notification-service
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 300m
     depends_on:
       postgres:
         condition: service_healthy
@@ -253,7 +253,7 @@ services:
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-2026}
       JWT_SECRET: ${JWT_SECRET}
       EUREKA_URI: http://eureka-server:8761/eureka/
-      JAVA_TOOL_OPTIONS: "-Xmx100m"
+      JAVA_TOOL_OPTIONS: "-Xmx200m"
     ports:
       - "8089:8089"
 
