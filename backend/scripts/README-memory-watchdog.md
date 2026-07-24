@@ -1,11 +1,15 @@
 # Watchdog memoire (AWS a RAM limitee)
 
 Sur une instance avec peu de RAM, `certification-service`,
-`notification-service` et `avis-service` sont arretes automatiquement
-des que la memoire disponible passe sous 200 Mo, puis redemarres des
-qu'elle repasse au-dessus de 450 Mo. Ces trois services ont ete choisis
-car leur absence temporaire n'empeche pas de faire une demonstration du
-catalogue, des commandes ou du paiement.
+`notification-service`, `avis-service` et `signalement-service` sont
+arretes automatiquement des que la memoire disponible passe sous
+200 Mo, puis redemarres des qu'elle repasse au-dessus de 450 Mo. Ces
+services ont ete choisis car leur absence temporaire n'empeche pas de
+faire une demonstration du catalogue, des commandes ou du paiement.
+
+Les services de premier ordre, jamais touches par ce script, sont :
+utilisateur, auth, produit, commande, paiement, messagerie, ainsi que
+eureka-server et api-gateway.
 
 ## Installation (une seule fois, sur le serveur)
 

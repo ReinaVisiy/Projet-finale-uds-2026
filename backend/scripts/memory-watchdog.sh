@@ -2,13 +2,15 @@
 #
 # memory-watchdog.sh — surveille la memoire disponible sur l'hote et
 # arrete temporairement les services les moins critiques pour une
-# demonstration (certification, notification, avis) quand la memoire
-# devient insuffisante, puis les redemarre automatiquement une fois
-# que la memoire s'est liberee.
+# demonstration (certification, notification, avis, signalement)
+# quand la memoire devient insuffisante, puis les redemarre
+# automatiquement une fois que la memoire s'est liberee.
 #
-# Pourquoi ces 3 services : ce sont ceux dont l'absence temporaire
-# gene le moins une demonstration du catalogue/achat (pas d'impact sur
-# auth, produit, commande, paiement, utilisateur).
+# Pourquoi ces services : ce sont ceux dont l'absence temporaire gene
+# le moins une demonstration. Les services de premier ordre (toujours
+# actifs, jamais touches par ce script) sont : utilisateur, auth,
+# produit, commande, paiement, messagerie, ainsi que eureka-server et
+# api-gateway.
 #
 # Utilisation :
 #   ./scripts/memory-watchdog.sh
@@ -16,7 +18,7 @@
 #  arriere-plan via systemd, y compris apres un redemarrage du serveur)
 #
 # Seuils (en Mo de memoire disponible, colonne "available" de `free`) :
-#   - en dessous de LOW_THRESHOLD_MB  -> on arrete les 3 services
+#   - en dessous de LOW_THRESHOLD_MB  -> on arrete ces services
 #   - au dessus de HIGH_THRESHOLD_MB -> on les redemarre
 # Un ecart entre les deux seuils (hysteresis) evite les arrets/demarrages
 # en boucle si la memoire oscille juste autour d'une seule valeur.
@@ -26,7 +28,7 @@ set -euo pipefail
 LOW_THRESHOLD_MB="${LOW_THRESHOLD_MB:-200}"
 HIGH_THRESHOLD_MB="${HIGH_THRESHOLD_MB:-450}"
 CHECK_INTERVAL_SECONDS="${CHECK_INTERVAL_SECONDS:-20}"
-SERVICES_A_GERER=(certification-service notification-service avis-service)
+SERVICES_A_GERER=(certification-service notification-service avis-service signalement-service)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$(dirname "$SCRIPT_DIR")"
