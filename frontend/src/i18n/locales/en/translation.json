@@ -551,13 +551,13 @@
     "voirCatalogue": "See full catalogue"
   },
   "avisPlateforme": {
-    "homeEmpty": "Be the first to review AgryCam!",
+    "homeEmpty": "Be the first to review AgriConnect!",
     "voirPlus": "See more",
     "listTitle": "What our users say",
     "listEmpty": "No reviews yet.",
     "loadError": "Could not load reviews.",
     "popupTitle": "Your feedback matters!",
-    "popupSubtitle": "Before you log out, tell us what you think of AgryCam.",
+    "popupSubtitle": "Before you log out, tell us what you think of AgriConnect.",
     "commentPlaceholder": "What did you like? What could be improved? (optional)",
     "selectRatingError": "Please choose a rating before sending.",
     "submitError": "Sending your review failed. Please try again.",
