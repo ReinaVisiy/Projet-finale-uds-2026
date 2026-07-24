@@ -33,7 +33,7 @@ services:
     build: ./api-gateway
     container_name: agrycam-api-gateway
     restart: unless-stopped
-    mem_limit: 300m
+    mem_limit: 400m
     depends_on:
       - eureka-server
     environment:
@@ -218,7 +218,7 @@ services:
     build: ./commande-service
     container_name: agrycam-commande-service
     restart: unless-stopped
-    mem_limit: 300m
+    mem_limit: 400m
     depends_on:
       postgres:
         condition: service_healthy
@@ -241,7 +241,7 @@ services:
     build: ./notification-service
     container_name: agrycam-notification-service
     restart: unless-stopped
-    mem_limit: 300m
+    mem_limit: 400m
     depends_on:
       postgres:
         condition: service_healthy
