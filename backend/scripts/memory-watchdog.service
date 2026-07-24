@@ -1,0 +1,16 @@
+[Unit]
+Description=AgryCam - watchdog memoire (arrete certification/notification/avis si RAM faible)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+# A adapter si le depot n'est pas clone dans ce chemin exact sur le serveur.
+WorkingDirectory=/home/ubuntu/Projet-finale-uds-2026/backend
+ExecStart=/home/ubuntu/Projet-finale-uds-2026/backend/scripts/memory-watchdog.sh
+Restart=always
+RestartSec=5
+User=ubuntu
+
+[Install]
+WantedBy=multi-user.target
